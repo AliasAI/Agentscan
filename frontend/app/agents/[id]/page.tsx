@@ -253,7 +253,7 @@ export default function AgentDetailPage() {
               <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
                 <span className="text-foreground/60">Reputation</span>
                 <span className="font-semibold">
-                  {agent.reputation_count > 0 ? (
+                  {agent.reputation_count && agent.reputation_count > 0 ? (
                     `${agent.reputation_score.toFixed(2)}/100`
                   ) : (
                     <span className="text-foreground/50 text-sm font-normal">No reviews yet</span>
@@ -263,7 +263,7 @@ export default function AgentDetailPage() {
               <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
                 <span className="text-foreground/60">Reviews</span>
                 <span className="font-semibold">
-                  {agent.reputation_count > 0 ? (
+                  {agent.reputation_count && agent.reputation_count > 0 ? (
                     agent.reputation_count
                   ) : (
                     <span className="text-foreground/50 text-sm font-normal">0</span>
