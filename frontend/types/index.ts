@@ -42,12 +42,19 @@ export interface Agent {
   reputation_last_updated?: string;
 }
 
+export interface Contracts {
+  identity: string;
+  reputation: string;
+  validation: string;
+}
+
 export interface Network {
   id: string;
   name: string;
   chain_id: number;
   rpc_url: string;
   explorer_url: string;
+  contracts: Contracts | null;
   created_at: string;
 }
 

@@ -2,21 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { networkService } from '@/lib/api/services';
-
-interface Contracts {
-  identity: string;
-  reputation: string;
-  validation: string;
-}
-
-interface Network {
-  id: string;
-  name: string;
-  chain_id: number;
-  rpc_url: string;
-  explorer_url: string;
-  contracts: Contracts | null;
-}
+import type { Network } from '@/types';
 
 export default function NetworksPage() {
   const [networks, setNetworks] = useState<Network[]>([]);
