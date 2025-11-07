@@ -21,7 +21,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Fetch stats on mount and refresh every 5 seconds
+  // Fetch stats on mount and refresh every 10 seconds
   useEffect(() => {
     const fetchStats = () => {
       statsService.getStats()
@@ -30,7 +30,7 @@ export default function HomePage() {
     }
 
     fetchStats()
-    const interval = setInterval(fetchStats, 5000) // Refresh every 5 seconds
+    const interval = setInterval(fetchStats, 10000) // Refresh every 10 seconds
 
     return () => clearInterval(interval)
   }, [])
@@ -69,21 +69,14 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch registration trend data and refresh every 10 seconds
+  // Fetch registration trend data on mount only (no auto-refresh)
   useEffect(() => {
-    const fetchTrendData = () => {
-      statsService
-        .getRegistrationTrend(30)
-        .then((response) => {
-          setTrendData(response.data)
-        })
-        .catch(console.error)
-    }
-
-    fetchTrendData()
-    const interval = setInterval(fetchTrendData, 10000) // Refresh every 10 seconds
-
-    return () => clearInterval(interval)
+    statsService
+      .getRegistrationTrend(30)
+      .then((response) => {
+        setTrendData(response.data)
+      })
+      .catch(console.error)
   }, [])
 
   const tabs = [
