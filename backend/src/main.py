@@ -7,10 +7,17 @@ from src.core.config import settings
 from src.db.database import engine, Base
 from src.api import stats, agents, sync, networks, activities
 from src.services.scheduler import start_scheduler, shutdown_scheduler
+from src.db.migrate_add_contracts import migrate
 from src.db.init_networks import init_networks
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Run migration to add contracts column
+try:
+    migrate()
+except Exception as e:
+    print(f"Migration warning: {e}")
 
 # Initialize networks data
 init_networks()
