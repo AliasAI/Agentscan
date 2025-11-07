@@ -52,24 +52,38 @@ export default function HomePage() {
       .finally(() => setLoading(false))
   }, [activeTab, searchQuery])
 
-  // Fetch activities
+  // Fetch activities and refresh every 10 seconds
   useEffect(() => {
-    activityService
-      .getActivities({ page: 1, page_size: 10 })
-      .then((response) => {
-        setActivities(response.items)
-      })
-      .catch(console.error)
+    const fetchActivities = () => {
+      activityService
+        .getActivities({ page: 1, page_size: 10 })
+        .then((response) => {
+          setActivities(response.items)
+        })
+        .catch(console.error)
+    }
+
+    fetchActivities()
+    const interval = setInterval(fetchActivities, 10000) // Refresh every 10 seconds
+
+    return () => clearInterval(interval)
   }, [])
 
-  // Fetch registration trend data
+  // Fetch registration trend data and refresh every 10 seconds
   useEffect(() => {
-    statsService
-      .getRegistrationTrend(30)
-      .then((response) => {
-        setTrendData(response.data)
-      })
-      .catch(console.error)
+    const fetchTrendData = () => {
+      statsService
+        .getRegistrationTrend(30)
+        .then((response) => {
+          setTrendData(response.data)
+        })
+        .catch(console.error)
+    }
+
+    fetchTrendData()
+    const interval = setInterval(fetchTrendData, 10000) // Refresh every 10 seconds
+
+    return () => clearInterval(interval)
   }, [])
 
   const tabs = [
