@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, JSON
 from sqlalchemy.orm import relationship
 
 from src.db.database import Base
@@ -18,6 +18,7 @@ class Network(Base):
     chain_id = Column(Integer, nullable=False, unique=True)
     rpc_url = Column(String, nullable=False)
     explorer_url = Column(String, nullable=False)
+    contracts = Column(JSON, nullable=True)  # 合约地址 {identity, reputation, validation}
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # 关系

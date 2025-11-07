@@ -7,9 +7,13 @@ from src.core.config import settings
 from src.db.database import engine, Base
 from src.api import stats, agents, sync, networks, activities
 from src.services.scheduler import start_scheduler, shutdown_scheduler
+from src.db.init_networks import init_networks
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Initialize networks data
+init_networks()
 
 # Create FastAPI application
 app = FastAPI(
