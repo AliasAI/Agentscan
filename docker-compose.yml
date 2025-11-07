@@ -1,0 +1,42 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agentscan-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # 持久化 SQLite 数据库
+      - ./data:/app/data
+      # 持久化日志
+      - ./logs/backend:/app/logs
+    environment:
+      - DATABASE_URL=sqlite:///./data/8004scan.db
+      - CORS_ORIGINS=http://localhost:3000,http://frontend:3000,https://your-domain.com
+    restart: unless-stopped
+    networks:
+      - agentscan-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agentscan-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=/api
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - agentscan-network
+
+networks:
+  agentscan-network:
+    driver: bridge
+
+volumes:
+  data:
+  logs:

@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agentscan-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs/backend:/app/logs
+    environment:
+      - DATABASE_URL=sqlite:///./data/8004scan.db
+      # 允许服务器本地和域名访问
+      - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://your-domain.com
+    restart: unless-stopped
