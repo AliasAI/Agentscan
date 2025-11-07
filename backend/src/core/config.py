@@ -43,5 +43,11 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
+    def get_cors_origins(self) -> list[str]:
+        """获取 CORS 配置，开发环境下允许所有来源"""
+        if self.debug:
+            return ["*"]  # 开发环境允许所有来源
+        return self.cors_origins if isinstance(self.cors_origins, list) else [self.cors_origins]
+
 
 settings = Settings()
