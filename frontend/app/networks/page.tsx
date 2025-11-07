@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { networkService } from '@/lib/api/services';
 
 interface Contracts {
   identity: string;
@@ -22,8 +23,7 @@ export default function NetworksPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/networks')
-      .then(res => res.json())
+    networkService.getNetworks()
       .then(data => {
         setNetworks(data);
         setLoading(false);
