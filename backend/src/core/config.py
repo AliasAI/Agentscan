@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./8004scan.db"
 
     # CORS 配置
-    cors_origins: list[str] = [
+    cors_origins: list[str] | str = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
@@ -34,9 +34,10 @@ class Settings(BaseSettings):
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
-        """解析 CORS origins，支持逗号分隔的字符串"""
+        """解析 CORS origins，支持逗号分隔的字符串或列表"""
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
+            # 支持逗号分隔的字符串
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
 
