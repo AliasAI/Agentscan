@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.db.database import engine, Base
-from src.api import stats, agents, sync, networks
+from src.api import stats, agents, sync, networks, activities
 from src.services.scheduler import start_scheduler, shutdown_scheduler
 
 # Create database tables
@@ -30,6 +30,7 @@ app.add_middleware(
 # Register routes
 app.include_router(stats.router, prefix="/api", tags=["stats"])
 app.include_router(agents.router, prefix="/api", tags=["agents"])
+app.include_router(activities.router, prefix="/api", tags=["activities"])
 app.include_router(sync.router, prefix="/api", tags=["sync"])
 app.include_router(networks.router, prefix="/api", tags=["networks"])
 
