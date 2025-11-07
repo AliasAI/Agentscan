@@ -12,6 +12,10 @@ RUN npm ci
 # 复制应用代码
 COPY . .
 
+# 设置构建时环境变量
+ARG NEXT_PUBLIC_API_URL=/api
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # 构建应用
 RUN npm run build
 

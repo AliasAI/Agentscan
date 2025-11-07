@@ -13,7 +13,7 @@ services:
       - ./logs/backend:/app/logs
     environment:
       - DATABASE_URL=sqlite:///./data/8004scan.db
-      - CORS_ORIGINS=http://localhost:3000,http://43.199.214.110
+      - CORS_ORIGINS=http://localhost:3000,http://43.199.214.110:3000,http://43.199.214.110:8080
     env_file:
       - ./backend/.env
     restart: unless-stopped
@@ -24,11 +24,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=/api
     container_name: agentscan-frontend
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=/api
     depends_on:
       - backend
     restart: unless-stopped
