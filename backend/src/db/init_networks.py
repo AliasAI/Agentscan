@@ -11,48 +11,50 @@ def init_networks():
     db = SessionLocal()
 
     try:
-        # Check if networks already exist
-        existing_count = db.query(Network).count()
-        if existing_count > 0:
-            print(f"Networks already initialized ({existing_count} networks found)")
+        added_count = 0
+        updated_count = 0
 
-            # Update existing networks with contract information
-            for network_key, config in NETWORKS.items():
-                network = db.query(Network).filter(
-                    Network.name == config["name"]
-                ).first()
-
-                if network:
-                    # Update contracts if not set
-                    if not network.contracts and "contracts" in config:
-                        network.contracts = config["contracts"]
-                        print(f"Updated contracts for {network.name}")
-
-            db.commit()
-            return
-
-        # Create networks from config
-        networks = []
+        # Process each network in config
         for network_key, config in NETWORKS.items():
             if not config.get("enabled", True):
                 continue
 
-            network = Network(
-                name=config["name"],
-                chain_id=config["chain_id"],
-                rpc_url=config["rpc_url"],
-                explorer_url=config["explorer_url"],
-                contracts=config.get("contracts"),
-            )
-            networks.append(network)
+            # Check if network already exists (by chain_id)
+            existing_network = db.query(Network).filter(
+                Network.chain_id == config["chain_id"]
+            ).first()
 
-        db.add_all(networks)
+            if existing_network:
+                # Update contracts if not set
+                if not existing_network.contracts and "contracts" in config:
+                    existing_network.contracts = config["contracts"]
+                    updated_count += 1
+                    print(f"✅ Updated contracts for {existing_network.name}")
+            else:
+                # Create new network
+                network = Network(
+                    name=config["name"],
+                    chain_id=config["chain_id"],
+                    rpc_url=config["rpc_url"],
+                    explorer_url=config["explorer_url"],
+                    contracts=config.get("contracts"),
+                )
+                db.add(network)
+                added_count += 1
+                has_contracts = "✓" if network.contracts else "✗"
+                print(f"✅ Added network: {network.name} (Chain ID: {network.chain_id}) [Contracts: {has_contracts}]")
+
         db.commit()
 
-        print(f"✅ Successfully initialized {len(networks)} networks:")
-        for network in networks:
-            has_contracts = "✓" if network.contracts else "✗"
-            print(f"   - {network.name} (Chain ID: {network.chain_id}) [Contracts: {has_contracts}]")
+        # Summary
+        total_count = db.query(Network).count()
+        if added_count > 0 or updated_count > 0:
+            print(f"\n📊 Network initialization summary:")
+            print(f"   - Added: {added_count}")
+            print(f"   - Updated: {updated_count}")
+            print(f"   - Total networks: {total_count}")
+        else:
+            print(f"✅ All {total_count} networks already initialized")
 
     except Exception as e:
         print(f"❌ Error initializing networks: {e}")
