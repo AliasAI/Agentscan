@@ -93,6 +93,51 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 - 后端 API：http://localhost:8000
 - API 文档：http://localhost:8000/docs
 
+## Docker 部署
+
+### 使用 Docker 快速部署
+
+#### 1. 环境准备
+
+确保已安装 Docker 和 Docker Compose，然后配置环境变量：
+
+```bash
+# 复制环境变量模板
+cp backend/.env.example backend/.env
+
+# 编辑 .env 文件，配置必需的环境变量（特别是 SEPOLIA_RPC_URL）
+```
+
+#### 2. 部署完整应用（前端 + 后端）
+
+```bash
+./scripts/docker-deploy.sh
+```
+
+#### 3. 仅部署后端
+
+```bash
+./scripts/docker-deploy-backend.sh
+```
+
+#### 4. 常用操作
+
+```bash
+# 查看日志
+./scripts/docker-logs.sh
+
+# 重启服务
+./scripts/docker-restart.sh
+
+# 停止服务
+./scripts/docker-stop.sh
+
+# 检查环境配置
+./scripts/docker-check-env.sh
+```
+
+**详细部署文档**：[Docker 部署指南](docs/DOCKER_DEPLOYMENT.md)
+
 ## 主要功能
 
 ### 首页

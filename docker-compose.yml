@@ -14,6 +14,9 @@ services:
     environment:
       - DATABASE_URL=sqlite:///./data/8004scan.db
       - CORS_ORIGINS=http://localhost:3000,http://frontend:3000,https://your-domain.com
+      - SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL}
+    env_file:
+      - ./backend/.env
     restart: unless-stopped
     networks:
       - agentscan-network
