@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { AgentCard } from '@/components/agent/AgentCard'
 import Tabs from '@/components/common/Tabs'
 import { SearchBar } from '@/components/common/SearchBar'
@@ -9,7 +8,6 @@ import { agentService } from '@/lib/api/services'
 import type { Agent } from '@/types'
 
 export default function AgentsPage() {
-  const searchParams = useSearchParams()
   const [agents, setAgents] = useState<Agent[]>([])
   const [activeTab, setActiveTab] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
