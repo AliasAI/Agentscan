@@ -12,9 +12,9 @@ import type {
 
 // 统计数据服务
 export const statsService = {
-  getStats: () => apiGet<Stats>('/api/stats'),
+  getStats: () => apiGet<Stats>('/stats'),
   getRegistrationTrend: (days: number = 30) =>
-    apiGet<RegistrationTrendResponse>(`/api/stats/registration-trend?days=${days}`),
+    apiGet<RegistrationTrendResponse>(`/stats/registration-trend?days=${days}`),
 };
 
 // 代理服务
@@ -31,23 +31,23 @@ export const agentService = {
         .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {})
     ).toString();
     return apiGet<PaginatedResponse<Agent>>(
-      `/api/agents${query ? `?${query}` : ''}`
+      `/agents${query ? `?${query}` : ''}`
     );
   },
 
   getFeaturedAgents: () =>
-    apiGet<Agent[]>('/api/agents/featured'),
+    apiGet<Agent[]>('/agents/featured'),
 
   getAgentById: (id: string) =>
-    apiGet<Agent>(`/api/agents/${id}`),
+    apiGet<Agent>(`/agents/${id}`),
 };
 
 // 网络服务
 export const networkService = {
-  getNetworks: () => apiGet<Network[]>('/api/networks'),
+  getNetworks: () => apiGet<Network[]>('/networks'),
 
   getNetworkById: (id: string) =>
-    apiGet<Network>(`/api/networks/${id}`),
+    apiGet<Network>(`/networks/${id}`),
 };
 
 // 活动服务
@@ -60,10 +60,10 @@ export const activityService = {
       params as Record<string, string>
     ).toString();
     return apiGet<PaginatedResponse<Activity>>(
-      `/api/activities${query ? `?${query}` : ''}`
+      `/activities${query ? `?${query}` : ''}`
     );
   },
 
   getAgentActivities: (agentId: string) =>
-    apiGet<Activity[]>(`/api/activities/agent/${agentId}`),
+    apiGet<Activity[]>(`/activities/agent/${agentId}`),
 };
