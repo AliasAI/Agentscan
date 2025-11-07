@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # 数据库配置
     database_url: str = "sqlite:///./8004scan.db"
 
+    # 区块链配置
+    sepolia_rpc_url: str = ""
+
     # CORS 配置
     cors_origins: list[str] | str = [
         "http://localhost:3000",
