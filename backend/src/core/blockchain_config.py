@@ -1,7 +1,11 @@
 """Blockchain configuration"""
 
+import os
+
 # Sepolia network configuration
-SEPOLIA_RPC_URL = "https://dry-summer-diamond.ethereum-sepolia.quiknode.pro/a919991bab9313b5845be8362dc01e9969f3000c/"  # Replace with your Infura key
+SEPOLIA_RPC_URL = os.getenv("SEPOLIA_RPC_URL", "")
+if not SEPOLIA_RPC_URL:
+    raise ValueError("SEPOLIA_RPC_URL environment variable is required")
 SEPOLIA_CHAIN_ID = 11155111
 
 # ERC-8004 ID Registry contract (replace with actual contract address)
