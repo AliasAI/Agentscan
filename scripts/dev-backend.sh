@@ -14,6 +14,10 @@ if [ ! -d ".venv" ]; then
   uv sync
 fi
 
+# 运行数据库迁移（如果需要）
+echo "运行数据库迁移..."
+uv run python -m src.db.migrate_add_contracts
+
 # 初始化数据库（如果需要）
 echo "初始化数据库..."
 uv run python -m src.db.init_data

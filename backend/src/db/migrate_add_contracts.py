@@ -3,13 +3,17 @@
 import sqlite3
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv()
 
 
 def migrate():
     """Add contracts column to networks table"""
 
     # Get database path from environment variable or use default
-    db_url = os.getenv("DATABASE_URL", "sqlite:///./data/8004scan.db")
+    db_url = os.getenv("DATABASE_URL", "sqlite:///./8004scan.db")
 
     if db_url.startswith("sqlite:///"):
         db_path = db_url.replace("sqlite:///", "")
@@ -22,6 +26,10 @@ def migrate():
         return
 
     print(f"📊 Connecting to database: {db_path}")
+
+    # Ensure database directory exists
+    db_path = Path(db_path)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()

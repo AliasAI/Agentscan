@@ -90,9 +90,9 @@ export default function HomePage() {
     <div className="container mx-auto px-4 py-8">
       {/* Hero Section */}
       <div className="relative text-center mb-12">
-        {/* Blockchain Sync Status - Absolute Position Top Right */}
+        {/* Blockchain Sync Status - Desktop: Absolute Position Top Right, Mobile: Below Title */}
         {stats?.blockchain_sync && (
-          <div className="absolute top-0 right-0 flex items-center gap-2 text-sm text-foreground/60">
+          <div className="hidden md:flex absolute top-0 right-0 items-center gap-2 text-sm text-foreground/60">
             <div className="flex items-center gap-1.5">
               {stats.blockchain_sync.is_syncing ? (
                 <>
@@ -118,6 +118,32 @@ export default function HomePage() {
         <h1 className="text-4xl font-bold mb-4">
           Explore AI Agents on the ERC-8004 Protocol
         </h1>
+
+        {/* Blockchain Sync Status - Mobile: Below Title */}
+        {stats?.blockchain_sync && (
+          <div className="flex md:hidden justify-center items-center gap-2 text-sm text-foreground/60 mb-4">
+            <div className="flex items-center gap-1.5">
+              {stats.blockchain_sync.is_syncing ? (
+                <>
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Syncing</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                  <span>Synced</span>
+                </>
+              )}
+            </div>
+            <span className="text-foreground/40">
+              {stats.blockchain_sync.sync_progress.toFixed(1)}%
+            </span>
+            <span className="text-foreground/30 text-xs">
+              Block {formatNumber(stats.blockchain_sync.current_block)}
+            </span>
+          </div>
+        )}
+
         <p className="text-lg text-foreground/60 mb-8">
           Discover, track, and analyze intelligent agents on the blockchain
         </p>

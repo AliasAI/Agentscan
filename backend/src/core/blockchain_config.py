@@ -1,6 +1,10 @@
 """Blockchain configuration"""
 
 import os
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv()
 
 # Sepolia network configuration
 SEPOLIA_RPC_URL = os.getenv("SEPOLIA_RPC_URL", "")
