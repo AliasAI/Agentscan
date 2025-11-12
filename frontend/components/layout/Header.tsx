@@ -23,8 +23,9 @@ export function Header() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-8">
-              <Link href="/" className="text-2xl font-bold text-foreground">
-                Agentscan
+              <Link href="/" className="flex items-baseline gap-2 text-foreground">
+                <span className="text-2xl font-bold">Agentscan</span>
+                <span className="text-sm font-normal text-foreground/60">by alias</span>
               </Link>
               <nav className="hidden md:flex space-x-6">
                 <Link href="/" className="text-foreground/80 hover:text-foreground">
@@ -51,9 +52,10 @@ export function Header() {
           <div className="flex items-center space-x-8">
             <Link
               href="/"
-              className="text-2xl font-bold text-foreground"
+              className="flex items-baseline gap-2 text-foreground"
             >
-              Agentscan
+              <span className="text-2xl font-bold">Agentscan</span>
+              <span className="text-sm font-normal text-foreground/60">by alias</span>
             </Link>
             <nav className="hidden md:flex space-x-6">
               <Link
