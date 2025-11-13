@@ -9,6 +9,7 @@ import { ActivityList } from '@/components/common/ActivityList'
 import { RegistrationTrendChart } from '@/components/charts/RegistrationTrendChart'
 import Tabs from '@/components/common/Tabs'
 import { formatNumber } from '@/lib/utils/format'
+import { AgentCardSkeleton, StatCardSkeleton, ActivityItemSkeleton } from '@/components/common/Skeleton'
 import { statsService, agentService, activityService } from '@/lib/api/services'
 import type { Agent, Activity, Stats, RegistrationTrendData } from '@/types'
 
@@ -128,30 +129,41 @@ export default function HomePage() {
 
       {/* Overall Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        <Card>
-          <div className="text-sm text-foreground/60 mb-2">Total Agents</div>
-          <div className="text-3xl font-bold">
-            {stats ? formatNumber(stats.total_agents) : '-'}
-          </div>
-        </Card>
-        <Card>
-          <div className="text-sm text-foreground/60 mb-2">Active Agents</div>
-          <div className="text-3xl font-bold text-green-600">
-            {stats ? formatNumber(stats.active_agents) : '-'}
-          </div>
-        </Card>
-        <Card>
-          <div className="text-sm text-foreground/60 mb-2">Networks</div>
-          <div className="text-3xl font-bold">
-            {stats ? formatNumber(stats.total_networks) : '-'}
-          </div>
-        </Card>
-        <Card>
-          <div className="text-sm text-foreground/60 mb-2">Total Activities</div>
-          <div className="text-3xl font-bold">
-            {stats ? formatNumber(stats.total_activities) : '-'}
-          </div>
-        </Card>
+        {!stats ? (
+          <>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </>
+        ) : (
+          <>
+            <Card>
+              <div className="text-sm text-foreground/60 mb-2">Total Agents</div>
+              <div className="text-3xl font-bold">
+                {formatNumber(stats.total_agents)}
+              </div>
+            </Card>
+            <Card>
+              <div className="text-sm text-foreground/60 mb-2">Active Agents</div>
+              <div className="text-3xl font-bold text-green-600">
+                {formatNumber(stats.active_agents)}
+              </div>
+            </Card>
+            <Card>
+              <div className="text-sm text-foreground/60 mb-2">Networks</div>
+              <div className="text-3xl font-bold">
+                {formatNumber(stats.total_networks)}
+              </div>
+            </Card>
+            <Card>
+              <div className="text-sm text-foreground/60 mb-2">Total Activities</div>
+              <div className="text-3xl font-bold">
+                {formatNumber(stats.total_activities)}
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -170,8 +182,10 @@ export default function HomePage() {
           {/* Agent List */}
           <div className="mt-6">
             {loading ? (
-              <div className="text-center py-12 text-foreground/60">
-                Loading agents...
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <AgentCardSkeleton key={i} />
+                ))}
               </div>
             ) : agents.length === 0 ? (
               <div className="text-center py-12 text-foreground/60">
@@ -208,9 +222,17 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold mb-6">Recent Activity</h2>
             <Card>
               {activities.length === 0 ? (
-                <div className="text-center py-8 text-foreground/60">
-                  No recent activity
-                </div>
+                loading ? (
+                  <div className="space-y-0">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <ActivityItemSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-foreground/60">
+                    No recent activity
+                  </div>
+                )
               ) : (
                 <ActivityList activities={activities} />
               )}
