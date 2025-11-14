@@ -328,7 +328,46 @@ load_dotenv()
 - Python 文件不超过 300 行
 - TypeScript/JavaScript 文件不超过 300 行
 - 每层文件夹中的文件不超过 8 个
-- 文档放在 docs/（正式文档）或 discuss/（方案讨论）
+- 文档放在 docs/（正式文档）或 discuss/（讨论和历史记录）
+
+## Documentation Structure
+
+### docs/ - 正式文档
+
+- **DEPLOYMENT.md** - 完整的部署指南（本地开发、Docker 部署、生产环境）
+- **oasf-classification.md** - OASF 自动分类功能说明
+- **background-classification-guide.md** - 异步批量分类使用指南
+- **classification-validation-rules.md** - 分类验证规则和标准
+- **reputation_sync_design.md** - 声誉系统设计文档
+
+### discuss/ - 讨论和历史记录
+
+- 已归档的部署文档（DOCKER_DEPLOYMENT.md、production-deployment.md）
+- 历史总结文档（oasf-upgrade-summary.md、实现总结.md）
+- 测试记录（llm-classification-test-results.md）
+- 临时故障排查文档（ssl-certificate-troubleshooting.md 等）
+
+### scripts/ - 运行脚本
+
+**核心开发脚本：**
+- dev-backend.sh - 启动后端开发服务器
+- dev-frontend.sh - 启动前端开发服务器
+- dev-all.sh - 同时启动前后端
+- init-networks.sh - 初始化网络数据
+- migrate-db.sh - 运行数据库迁移
+
+**Docker 部署脚本：**
+- docker-deploy.sh - 部署完整应用
+- docker-check-env.sh - 检查环境配置
+- docker-logs.sh - 查看容器日志
+- docker-restart.sh - 重启服务
+- docker-stop.sh - 停止服务
+
+**辅助工具：**
+- check-nginx-config.sh - Nginx 配置检查（生产环境辅助）
+
+**已归档脚本：**
+- scripts/archive/ - 临时诊断脚本（diagnose-nginx-redirect.sh 等）
 
 ## API Documentation
 
@@ -351,7 +390,11 @@ load_dotenv()
 
 2. **智能分类策略**
    - **优先级1**：从 metadata 的 `endpoints[].skills/domains` 直接提取（OASF 标准格式）
-   - **优先级2**：使用 Claude API 智能分析 agent description（需配置 `ANTHROPIC_API_KEY`）
+   - **优先级2**：使用 LLM 智能分析 agent description
+     - DeepSeek（推荐）：性价比高
+     - OpenAI：GPT-4o-mini
+     - OpenRouter：统一接口支持多种模型
+     - Anthropic Claude：保持向后兼容
    - **优先级3**：基于关键词匹配的简单分类（无需 API key）
 
 3. **自动化流程**
@@ -399,18 +442,27 @@ GET /api/taxonomy/domains
 
 ### 配置（可选）
 
-在 `backend/.env` 中添加 Claude API key 以启用智能分类：
+在 `backend/.env` 中配置 LLM 提供商以启用智能分类：
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-your-key-here
+# 选择提供商: deepseek, openai, openrouter, anthropic
+LLM_PROVIDER=deepseek
+
+# 根据选择的提供商配置对应的 API Key
+DEEPSEEK_API_KEY=sk-your-key-here
+# OPENAI_API_KEY=sk-your-key-here
+# OPENROUTER_API_KEY=sk-your-key-here
+# ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-如果不配置，系统会使用关键词匹配进行基础分类。
+如果不配置任何 API key，系统会使用关键词匹配进行基础分类。
 
 ### 相关文档
 
-- 完整文档：`docs/oasf-classification.md`
-- 升级总结：`docs/oasf-upgrade-summary.md`
+- 完整功能说明：`docs/oasf-classification.md`
+- 后台分类指南：`docs/background-classification-guide.md`
+- 验证规则：`docs/classification-validation-rules.md`
+- 升级总结：`discuss/oasf-upgrade-summary.md`（历史记录）
 - OASF 规范：https://github.com/agntcy/oasf
 
 ## External Dependencies
@@ -421,7 +473,7 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 - IPFS：元数据存储（通过公共网关访问）
 
 ### AI & 分类相关
-- Anthropic Claude API：智能分类 agent skills 和 domains（可选）
+- LLM 提供商（可选）：DeepSeek、OpenAI、OpenRouter、Anthropic Claude
 - OASF v0.8.0：开放代理服务框架标准（agent0-py）
 
 ### 后端关键依赖

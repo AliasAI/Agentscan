@@ -2,26 +2,31 @@
 
 ## 概述
 
-为了避免对无效或不完整的 agent 进行错误分类，8004scan 实施了严格的 description 验证规则。
+为了避免对无效或不完整的 agent 进行错误分类，8004scan 采用**两层验证策略**：
+
+1. **基础硬性规则**：过滤明显无效的描述（错误信息、测试数据、时间戳等）
+2. **LLM 语义判断**：判断描述的语义是否充分以进行准确分类
 
 **原则**: 宁愿不分类，也不要错误分类。
 
 ## 验证规则
 
-### 1. 最小长度要求
+### 第一层：基础硬性验证
 
-**规则**: Description 长度至少 **50 个字符**（已提高要求）
+#### 1. 最小长度要求
 
-**原因**: 少于 50 个字符的描述通常无法提供足够的语义信息进行准确分类。
+**规则**: Description 长度至少 **20 个字符**
+
+**原因**: 过滤极短的描述（如 "AI bot"），但不过度限制。
 
 **示例**:
 ```python
 # ❌ 无效 - 太短
 "Code generator"  # 14 字符
-"An AI coding assistant"  # 22 字符
 
-# ✅ 有效
-"An AI agent that generates high-quality code from natural language descriptions"  # 81 字符
+# ✅ 通过基础验证（但仍需 LLM 判断语义）
+"A coding bot for Python"  # 23 字符
+"An AI agent that generates code"  # 33 字符
 ```
 
 ### 2. 非空检查
@@ -74,49 +79,53 @@ None
 "A trading bot for cryptocurrency markets with real-time analysis"
 ```
 
-### 4. 数字字符比例检查
+#### 4. 数字字符比例检查
 
-**规则**: 数字字符不能超过描述长度的 **30%**
+**规则**: 数字字符不能超过描述长度的 **50%**
 
-**原因**: 过多数字通常表示时间戳或无意义的序列号。
+**原因**: 过多数字通常表示纯时间戳或无意义的序列号。
 
 **示例**:
 ```python
-# ❌ 无效 - 数字过多
-"Created at 1761852369 - UPDATED"  # 数字占 32%
+# ❌ 无效 - 数字过多（纯时间戳）
+"1761852369123456"  # 数字占 100%
 
-# ✅ 有效
+# ✅ 通过（但仍需 LLM 判断）
 "Agent v2.0 for data analysis"  # 数字占 9%
+"Created at 1761852369 - UPDATED"  # 被 invalid_patterns 拒绝
 ```
 
-### 5. 有意义词汇数量检查
+### 第二层：LLM 语义判断
 
-**规则**: 描述必须包含至少 **5 个英文单词**
+通过基础验证后，LLM 会进一步判断描述的**语义充分性**：
 
-**原因**: 确保有足够的语义信息进行分类。
+#### LLM 判断标准
 
-**示例**:
+1. **描述是否提供足够的语义信息**
+   - 如果描述过于简短、模糊、或缺乏实质内容，LLM 会返回空数组
+
+2. **明确性要求**
+   - 必须能从描述中明确提取出功能（skills）或领域（domains）
+   - 不能过于宽泛或抽象
+
+#### 示例
+
+**LLM 会拒绝（返回空数组）**:
 ```python
-# ❌ 无效 - 词汇太少
-"AI bot 123"  # 只有 2 个单词
-
-# ✅ 有效
-"An advanced AI agent for automated trading strategies"  # 8 个单词
+"AI assistant for tasks"  # 过于宽泛，缺乏具体信息
+"Smart bot"  # 语义不足
+"Automation tool"  # 太抽象
 ```
 
-### 6. 平均单词长度检查
-
-**规则**: 平均单词长度必须至少 **3 个字符**
-
-**原因**: 过短的词汇（如大量的 "a", "is", "to"）可能缺乏实质信息。
-
-**示例**:
+**LLM 会接受并分类**:
 ```python
-# ❌ 无效 - 单词过短
-"An AI is ok to go"  # 平均 2.3 字符
+"A coding bot for Python"
+# → Skills: coding_skills, text_to_code
+# → Domains: software_development
 
-# ✅ 有效
-"An advanced AI agent for trading"  # 平均 4.7 字符
+"An AI agent for cryptocurrency trading"
+# → Skills: trading, market_analysis
+# → Domains: finance, trading
 ```
 
 ## 行为逻辑
@@ -306,27 +315,44 @@ POST /api/agents/classify-background?limit=100
 "technology/software_engineering/software_development"
 ```
 
+## 两层验证流程图
+
+```
+Agent 描述
+  ↓
+【第一层：基础硬性验证】
+  ├─ 长度 < 20 字符？ → ❌ 拒绝
+  ├─ 包含无效模式？ → ❌ 拒绝
+  ├─ 数字 > 50%？ → ❌ 拒绝
+  └─ ✅ 通过
+      ↓
+【第二层：LLM 语义判断】
+  ├─ 语义充分？
+  │   ├─ 是 → ✅ 分类（2-3 skills, 1-2 domains）
+  │   └─ 否 → ⏭️ 跳过（返回空数组）
+```
+
 ## 配置参数
 
-### 最小长度阈值
+### 第一层：基础验证参数
 
-当前设置: **50 字符**（已从 20 提高到 50）
+**最小长度阈值**: **20 字符**
+- 文件: `backend/src/services/ai_classifier.py`
+- 文件: `backend/src/services/blockchain_sync.py`
+- 变量: `MIN_DESCRIPTION_LENGTH`
 
-如需调整，修改以下文件中的 `MIN_DESCRIPTION_LENGTH`:
-- `backend/src/services/ai_classifier.py`
-- `backend/src/services/blockchain_sync.py`
+**数字字符比例阈值**: **50%**
+- 防止纯时间戳通过验证
 
-### 数字字符比例阈值
+### 第二层：LLM 判断参数
 
-当前设置: **30%**
+**分类数量限制**:
+- Skills: 最多 **3 个**
+- Domains: 最多 **2 个**
 
-### 最少单词数量
-
-当前设置: **5 个单词**
-
-### 平均单词长度阈值
-
-当前设置: **3 个字符**
+**语义判断原则**:
+- 在 LLM Prompt 中明确要求
+- 语义不足时必须返回空数组
 
 ### 无效模式列表
 
@@ -386,17 +412,45 @@ WHERE LENGTH(description) < 20
 
 ## LLM Prompt 优化
 
-### 更加保守的分类原则
+### 核心原则（在 Prompt 中明确）
 
-LLM 现在遵循以下原则进行分类：
+1. **语义充分性判断**（最重要）:
+   - 仔细判断描述是否提供了足够的语义信息
+   - 如果描述过于简短、模糊、或缺乏实质内容，必须返回空数组
 
-1. **宁愿不分类，也不要错误分类**
-2. 最多选择 2-3 个 Skills，必须是描述中明确提到的功能
-3. 最多选择 1-2 个 Domains，必须是描述中明确提到的领域
-4. 只选择最核心和最具体的分类
-5. 如果描述信息不足或不清晰，返回空数组
-6. 避免猜测，只基于明确信息分类
-7. 优先选择更具体的子分类
+2. **分类数量限制**:
+   - Skills: 最多 2-3 个，必须是描述中明确提到的功能
+   - Domains: 最多 1-2 个，必须是描述中明确提到的应用领域
+
+3. **分类质量要求**:
+   - 只选择最核心和最具体的分类
+   - 避免通用标签（如 "technology/technology"）
+   - 优先选择更具体的子分类
+
+4. **避免猜测**:
+   - 只基于描述中的明确信息进行分类
+   - 不要根据名称或假设进行推断
+   - 如果不确定，返回空数组
+
+### Prompt 示例
+
+Prompt 中明确给出正反例：
+```
+❌ "A coding bot" → 返回 {"skills": [], "domains": []}（信息不足）
+❌ "AI assistant" → 返回 {"skills": [], "domains": []}（过于宽泛）
+✅ "An AI agent for generating Python code from natural language" → 可以分类
+```
+
+## 实际效果对比
+
+### 测试案例
+
+| 描述 | 长度 | 基础验证 | LLM 判断 | 最终结果 |
+|------|------|----------|----------|----------|
+| "Created at 1761852369 - UPDATED" | 31 | ❌ 拒绝 | - | ❌ 不分类 |
+| "AI assistant for tasks" | 22 | ✅ 通过 | ❌ 语义不足 | ❌ 不分类 |
+| "A coding bot for Python" | 23 | ✅ 通过 | ✅ 语义充分 | ✅ 2 skills, 1 domain |
+| "An AI agent that generates code..." | 86 | ✅ 通过 | ✅ 语义充分 | ✅ 2 skills, 1 domain |
 
 ## 更新历史
 
@@ -404,6 +458,7 @@ LLM 现在遵循以下原则进行分类：
 |------|------|------|
 | 2025-11-14 | v1.0 | 初始版本，添加严格验证规则 |
 | 2025-11-14 | v2.0 | 重大优化：提高最小长度到 50 字符，增加数字比例、词汇数量、平均单词长度检查，减少标签数量限制，添加通用标签过滤，优化 LLM Prompt |
+| 2025-11-14 | v3.0 | 采用两层验证策略：基础验证（20 字符 + 模式过滤）+ LLM 语义判断，更加灵活和智能 |
 
 ---
 
