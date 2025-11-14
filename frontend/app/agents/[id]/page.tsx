@@ -8,6 +8,7 @@ import { DetailPageSkeleton } from '@/components/common/Skeleton'
 import { useToast } from '@/components/common/Toast'
 import { agentService } from '@/lib/api/services'
 import { formatAddress, formatDate } from '@/lib/utils/format'
+import { OASFDetailTags } from '@/components/agent/OASFTags'
 import type { Agent } from '@/types'
 
 export default function AgentDetailPage() {
@@ -175,6 +176,14 @@ export default function AgentDetailPage() {
               </div>
             </div>
           </Card>
+
+          {/* OASF Taxonomy */}
+          {(agent.skills && agent.skills.length > 0) || (agent.domains && agent.domains.length > 0) ? (
+            <Card>
+              <h2 className="text-xl font-bold mb-4">OASF Taxonomy</h2>
+              <OASFDetailTags skills={agent.skills} domains={agent.domains} />
+            </Card>
+          ) : null}
 
           {/* Blockchain Data */}
           {agent.token_id !== undefined && agent.token_id !== null && (

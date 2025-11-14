@@ -40,6 +40,10 @@ export interface Agent {
   // Reputation data fields
   reputation_count?: number;
   reputation_last_updated?: string;
+
+  // OASF taxonomy fields
+  skills?: string[];
+  domains?: string[];
 }
 
 export interface Contracts {

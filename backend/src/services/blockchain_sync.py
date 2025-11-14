@@ -19,6 +19,7 @@ from src.core.blockchain_config import (
 )
 from src.models import Agent, BlockchainSync, SyncStatusEnum, SyncStatus, AgentStatus, Activity, ActivityType
 from src.db.database import SessionLocal
+from src.services.ai_classifier import ai_classifier_service
 import structlog
 
 logger = structlog.get_logger()
@@ -137,13 +138,18 @@ class BlockchainSyncService:
                 logger.info("agent_already_exists_recheck", token_id=token_id)
                 return
 
+            # 提取或分类 OASF skills 和 domains
+            name = metadata.get('name', f'Agent #{token_id}')
+            description = metadata.get('description', 'No description')
+            oasf_data = await self._extract_oasf_data(metadata, name, description)
+
             # Create agent with blockchain timestamp
             agent = Agent(
                 token_id=token_id,
-                name=metadata.get('name', f'Agent #{token_id}'),
+                name=name,
                 address=owner.lower(),
                 owner_address=owner.lower(),
-                description=metadata.get('description', 'No description'),
+                description=description,
                 reputation_score=0.0,  # Will be updated by reputation sync service
                 status=AgentStatus.ACTIVE,
                 network_id=self._get_default_network_id(db),
@@ -151,7 +157,9 @@ class BlockchainSyncService:
                 on_chain_data=dict(event['args']),
                 sync_status=SyncStatus.SYNCED,
                 last_synced_at=datetime.utcnow(),
-                created_at=block_timestamp  # Use blockchain timestamp
+                created_at=block_timestamp,  # Use blockchain timestamp
+                skills=oasf_data.get('skills'),
+                domains=oasf_data.get('domains')
             )
 
             db.add(agent)
@@ -194,11 +202,17 @@ class BlockchainSyncService:
         metadata = await self._fetch_metadata(metadata_uri)
 
         # Update agent (reputation_score is managed by reputation sync service)
-        agent.name = metadata.get('name', agent.name)
-        agent.description = metadata.get('description', agent.description)
+        name = metadata.get('name', agent.name)
+        description = metadata.get('description', agent.description)
+        oasf_data = await self._extract_oasf_data(metadata, name, description)
+
+        agent.name = name
+        agent.description = description
         agent.metadata_uri = metadata_uri
         agent.last_synced_at = datetime.utcnow()
         agent.sync_status = SyncStatus.SYNCED
+        agent.skills = oasf_data.get('skills')
+        agent.domains = oasf_data.get('domains')
 
         db.commit()
 
@@ -287,6 +301,54 @@ class BlockchainSyncService:
             'name': 'Unknown Agent',
             'description': 'Metadata fetch failed'
         }
+
+    async def _extract_oasf_data(self, metadata: dict, name: str, description: str) -> dict:
+        """提取或自动分类 OASF skills 和 domains
+
+        优先级：
+        1. 如果 metadata 中有 endpoints[].skills/domains (OASF 格式)，直接使用
+        2. 否则使用 AI 分类服务自动分析 description
+        """
+        skills = []
+        domains = []
+
+        # 尝试从 metadata 的 endpoints 中提取 OASF 信息
+        if 'endpoints' in metadata and isinstance(metadata['endpoints'], list):
+            for endpoint in metadata['endpoints']:
+                if isinstance(endpoint, dict):
+                    # 提取 skills
+                    if 'skills' in endpoint and isinstance(endpoint['skills'], list):
+                        skills.extend(endpoint['skills'])
+                    # 提取 domains
+                    if 'domains' in endpoint and isinstance(endpoint['domains'], list):
+                        domains.extend(endpoint['domains'])
+
+        # 如果从 metadata 中提取到了 skills/domains，直接使用
+        if skills or domains:
+            logger.info(
+                "oasf_extracted_from_metadata",
+                name=name,
+                skills_count=len(skills),
+                domains_count=len(domains)
+            )
+            return {
+                "skills": list(set(skills))[:5],  # 去重并限制数量
+                "domains": list(set(domains))[:3]
+            }
+
+        # 否则使用 AI 分类
+        try:
+            classification = await ai_classifier_service.classify_agent(name, description)
+            logger.info(
+                "oasf_auto_classified",
+                name=name,
+                skills_count=len(classification.get('skills', [])),
+                domains_count=len(classification.get('domains', []))
+            )
+            return classification
+        except Exception as e:
+            logger.warning("oasf_classification_failed", name=name, error=str(e))
+            return {"skills": [], "domains": []}
 
     def _get_sync_tracker(self, db: Session) -> BlockchainSync:
         """Get or create blockchain sync tracker"""

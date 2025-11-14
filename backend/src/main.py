@@ -5,17 +5,19 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.db.database import engine, Base
-from src.api import stats, agents, sync, networks, activities
+from src.api import stats, agents, sync, networks, activities, classification
 from src.services.scheduler import start_scheduler, shutdown_scheduler
-from src.db.migrate_add_contracts import migrate
+from src.db.migrate_add_contracts import migrate as migrate_contracts
+from src.db.migrate_add_oasf_fields import migrate as migrate_oasf
 from src.db.init_networks import init_networks
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
-# Run migration to add contracts column
+# Run migrations
 try:
-    migrate()
+    migrate_contracts()
+    migrate_oasf()
 except Exception as e:
     print(f"Migration warning: {e}")
 
@@ -44,6 +46,7 @@ app.include_router(agents.router, prefix="/api", tags=["agents"])
 app.include_router(activities.router, prefix="/api", tags=["activities"])
 app.include_router(sync.router, prefix="/api", tags=["sync"])
 app.include_router(networks.router, prefix="/api", tags=["networks"])
+app.include_router(classification.router, prefix="/api", tags=["classification"])
 
 
 @app.on_event("startup")

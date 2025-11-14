@@ -96,8 +96,16 @@ Web3.py ← Sepolia Network (ERC-8004 合约)
    - 增量同步：记录 last_block 避免重复处理
    - 自动获取 IPFS 元数据（支持 HTTP 和 IPFS URI）
    - 错误重试机制（MAX_RETRIES = 2）
+   - **集成 OASF 自动分类**：新 agent 注册时自动分类 skills 和 domains
 
-2. **定时任务调度器**（services/scheduler.py）
+2. **OASF 分类服务**（services/ai_classifier.py）[NEW]
+   - 基于 OASF v0.8.0 规范自动分类 agent
+   - 优先从 metadata 的 `endpoints[].skills/domains` 提取
+   - 否则使用 AI（Claude API）或关键词匹配自动分类
+   - 支持 136 个 skills 和 204 个 domains
+   - 完整文档：`docs/oasf-classification.md`
+
+3. **定时任务调度器**（services/scheduler.py）
    - 使用 APScheduler 管理定时任务
    - blockchain_sync：每 5 分钟同步一次
    - reputation_sync：每 30 分钟同步一次
@@ -155,6 +163,7 @@ Agent 模型保存到数据库
 - 链上字段：token_id (索引), owner_address (索引), metadata_uri, on_chain_data (JSON)
 - 同步字段：sync_status (enum: pending/synced/failed), synced_at, created_at (索引)
 - 业务字段：reputation_score, status (enum: active/inactive/suspended)
+- **OASF 字段**：skills (JSON), domains (JSON) - 自动分类的技能和领域标签
 
 **BlockchainSync 模型：**
 - 追踪同步进度：last_block, current_block, status
@@ -312,6 +321,83 @@ load_dotenv()
 - http://localhost:8000/docs（Swagger UI）
 - http://localhost:8000/redoc（ReDoc）
 
+## OASF Classification (NEW - 2025-11-14)
+
+### 功能概述
+
+8004scan 现已集成完整的 OASF v0.8.0 分类体系，可自动为 AI Agent 打上 skills 和 domains 标签。
+
+### 关键特性
+
+1. **完整的 OASF v0.8.0 规范**
+   - **136 个 Skills**：涵盖 NLP、CV、Agent 编排、数据工程等 15 大类
+   - **204 个 Domains**：涵盖技术、金融、医疗、教育等 25 大领域
+   - 数据来源：https://github.com/agent0lab/agent0-py
+
+2. **智能分类策略**
+   - **优先级1**：从 metadata 的 `endpoints[].skills/domains` 直接提取（OASF 标准格式）
+   - **优先级2**：使用 Claude API 智能分析 agent description（需配置 `ANTHROPIC_API_KEY`）
+   - **优先级3**：基于关键词匹配的简单分类（无需 API key）
+
+3. **自动化流程**
+   - 新 agent 注册时自动分类
+   - metadata 更新时重新分类
+   - 支持手动触发单个或批量分类
+
+### 核心文件
+
+```
+backend/src/
+├── taxonomies/
+│   ├── all_skills.json        # 136 skills (46KB，来自 agent0-py)
+│   ├── all_domains.json       # 204 domains (73KB，来自 agent0-py)
+│   └── oasf_taxonomy.py       # Python 模块（动态加载 JSON）
+├── services/
+│   └── ai_classifier.py       # AI 分类服务
+└── api/
+    └── classification.py      # 分类 API 端点
+
+frontend/
+├── components/agent/
+│   └── OASFTags.tsx           # 标签展示组件
+└── types/index.ts             # Agent 类型定义（包含 skills/domains）
+```
+
+### API 端点
+
+```bash
+# 手动分类单个 agent
+POST /api/agents/{agent_id}/classify
+
+# 批量分类所有未分类的 agents
+POST /api/agents/classify-all?limit=100
+
+# 获取所有可用的 skills/domains
+GET /api/taxonomy/skills
+GET /api/taxonomy/domains
+```
+
+### 前端展示
+
+- **列表页**：Agent 卡片显示最多 3 个标签（skills 蓝色 ⚡，domains 紫色 🏢）
+- **详情页**：独立的 "OASF Taxonomy" 卡片，按分类分组完整展示
+
+### 配置（可选）
+
+在 `backend/.env` 中添加 Claude API key 以启用智能分类：
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+```
+
+如果不配置，系统会使用关键词匹配进行基础分类。
+
+### 相关文档
+
+- 完整文档：`docs/oasf-classification.md`
+- 升级总结：`docs/oasf-upgrade-summary.md`
+- OASF 规范：https://github.com/agntcy/oasf
+
 ## External Dependencies
 
 ### 区块链相关
@@ -319,11 +405,16 @@ load_dotenv()
 - Sepolia 测试网：ERC-8004 合约部署网络
 - IPFS：元数据存储（通过公共网关访问）
 
+### AI & 分类相关
+- Anthropic Claude API：智能分类 agent skills 和 domains（可选）
+- OASF v0.8.0：开放代理服务框架标准（agent0-py）
+
 ### 后端关键依赖
 - FastAPI：Web 框架
 - SQLAlchemy 2.x：ORM
 - APScheduler：定时任务
 - structlog：结构化日志
+- httpx：异步 HTTP 客户端
 - uv：包管理器（替代 pip/poetry）
 
 ### 前端关键依赖

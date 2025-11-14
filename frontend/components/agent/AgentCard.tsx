@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Agent } from '@/types';
 import { formatAddress } from '@/lib/utils/format';
+import { OASFTags } from './OASFTags';
 
 interface AgentCardProps {
   agent: Agent;
@@ -21,7 +22,7 @@ export function AgentCard({ agent }: AgentCardProps) {
 
   return (
     <Link href={`/agents/${agent.id}`}>
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 hover:shadow-lg transition-shadow cursor-pointer h-[180px] flex flex-col">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 hover:shadow-lg transition-shadow cursor-pointer min-h-[200px] flex flex-col">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -42,10 +43,11 @@ export function AgentCard({ agent }: AgentCardProps) {
             {statusLabels[agent.status]}
           </span>
         </div>
-        <p className="text-sm text-foreground/80 mb-3 line-clamp-2 flex-1">
+        <p className="text-sm text-foreground/80 mb-2 line-clamp-2">
           {agent.description}
         </p>
-        <div className="flex items-center justify-between text-sm mt-auto">
+        <OASFTags skills={agent.skills} domains={agent.domains} maxDisplay={3} />
+        <div className="flex items-center justify-between text-sm mt-auto pt-3">
           <div className="text-foreground/60">
             Reputation
           </div>

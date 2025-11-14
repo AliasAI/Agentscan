@@ -52,4 +52,8 @@ class AgentResponse(AgentBase):
     reputation_count: int = 0
     reputation_last_updated: datetime | None = None
 
+    # OASF taxonomy fields
+    skills: list[str] | None = None
+    domains: list[str] | None = None
+
     model_config = {"from_attributes": True}

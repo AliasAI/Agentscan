@@ -50,6 +50,10 @@ class Agent(Base):
     reputation_count = Column(Integer, nullable=False, default=0)  # Number of feedbacks
     reputation_last_updated = Column(DateTime, nullable=True)  # Last reputation sync time
 
+    # OASF taxonomy fields (auto-classified from description if not in metadata)
+    skills = Column(JSON, nullable=True)  # List of skill slugs: ["skill_category/skill_name"]
+    domains = Column(JSON, nullable=True)  # List of domain slugs: ["domain_category/domain_name"]
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
