@@ -108,6 +108,11 @@ Web3.py ← Sepolia Network (ERC-8004 合约)
      - OpenRouter：统一接口支持多种模型
      - Anthropic Claude：保持向后兼容
    - 支持 136 个 skills 和 204 个 domains
+   - **严格验证规则**（宁愿不分类，也不要错误分类）：
+     - Description 最小长度 20 字符
+     - 过滤错误信息和默认值（如 "metadata fetch failed"）
+     - 只对有足够信息的 agents 进行分类
+     - 验证规则文档：`docs/classification-validation-rules.md`
    - **后台异步分类**：
      - 支持异步批量分类，不阻塞主服务
      - 实时进度追踪，可启动/查看/取消任务

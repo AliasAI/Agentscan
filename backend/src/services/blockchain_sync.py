@@ -302,6 +302,48 @@ class BlockchainSyncService:
             'description': 'Metadata fetch failed'
         }
 
+    def _is_valid_description(self, description: str) -> bool:
+        """检查 description 是否足够有效以进行 AI 分类
+
+        返回 True 如果 description 有效，否则返回 False
+
+        规则:
+        1. description 不能为空
+        2. 长度至少 20 个字符
+        3. 不能是常见的错误信息或默认值
+        """
+        if not description or not isinstance(description, str):
+            return False
+
+        # 去除首尾空格
+        description = description.strip()
+
+        # 检查最小长度（至少 20 个字符）
+        MIN_DESCRIPTION_LENGTH = 20
+        if len(description) < MIN_DESCRIPTION_LENGTH:
+            return False
+
+        # 常见的无效描述模式（小写比较）
+        invalid_patterns = [
+            'no metadata',
+            'metadata fetch failed',
+            'no description',
+            'unknown agent',
+            'agent from direct json',
+            'no metadata uri provided',
+            'failed to fetch',
+            'error fetching',
+            'not available',
+            'n/a',
+        ]
+
+        description_lower = description.lower()
+        for pattern in invalid_patterns:
+            if pattern in description_lower:
+                return False
+
+        return True
+
     async def _extract_oasf_data(self, metadata: dict, name: str, description: str) -> dict:
         """提取或自动分类 OASF skills 和 domains
 
@@ -336,7 +378,17 @@ class BlockchainSyncService:
                 "domains": list(set(domains))[:3]
             }
 
-        # 否则使用 AI 分类
+        # 否则使用 AI 分类（但需要有足够的描述信息）
+        # 检查 description 是否有效且足够详细
+        if not self._is_valid_description(description):
+            logger.info(
+                "oasf_classification_skipped",
+                name=name,
+                reason="insufficient_description",
+                description_preview=description[:50] if description else None
+            )
+            return {"skills": [], "domains": []}
+
         try:
             classification = await ai_classifier_service.classify_agent(name, description)
             logger.info(

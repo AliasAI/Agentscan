@@ -112,6 +112,48 @@ class AIClassifierService:
             logger.error("llm_initialization_failed", error=str(e))
             self.use_fallback = True
 
+    def _is_valid_description(self, description: str) -> bool:
+        """检查 description 是否足够有效以进行分类
+
+        返回 True 如果 description 有效，否则返回 False
+
+        规则:
+        1. description 不能为空
+        2. 长度至少 20 个字符
+        3. 不能是常见的错误信息或默认值
+        """
+        if not description or not isinstance(description, str):
+            return False
+
+        # 去除首尾空格
+        description = description.strip()
+
+        # 检查最小长度（至少 20 个字符，确保有足够的上下文）
+        MIN_DESCRIPTION_LENGTH = 20
+        if len(description) < MIN_DESCRIPTION_LENGTH:
+            return False
+
+        # 常见的无效描述模式（小写比较）
+        invalid_patterns = [
+            'no metadata',
+            'metadata fetch failed',
+            'no description',
+            'unknown agent',
+            'agent from direct json',
+            'no metadata uri provided',
+            'failed to fetch',
+            'error fetching',
+            'not available',
+            'n/a',
+        ]
+
+        description_lower = description.lower()
+        for pattern in invalid_patterns:
+            if pattern in description_lower:
+                return False
+
+        return True
+
     async def classify_agent(self, name: str, description: str) -> Dict[str, List[str]]:
         """分析 agent 并返回分类结果
 
@@ -122,8 +164,13 @@ class AIClassifierService:
         Returns:
             {"skills": [...], "domains": [...]}
         """
-        if not description or description.strip() == "":
-            logger.debug("empty_description", name=name)
+        # 检查 description 是否有效
+        if not self._is_valid_description(description):
+            logger.debug(
+                "invalid_description_skipped",
+                name=name,
+                description_preview=description[:50] if description else None
+            )
             return {"skills": [], "domains": []}
 
         # 如果没有 API key，使用简单的关键词匹配
