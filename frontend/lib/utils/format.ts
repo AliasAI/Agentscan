@@ -12,18 +12,33 @@ export function formatNumber(num: number): string {
 }
 
 export function formatDate(date: string): string {
+  // 确保日期字符串被当作 UTC 时间解析
+  let utcDateStr = date;
+  if (date.includes('T') && !date.endsWith('Z') && !date.match(/[+-]\d{2}:\d{2}$/)) {
+    utcDateStr = date + 'Z';
+  }
+
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(new Date(date));
+  }).format(new Date(utcDateStr));
 }
 
 export function formatRelativeTime(date: string): string {
   const now = new Date();
-  const target = new Date(date);
+
+  // 确保日期字符串被当作 UTC 时间解析
+  // 后端返回的是 UTC 时间，但可能没有 Z 后缀
+  // 如果是 ISO 8601 格式（包含 T）但没有时区标识，添加 Z
+  let utcDateStr = date;
+  if (date.includes('T') && !date.endsWith('Z') && !date.match(/[+-]\d{2}:\d{2}$/)) {
+    utcDateStr = date + 'Z';
+  }
+
+  const target = new Date(utcDateStr);
   const diff = now.getTime() - target.getTime();
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);

@@ -37,6 +37,12 @@ export function ActivityList({ activities }: ActivityListProps) {
                 {formatRelativeTime(activity.created_at)}
               </span>
             </div>
+            {activity.agent && (
+              <p className="text-xs text-foreground/60 mb-1">
+                Agent: {activity.agent.name}
+                {activity.agent.token_id && ` (#${activity.agent.token_id})`}
+              </p>
+            )}
             <p className="text-sm text-foreground/80">
               {activity.description}
             </p>
