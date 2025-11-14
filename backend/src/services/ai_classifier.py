@@ -119,10 +119,11 @@ class AIClassifierService:
 
         规则:
         1. description 不能为空
-        2. 长度至少 50 个字符（提高要求）
+        2. 长度至少 20 个字符（基础要求）
         3. 不能是常见的错误信息或默认值
-        4. 不能是测试数据或时间戳
-        5. 必须包含足够的有意义的词汇
+        4. 不能是测试数据或明显的时间戳
+
+        注: 语义是否充分由 LLM 判断，LLM 会在语义不足时返回空数组
         """
         if not description or not isinstance(description, str):
             return False
@@ -130,8 +131,8 @@ class AIClassifierService:
         # 去除首尾空格
         description = description.strip()
 
-        # 检查最小长度（提高到 50 个字符，确保有足够的语义信息）
-        MIN_DESCRIPTION_LENGTH = 50
+        # 检查最小长度（20 个字符，过滤极短描述）
+        MIN_DESCRIPTION_LENGTH = 20
         if len(description) < MIN_DESCRIPTION_LENGTH:
             return False
 
@@ -162,21 +163,10 @@ class AIClassifierService:
             if pattern in description_lower:
                 return False
 
-        # 检查是否主要由数字组成（如时间戳）
-        # 如果数字字符超过 30%，可能是无效描述
+        # 检查是否主要由数字组成（如纯时间戳）
+        # 如果数字字符超过 50%，很可能是无效描述
         digit_count = sum(c.isdigit() for c in description)
-        if digit_count / len(description) > 0.3:
-            return False
-
-        # 检查是否包含足够的有意义的词汇（至少 5 个单词）
-        import re
-        words = re.findall(r'\b[a-zA-Z]+\b', description)
-        if len(words) < 5:
-            return False
-
-        # 检查平均单词长度（过短的词汇可能不够有意义）
-        avg_word_length = sum(len(w) for w in words) / len(words) if words else 0
-        if avg_word_length < 3:
+        if digit_count / len(description) > 0.5:
             return False
 
         return True
@@ -349,7 +339,7 @@ class AIClassifierService:
             }
 
     def _build_prompt(self, name: str, description: str) -> str:
-        """构建分类提示词（更加保守和克制）"""
+        """构建分类提示词（强调语义判断，保守分类）"""
         # 提供完整的 skills 和 domains 列表（作为紧凑的字符串列表）
         all_skills = list(OASF_SKILLS)
         all_domains = list(OASF_DOMAINS)
@@ -365,18 +355,34 @@ Agent 描述: {description}
 可用的 Domains（共 {len(all_domains)} 个）:
 {json.dumps(all_domains, ensure_ascii=False)}
 
-【重要原则 - 宁愿不分类，也不要错误分类】:
-1. **最多选择 2-3 个 Skills**，必须是描述中明确提到或强烈暗示的功能
-2. **最多选择 1-2 个 Domains**，必须是描述中明确提到的应用领域
-3. **只选择最核心和最具体的分类**，避免通用标签（如 "technology/technology"）
-4. **如果描述信息不足或不清晰，返回空数组 []**
-5. **避免猜测**，只基于描述中的明确信息进行分类
-6. 优先选择更具体的子分类（如 "natural_language_processing/summarization"），而不是通用分类（如 "natural_language_processing/natural_language_processing"）
+【核心原则 - 宁愿不分类，也不要错误分类】:
+
+1. **语义充分性判断**（最重要）:
+   - 仔细判断描述是否提供了足够的语义信息
+   - 如果描述过于简短、模糊、或缺乏实质内容，**必须返回空数组 []**
+   - 示例：
+     * ❌ "A coding bot" → 返回 {{"skills": [], "domains": []}}（信息不足）
+     * ❌ "AI assistant" → 返回 {{"skills": [], "domains": []}}（过于宽泛）
+     * ✅ "An AI agent for generating Python code from natural language" → 可以分类
+
+2. **分类数量限制**:
+   - Skills: 最多 2-3 个，必须是描述中**明确提到**的功能
+   - Domains: 最多 1-2 个，必须是描述中**明确提到**的应用领域
+
+3. **分类质量要求**:
+   - 只选择最核心和最具体的分类
+   - 避免通用标签（如 "technology/technology", "ai/ai"）
+   - 优先选择更具体的子分类（如 "natural_language_processing/summarization"）
+
+4. **避免猜测**:
+   - 只基于描述中的明确信息进行分类
+   - 不要根据名称或假设进行推断
+   - 如果不确定，返回空数组
 
 返回格式（只返回 JSON，不要其他内容）:
 {{
-  "skills": ["skill1", "skill2"],  // 最多 2-3 个，描述不清晰时返回 []
-  "domains": ["domain1"]  // 最多 1-2 个，描述不清晰时返回 []
+  "skills": ["skill1", "skill2"],  // 最多 2-3 个，语义不足时必须返回 []
+  "domains": ["domain1"]  // 最多 1-2 个，语义不足时必须返回 []
 }}"""
 
     def _fallback_classify(self, name: str, description: str) -> Dict[str, List[str]]:

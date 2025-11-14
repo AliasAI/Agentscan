@@ -311,8 +311,11 @@ class BlockchainSyncService:
 
         规则:
         1. description 不能为空
-        2. 长度至少 20 个字符
+        2. 长度至少 20 个字符（基础要求）
         3. 不能是常见的错误信息或默认值
+        4. 不能是测试数据或明显的时间戳
+
+        注: 语义是否充分由 LLM 判断，LLM 会在语义不足时返回空数组
         """
         if not description or not isinstance(description, str):
             return False
@@ -320,7 +323,7 @@ class BlockchainSyncService:
         # 去除首尾空格
         description = description.strip()
 
-        # 检查最小长度（至少 20 个字符）
+        # 检查最小长度（20 个字符，过滤极短描述）
         MIN_DESCRIPTION_LENGTH = 20
         if len(description) < MIN_DESCRIPTION_LENGTH:
             return False
@@ -337,12 +340,26 @@ class BlockchainSyncService:
             'error fetching',
             'not available',
             'n/a',
+            'test agent',  # 测试数据
+            'created at',  # 时间戳标记
+            'updated',     # 更新标记
+            'lorem ipsum', # 占位符文本
+            'todo',
+            'placeholder',
+            'example',
+            'demo agent',
         ]
 
         description_lower = description.lower()
         for pattern in invalid_patterns:
             if pattern in description_lower:
                 return False
+
+        # 检查是否主要由数字组成（如纯时间戳）
+        # 如果数字字符超过 50%，很可能是无效描述
+        digit_count = sum(c.isdigit() for c in description)
+        if digit_count / len(description) > 0.5:
+            return False
 
         return True
 
