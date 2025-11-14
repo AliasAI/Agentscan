@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { AgentCard } from '@/components/agent/AgentCard'
 import Tabs from '@/components/common/Tabs'
 import { SearchBar } from '@/components/common/SearchBar'
+import { AgentCardSkeleton } from '@/components/common/Skeleton'
+import { FilterSort, type FilterOptions, type SortOption } from '@/components/common/FilterSort'
 import { agentService } from '@/lib/api/services'
 import type { Agent } from '@/types'
 
@@ -69,9 +71,10 @@ export default function AgentsPage() {
         <SearchBar onSearch={handleSearch} />
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6">
+      {/* Tabs and Filters */}
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <Tabs tabs={tabs} defaultTab="all" onChange={handleTabChange} />
+        <FilterSort />
       </div>
 
       {/* Results Info */}
@@ -85,8 +88,10 @@ export default function AgentsPage() {
 
       {/* Agent Grid */}
       {loading ? (
-        <div className="text-center py-12 text-foreground/60">
-          Loading agents...
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {Array.from({ length: pageSize }).map((_, i) => (
+            <AgentCardSkeleton key={i} />
+          ))}
         </div>
       ) : agents.length === 0 ? (
         <div className="text-center py-12 text-foreground/60">

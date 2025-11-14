@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card } from '@/components/common/Card'
+import { DetailPageSkeleton } from '@/components/common/Skeleton'
+import { useToast } from '@/components/common/Toast'
 import { agentService } from '@/lib/api/services'
 import { formatAddress, formatDate } from '@/lib/utils/format'
 import type { Agent } from '@/types'
@@ -12,6 +14,7 @@ export default function AgentDetailPage() {
   const params = useParams()
   const router = useRouter()
   const agentId = params.id as string
+  const toast = useToast()
 
   const [agent, setAgent] = useState<Agent | null>(null)
   const [loading, setLoading] = useState(true)
@@ -36,8 +39,13 @@ export default function AgentDetailPage() {
     fetchData()
   }, [agentId])
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+  const copyToClipboard = async (text: string, label: string = 'Text') => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(`${label} copied to clipboard!`)
+    } catch (err) {
+      toast.error('Failed to copy to clipboard')
+    }
   }
 
   const statusColors = {
@@ -65,13 +73,7 @@ export default function AgentDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center py-12 text-foreground/60">
-          Loading agent details...
-        </div>
-      </div>
-    )
+    return <DetailPageSkeleton />
   }
 
   if (error || !agent) {
@@ -135,7 +137,7 @@ export default function AgentDetailPage() {
                     {formatAddress(agent.owner_address || agent.address)}
                   </span>
                   <button
-                    onClick={() => copyToClipboard(agent.owner_address || agent.address)}
+                    onClick={() => copyToClipboard(agent.owner_address || agent.address, 'Address')}
                     className="text-blue-600 hover:text-blue-700 text-xs"
                     title="Copy address"
                   >
@@ -195,7 +197,7 @@ export default function AgentDetailPage() {
                         {agent.metadata_uri}
                       </a>
                       <button
-                        onClick={() => copyToClipboard(agent.metadata_uri!)}
+                        onClick={() => copyToClipboard(agent.metadata_uri!, 'Metadata URI')}
                         className="text-blue-600 hover:text-blue-700 text-xs shrink-0"
                         title="Copy URI"
                       >
@@ -238,6 +240,18 @@ export default function AgentDetailPage() {
               </pre>
             </Card>
           )}
+
+          {/* Activity History */}
+          <Card>
+            <h2 className="text-xl font-bold mb-4">Activity History</h2>
+            <div className="text-sm text-foreground/60 mb-4">
+              Recent activities and events for this agent
+            </div>
+            {/* Placeholder for activity timeline - would fetch from API in production */}
+            <div className="text-center py-8 text-foreground/60">
+              Activity timeline will be displayed here when activity data is available
+            </div>
+          </Card>
         </div>
 
         {/* Sidebar */}
@@ -285,7 +299,7 @@ export default function AgentDetailPage() {
             <div className="space-y-2">
               {agent.owner_address && (
                 <button
-                  onClick={() => copyToClipboard(agent.owner_address!)}
+                  onClick={() => copyToClipboard(agent.owner_address!, 'Owner Address')}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                 >
                   Copy Owner Address
