@@ -8,6 +8,14 @@ echo "启动后端开发服务器..."
 
 cd "$(dirname "$0")/../backend"
 
+# 加载环境变量
+if [ -f ".env" ]; then
+  echo "加载环境变量..."
+  set -a
+  source .env
+  set +a
+fi
+
 # 确保虚拟环境存在
 if [ ! -d ".venv" ]; then
   echo "虚拟环境不存在，正在创建..."
