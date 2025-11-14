@@ -95,7 +95,7 @@ function show_logs() {
 function check_stats() {
     echo -e "${GREEN}检查数据库统计...${NC}"
     echo ""
-    docker exec agentscan-backend python /app/check_classified.py
+    docker exec agentscan-backend uv run python /app/check_classified.py
 }
 
 # 主逻辑
