@@ -98,11 +98,21 @@ Web3.py ← Sepolia Network (ERC-8004 合约)
    - 错误重试机制（MAX_RETRIES = 2）
    - **集成 OASF 自动分类**：新 agent 注册时自动分类 skills 和 domains
 
-2. **OASF 分类服务**（services/ai_classifier.py）[NEW]
+2. **OASF 分类服务**（services/ai_classifier.py + background_classifier.py）[UPDATED: 2025-11-14]
    - 基于 OASF v0.8.0 规范自动分类 agent
    - 优先从 metadata 的 `endpoints[].skills/domains` 提取
-   - 否则使用 AI（Claude API）或关键词匹配自动分类
+   - 否则使用多种 LLM（参考 herAI 架构）或关键词匹配自动分类
+   - **支持的 LLM 提供商**：
+     - DeepSeek（推荐）：性价比高，使用 OpenAI SDK
+     - OpenAI：GPT-4o-mini
+     - OpenRouter：统一接口支持多种模型
+     - Anthropic Claude：保持向后兼容
    - 支持 136 个 skills 和 204 个 domains
+   - **后台异步分类**：
+     - 支持异步批量分类，不阻塞主服务
+     - 实时进度追踪，可启动/查看/取消任务
+     - 使用脚本：`./classify_background.sh start [limit] [batch_size]`
+     - 完整使用指南：`docs/background-classification-guide.md`
    - 完整文档：`docs/oasf-classification.md`
 
 3. **定时任务调度器**（services/scheduler.py）

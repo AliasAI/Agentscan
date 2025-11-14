@@ -1,13 +1,23 @@
 """AI 分类服务
 
-使用 LLM 自动分析 agent description 并分类到 OASF taxonomy
+使用多种 LLM 自动分析 agent description 并分类到 OASF taxonomy
+
+支持的 LLM 提供商:
+- DeepSeek (推荐，性价比高)
+- OpenAI (GPT-4o-mini)
+- OpenRouter (支持多种模型)
+- Anthropic Claude (保持向后兼容)
 """
 
 import os
 import json
-from typing import Dict, List
+from typing import Dict, List, Optional
 import structlog
-import httpx
+from openai import OpenAI
+from dotenv import load_dotenv
+
+# 加载环境变量（参考 herAI 的模式）
+load_dotenv()
 
 from src.taxonomies.oasf_taxonomy import OASF_SKILLS, OASF_DOMAINS
 
@@ -19,13 +29,88 @@ class AIClassifierService:
 
     def __init__(self):
         """初始化分类器"""
-        self.api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.api_url = "https://api.anthropic.com/v1/messages"
+        # 从环境变量获取配置
+        self.llm_provider = os.getenv("LLM_PROVIDER", "deepseek")  # 默认使用 deepseek
+        self.model_name = os.getenv("LLM_MODEL_NAME", "")
 
-        # 如果没有 API key，降级到基于关键词的简单分类
-        self.use_fallback = not self.api_key
-        if self.use_fallback:
-            logger.warning("anthropic_api_key_not_found", message="将使用基于关键词的简单分类")
+        # 初始化 LLM 客户端
+        self._initialize_llm_client()
+
+    def _initialize_llm_client(self):
+        """初始化 LLM 客户端（参考 herAI 的初始化模式）"""
+        provider = self.llm_provider.lower()
+
+        try:
+            if provider == "deepseek":
+                api_key = os.getenv("DEEPSEEK_API_KEY")
+                if not api_key:
+                    logger.warning("deepseek_api_key_not_found", message="将使用关键词分类")
+                    self.use_fallback = True
+                    return
+
+                # 使用 OpenAI SDK + DeepSeek API（兼容 OpenAI 接口）
+                self.client = OpenAI(
+                    api_key=api_key,
+                    base_url="https://api.deepseek.com/v1"
+                )
+                self.model_name = self.model_name or "deepseek-chat"
+                self.use_fallback = False
+
+            elif provider == "openai":
+                api_key = os.getenv("OPENAI_API_KEY")
+                if not api_key:
+                    logger.warning("openai_api_key_not_found", message="将使用关键词分类")
+                    self.use_fallback = True
+                    return
+
+                self.client = OpenAI(api_key=api_key)
+                self.model_name = self.model_name or "gpt-4o-mini"
+                self.use_fallback = False
+
+            elif provider == "openrouter":
+                api_key = os.getenv("OPENROUTER_API_KEY")
+                if not api_key:
+                    logger.warning("openrouter_api_key_not_found", message="将使用关键词分类")
+                    self.use_fallback = True
+                    return
+
+                # OpenRouter 提供统一接口访问多种模型
+                self.client = OpenAI(
+                    api_key=api_key,
+                    base_url="https://openrouter.ai/api/v1"
+                )
+                self.model_name = self.model_name or "deepseek/deepseek-chat"
+                self.use_fallback = False
+
+            elif provider == "anthropic":
+                # 保留原有的 Anthropic 实现（使用 httpx）
+                api_key = os.getenv("ANTHROPIC_API_KEY")
+                if not api_key:
+                    logger.warning("anthropic_api_key_not_found", message="将使用关键词分类")
+                    self.use_fallback = True
+                    return
+
+                self.api_key = api_key
+                self.api_url = "https://api.anthropic.com/v1/messages"
+                self.model_name = self.model_name or "claude-3-haiku-20240307"
+                self.client = None  # Anthropic 使用不同的调用方式
+                self.use_fallback = False
+
+            else:
+                logger.error("unsupported_llm_provider", provider=provider)
+                self.use_fallback = True
+                return
+
+            if not self.use_fallback:
+                logger.info(
+                    "llm_client_initialized",
+                    provider=self.llm_provider,
+                    model=self.model_name
+                )
+
+        except Exception as e:
+            logger.error("llm_initialization_failed", error=str(e))
+            self.use_fallback = True
 
     async def classify_agent(self, name: str, description: str) -> Dict[str, List[str]]:
         """分析 agent 并返回分类结果
@@ -53,26 +138,63 @@ class AIClassifierService:
             return self._fallback_classify(name, description)
 
     async def _llm_classify(self, name: str, description: str) -> Dict[str, List[str]]:
-        """使用 Claude API 进行分类"""
+        """使用 LLM 进行分类"""
 
-        prompt = f"""分析以下 AI Agent，并从提供的 OASF 分类体系中选择最合适的 skills 和 domains。
+        # Anthropic 使用特殊的调用方式（保持向后兼容）
+        if self.llm_provider.lower() == "anthropic":
+            return await self._anthropic_classify(name, description)
 
-Agent 名称: {name}
-Agent 描述: {description}
+        # 其他提供商使用 OpenAI SDK（统一接口）
+        prompt = self._build_prompt(name, description)
 
-可用的 Skills:
-{json.dumps(OASF_SKILLS, indent=2)}
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "你是一个专业的 AI Agent 分类器，基于 OASF 标准分类体系工作。只返回 JSON 格式的结果，不要包含任何其他文字。"
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                response_format={"type": "json_object"},  # 强制 JSON 输出（参考 herAI MBTI 服务）
+                temperature=0.3,
+                max_tokens=1024
+            )
 
-可用的 Domains:
-{json.dumps(OASF_DOMAINS, indent=2)}
+            content = response.choices[0].message.content
+            classification = json.loads(content)
 
-请仔细分析 agent 的描述，选择最多 5 个最相关的 skills 和最多 3 个最相关的 domains。
+            # 验证结果
+            skills = [s for s in classification.get("skills", []) if s in OASF_SKILLS]
+            domains = [d for d in classification.get("domains", []) if d in OASF_DOMAINS]
 
-返回格式（只返回 JSON，不要其他内容）:
-{{
-  "skills": ["skill1", "skill2", ...],
-  "domains": ["domain1", "domain2", ...]
-}}"""
+            logger.info(
+                "llm_classification_success",
+                provider=self.llm_provider,
+                model=self.model_name,
+                name=name,
+                skills_count=len(skills),
+                domains_count=len(domains)
+            )
+
+            return {
+                "skills": skills[:5],
+                "domains": domains[:3]
+            }
+
+        except Exception as e:
+            logger.error("llm_api_call_failed", error=str(e), provider=self.llm_provider)
+            raise
+
+    async def _anthropic_classify(self, name: str, description: str) -> Dict[str, List[str]]:
+        """使用 Anthropic API 进行分类（保持向后兼容）"""
+        import httpx
+
+        prompt = self._build_prompt(name, description)
 
         async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(
@@ -83,7 +205,7 @@ Agent 描述: {description}
                     "content-type": "application/json",
                 },
                 json={
-                    "model": "claude-3-haiku-20240307",
+                    "model": self.model_name,
                     "max_tokens": 1024,
                     "messages": [
                         {"role": "user", "content": prompt}
@@ -93,15 +215,12 @@ Agent 描述: {description}
 
             response.raise_for_status()
             result = response.json()
-
-            # 提取 JSON 响应
             content = result["content"][0]["text"]
 
-            # 尝试解析 JSON
+            # 提取 JSON
             try:
                 classification = json.loads(content)
             except json.JSONDecodeError:
-                # 如果返回的不是纯 JSON，尝试提取 JSON 部分
                 import re
                 json_match = re.search(r'\{.*\}', content, re.DOTALL)
                 if json_match:
@@ -114,16 +233,44 @@ Agent 描述: {description}
             domains = [d for d in classification.get("domains", []) if d in OASF_DOMAINS]
 
             logger.info(
-                "llm_classification_success",
+                "anthropic_classification_success",
                 name=name,
                 skills_count=len(skills),
                 domains_count=len(domains)
             )
 
             return {
-                "skills": skills[:5],  # 最多 5 个
-                "domains": domains[:3]  # 最多 3 个
+                "skills": skills[:5],
+                "domains": domains[:3]
             }
+
+    def _build_prompt(self, name: str, description: str) -> str:
+        """构建分类提示词（提供完整列表，确保准确分类）"""
+        # 提供完整的 skills 和 domains 列表（作为紧凑的字符串列表）
+        all_skills = list(OASF_SKILLS)
+        all_domains = list(OASF_DOMAINS)
+
+        return f"""分析以下 AI Agent，并从 OASF 分类体系中选择最合适的 skills 和 domains。
+
+Agent 名称: {name}
+Agent 描述: {description}
+
+可用的 Skills（共 {len(all_skills)} 个，选择最多 5 个最相关的）:
+{json.dumps(all_skills, ensure_ascii=False)}
+
+可用的 Domains（共 {len(all_domains)} 个，选择最多 3 个最相关的）:
+{json.dumps(all_domains, ensure_ascii=False)}
+
+分析指南：
+1. Skills: 关注 agent 的功能和技术能力（如代码生成、数据处理、图像分类等）
+2. Domains: 关注 agent 的应用领域（如教育、金融、医疗、区块链等）
+3. 优先选择最具体和相关的分类
+
+返回格式（只返回 JSON，不要其他内容）:
+{{
+  "skills": ["skill1", "skill2", ...],
+  "domains": ["domain1", "domain2", ...]
+}}"""
 
     def _fallback_classify(self, name: str, description: str) -> Dict[str, List[str]]:
         """基于关键词的简单分类（降级方案）"""

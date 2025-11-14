@@ -16,14 +16,23 @@
 ### 2. 分类方式
 
 #### AI 分类（推荐）
-- 使用 Claude API 分析 agent 描述
-- 需要配置 `ANTHROPIC_API_KEY` 环境变量
-- 更准确、智能
+
+支持多种 LLM 提供商（参考 herAI 的架构设计）：
+
+- **DeepSeek**（推荐）：性价比高，质量好
+- **OpenAI**：GPT-4o-mini，效果稳定
+- **OpenRouter**：统一接口支持多种模型
+- **Anthropic Claude**：保持向后兼容
+
+**技术实现**：
+- 使用 OpenAI SDK 统一接口（兼容 DeepSeek、OpenRouter 等）
+- 强制 JSON 输出格式（`response_format={"type": "json_object"}`）
+- 智能分析 agent 描述，准确度更高
 
 #### 关键词分类（降级方案）
 - 无需 API key
 - 基于关键词匹配
-- 作为备选方案自动启用
+- 当 API key 未配置或 LLM 调用失败时自动启用
 
 ### 3. 前端展示
 
@@ -34,13 +43,35 @@
 
 ### 配置 AI 分类（可选）
 
-在 `backend/.env` 中添加：
+在 `backend/.env` 中配置：
 
 ```bash
-ANTHROPIC_API_KEY=your_api_key_here
+# 选择 LLM 提供商: deepseek, openai, openrouter, anthropic
+LLM_PROVIDER=deepseek
+
+# 模型名称（可选，不指定将使用默认值）
+LLM_MODEL_NAME=
+
+# 根据选择的提供商配置对应的 API Key
+DEEPSEEK_API_KEY=sk-your-deepseek-key-here
+OPENAI_API_KEY=sk-your-openai-key-here
+OPENROUTER_API_KEY=sk-your-openrouter-key-here
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
 ```
 
-如果不配置，系统会自动使用关键词匹配进行分类。
+**默认模型配置**：
+- DeepSeek: `deepseek-chat`
+- OpenAI: `gpt-4o-mini`
+- OpenRouter: `deepseek/deepseek-chat`
+- Anthropic: `claude-3-haiku-20240307`
+
+**获取 API Key**：
+- DeepSeek: https://platform.deepseek.com/
+- OpenAI: https://platform.openai.com/
+- OpenRouter: https://openrouter.ai/
+- Anthropic: https://console.anthropic.com/
+
+如果不配置任何 API key，系统会自动使用关键词匹配进行分类。
 
 ### API 端点
 

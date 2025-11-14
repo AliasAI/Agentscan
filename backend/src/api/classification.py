@@ -1,11 +1,14 @@
 """Classification API - OASF skills 和 domains 自动分类"""
 
-from fastapi import APIRouter, Depends, HTTPException
+import asyncio
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from src.db.database import get_db
 from src.models.agent import Agent
 from src.services.ai_classifier import ai_classifier_service
+from src.services.background_classifier import background_classification_task
 from src.taxonomies.oasf_taxonomy import (
     get_all_skills,
     get_all_domains,
@@ -144,4 +147,75 @@ async def get_domains():
             }
             for domain in domains
         ]
+    }
+
+
+# ==================== 后台异步分类 API ====================
+
+
+@router.post("/agents/classify-background")
+async def start_background_classification(
+    background_tasks: BackgroundTasks,
+    limit: Optional[int] = None,
+    batch_size: int = 10,
+):
+    """启动后台异步分类任务
+
+    Args:
+        limit: 最多处理多少个 agent（None 表示全部，建议先从小数量开始测试）
+        batch_size: 每批处理多少个（默认 10，避免一次性占用太多资源）
+
+    示例:
+        POST /api/agents/classify-background?limit=100&batch_size=10
+    """
+    if background_classification_task.is_running:
+        return {
+            "status": "already_running",
+            "message": "后台分类任务已在运行中",
+            "task_status": background_classification_task.get_status()
+        }
+
+    # 使用 FastAPI 的 BackgroundTasks 启动异步任务
+    background_tasks.add_task(
+        background_classification_task.run,
+        limit=limit,
+        batch_size=batch_size
+    )
+
+    logger.info(
+        "background_classification_task_started",
+        limit=limit,
+        batch_size=batch_size
+    )
+
+    return {
+        "status": "started",
+        "message": f"后台分类任务已启动，将处理最多 {limit or '全部'} 个 agents",
+        "limit": limit,
+        "batch_size": batch_size,
+        "task_status": background_classification_task.get_status()
+    }
+
+
+@router.get("/agents/classify-background/status")
+async def get_background_classification_status():
+    """获取后台分类任务状态"""
+    return background_classification_task.get_status()
+
+
+@router.post("/agents/classify-background/cancel")
+async def cancel_background_classification():
+    """取消后台分类任务"""
+    if not background_classification_task.is_running:
+        return {
+            "status": "not_running",
+            "message": "没有正在运行的分类任务"
+        }
+
+    background_classification_task.cancel()
+
+    return {
+        "status": "cancelled",
+        "message": "已发送取消信号，任务将在当前 agent 处理完成后停止",
+        "task_status": background_classification_task.get_status()
     }
