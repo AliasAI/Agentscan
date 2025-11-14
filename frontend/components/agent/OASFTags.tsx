@@ -11,6 +11,10 @@ interface OASFTagsProps {
 }
 
 export function OASFTags({ skills = [], domains = [], maxDisplay = 3 }: OASFTagsProps) {
+  // 确保 skills 和 domains 是数组（处理 null/undefined 情况）
+  const safeSkills = Array.isArray(skills) ? skills : [];
+  const safeDomains = Array.isArray(domains) ? domains : [];
+
   // 将 slug 转换为显示名称
   const formatTagName = (slug: string): string => {
     if (slug.includes('/')) {
@@ -26,15 +30,15 @@ export function OASFTags({ skills = [], domains = [], maxDisplay = 3 }: OASFTags
   };
 
   const allTags = [
-    ...skills.slice(0, maxDisplay).map(skill => ({ type: 'skill', value: skill })),
-    ...domains.slice(0, maxDisplay).map(domain => ({ type: 'domain', value: domain })),
+    ...safeSkills.slice(0, maxDisplay).map(skill => ({ type: 'skill', value: skill })),
+    ...safeDomains.slice(0, maxDisplay).map(domain => ({ type: 'domain', value: domain })),
   ];
 
   if (allTags.length === 0) {
     return null;
   }
 
-  const remainingCount = (skills.length + domains.length) - allTags.length;
+  const remainingCount = (safeSkills.length + safeDomains.length) - allTags.length;
 
   return (
     <div className="flex flex-wrap gap-1.5 mt-2">
@@ -70,6 +74,10 @@ interface OASFDetailTagsProps {
 }
 
 export function OASFDetailTags({ skills = [], domains = [] }: OASFDetailTagsProps) {
+  // 确保 skills 和 domains 是数组（处理 null/undefined 情况）
+  const safeSkills = Array.isArray(skills) ? skills : [];
+  const safeDomains = Array.isArray(domains) ? domains : [];
+
   const formatTagName = (slug: string): string => {
     if (slug.includes('/')) {
       const parts = slug.split('/');
@@ -93,7 +101,7 @@ export function OASFDetailTags({ skills = [], domains = [] }: OASFDetailTagsProp
     return 'General';
   };
 
-  if (skills.length === 0 && domains.length === 0) {
+  if (safeSkills.length === 0 && safeDomains.length === 0) {
     return (
       <div className="text-sm text-foreground/60">
         No skills or domains classified yet
@@ -103,11 +111,11 @@ export function OASFDetailTags({ skills = [], domains = [] }: OASFDetailTagsProp
 
   return (
     <div className="space-y-4">
-      {skills.length > 0 && (
+      {safeSkills.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold mb-2">Skills</h4>
           <div className="flex flex-wrap gap-2">
-            {skills.map((skill, index) => (
+            {safeSkills.map((skill, index) => (
               <div
                 key={index}
                 className="inline-flex flex-col bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2"
@@ -124,11 +132,11 @@ export function OASFDetailTags({ skills = [], domains = [] }: OASFDetailTagsProp
         </div>
       )}
 
-      {domains.length > 0 && (
+      {safeDomains.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold mb-2">Domains</h4>
           <div className="flex flex-wrap gap-2">
-            {domains.map((domain, index) => (
+            {safeDomains.map((domain, index) => (
               <div
                 key={index}
                 className="inline-flex flex-col bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg px-3 py-2"

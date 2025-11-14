@@ -12,6 +12,8 @@ export function formatNumber(num: number): string {
 }
 
 export function formatDate(date: string): string {
+  if (!date) return 'N/A';
+
   // 确保日期字符串被当作 UTC 时间解析
   let utcDateStr = date;
   if (date.includes('T') && !date.endsWith('Z') && !date.match(/[+-]\d{2}:\d{2}$/)) {
@@ -28,6 +30,8 @@ export function formatDate(date: string): string {
 }
 
 export function formatRelativeTime(date: string): string {
+  if (!date) return 'N/A';
+
   const now = new Date();
 
   // 确保日期字符串被当作 UTC 时间解析
