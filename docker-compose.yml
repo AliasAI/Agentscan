@@ -13,7 +13,7 @@ services:
       - ./logs/backend:/app/logs
     environment:
       - DATABASE_URL=sqlite:///./data/8004scan.db
-      - CORS_ORIGINS=http://localhost:3000,http://43.199.214.110:3000,http://43.199.214.110:8080
+      - CORS_ORIGINS=http://localhost:3000,https://agentscan.info,https://www.agentscan.info,http://agentscan.info,http://www.agentscan.info
     env_file:
       - ./backend/.env
     restart: unless-stopped

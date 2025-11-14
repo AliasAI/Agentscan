@@ -3,7 +3,7 @@
 # Database migration script
 # 数据库迁移脚本
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../backend"
 
 echo "🔧 Running database migration..."
-cd backend && python -m src.db.migrate_add_contracts
+uv run python -m src.db.migrate_add_contracts
