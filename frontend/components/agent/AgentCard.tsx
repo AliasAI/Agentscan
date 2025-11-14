@@ -46,7 +46,12 @@ export function AgentCard({ agent }: AgentCardProps) {
         <p className="text-sm text-foreground/80 mb-2 line-clamp-2">
           {agent.description}
         </p>
-        <OASFTags skills={agent.skills} domains={agent.domains} maxDisplay={3} />
+        <OASFTags
+          skills={agent.skills}
+          domains={agent.domains}
+          maxDisplay={3}
+          classificationSource={agent.classification_source}
+        />
         <div className="flex items-center justify-between text-sm mt-auto pt-3">
           <div className="text-foreground/60">
             Reputation

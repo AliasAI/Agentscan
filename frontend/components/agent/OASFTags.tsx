@@ -8,9 +8,10 @@ interface OASFTagsProps {
   skills?: string[];
   domains?: string[];
   maxDisplay?: number;
+  classificationSource?: string | null;
 }
 
-export function OASFTags({ skills = [], domains = [], maxDisplay = 3 }: OASFTagsProps) {
+export function OASFTags({ skills = [], domains = [], maxDisplay = 3, classificationSource }: OASFTagsProps) {
   // 确保 skills 和 domains 是数组（处理 null/undefined 情况）
   const safeSkills = Array.isArray(skills) ? skills : [];
   const safeDomains = Array.isArray(domains) ? domains : [];
@@ -41,7 +42,7 @@ export function OASFTags({ skills = [], domains = [], maxDisplay = 3 }: OASFTags
   const remainingCount = (safeSkills.length + safeDomains.length) - allTags.length;
 
   return (
-    <div className="flex flex-wrap gap-1.5 mt-2">
+    <div className="flex flex-wrap gap-1.5 mt-2 items-center">
       {allTags.map((tag, index) => (
         <span
           key={`${tag.type}-${index}`}
@@ -61,6 +62,15 @@ export function OASFTags({ skills = [], domains = [], maxDisplay = 3 }: OASFTags
           +{remainingCount} more
         </span>
       )}
+      {classificationSource && (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+          classificationSource === 'metadata'
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+            : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+        }`}>
+          {classificationSource === 'metadata' ? '🤖 Agent' : '🧠 AI'}
+        </span>
+      )}
     </div>
   );
 }
@@ -71,9 +81,10 @@ export function OASFTags({ skills = [], domains = [], maxDisplay = 3 }: OASFTags
 interface OASFDetailTagsProps {
   skills?: string[];
   domains?: string[];
+  classificationSource?: string | null;
 }
 
-export function OASFDetailTags({ skills = [], domains = [] }: OASFDetailTagsProps) {
+export function OASFDetailTags({ skills = [], domains = [], classificationSource }: OASFDetailTagsProps) {
   // 确保 skills 和 domains 是数组（处理 null/undefined 情况）
   const safeSkills = Array.isArray(skills) ? skills : [];
   const safeDomains = Array.isArray(domains) ? domains : [];
@@ -111,6 +122,22 @@ export function OASFDetailTags({ skills = [], domains = [] }: OASFDetailTagsProp
 
   return (
     <div className="space-y-4">
+      {classificationSource && (
+        <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+          <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium ${
+            classificationSource === 'metadata'
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+              : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+          }`}>
+            {classificationSource === 'metadata' ? '🤖 Agent' : '🧠 AI'}
+          </span>
+          <span className="text-xs text-foreground/60">
+            {classificationSource === 'metadata'
+              ? 'Extracted from agent metadata (OASF standard)'
+              : 'Automatically classified by AI'}
+          </span>
+        </div>
+      )}
       {safeSkills.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold mb-2">Skills</h4>

@@ -114,6 +114,7 @@ class BackgroundClassificationTask:
                             # 更新数据库
                             agent.skills = classification.get("skills", [])
                             agent.domains = classification.get("domains", [])
+                            agent.classification_source = "ai"  # 后台分类全部为 AI 分类
                             db.commit()
 
                             self.classified += 1

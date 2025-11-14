@@ -9,6 +9,7 @@ from src.api import stats, agents, sync, networks, activities, classification
 from src.services.scheduler import start_scheduler, shutdown_scheduler
 from src.db.migrate_add_contracts import migrate as migrate_contracts
 from src.db.migrate_add_oasf_fields import migrate as migrate_oasf
+from src.db.migrate_add_classification_source import migrate as migrate_classification_source
 from src.db.init_networks import init_networks
 
 # Create database tables
@@ -18,6 +19,7 @@ Base.metadata.create_all(bind=engine)
 try:
     migrate_contracts()
     migrate_oasf()
+    migrate_classification_source()
 except Exception as e:
     print(f"Migration warning: {e}")
 

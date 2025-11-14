@@ -46,6 +46,7 @@ async def classify_agent(
         # 更新 agent
         agent.skills = classification.get("skills", [])
         agent.domains = classification.get("domains", [])
+        agent.classification_source = "ai"  # 手动触发的分类也是 AI 分类
         db.commit()
 
         logger.info(
@@ -96,6 +97,7 @@ async def classify_all_agents(
 
             agent.skills = classification.get("skills", [])
             agent.domains = classification.get("domains", [])
+            agent.classification_source = "ai"  # 批量分类也是 AI 分类
             db.commit()
 
             classified_count += 1

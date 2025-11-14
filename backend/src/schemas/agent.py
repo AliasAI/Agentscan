@@ -55,5 +55,6 @@ class AgentResponse(AgentBase):
     # OASF taxonomy fields
     skills: list[str] | None = None
     domains: list[str] | None = None
+    classification_source: str | None = None  # "metadata" or "ai"
 
     model_config = {"from_attributes": True}

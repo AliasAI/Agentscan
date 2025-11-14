@@ -181,7 +181,11 @@ export default function AgentDetailPage() {
           {(agent.skills && agent.skills.length > 0) || (agent.domains && agent.domains.length > 0) ? (
             <Card>
               <h2 className="text-xl font-bold mb-4">OASF Taxonomy</h2>
-              <OASFDetailTags skills={agent.skills} domains={agent.domains} />
+              <OASFDetailTags
+                skills={agent.skills}
+                domains={agent.domains}
+                classificationSource={agent.classification_source}
+              />
             </Card>
           ) : null}
 

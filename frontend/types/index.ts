@@ -44,6 +44,7 @@ export interface Agent {
   // OASF taxonomy fields
   skills?: string[];
   domains?: string[];
+  classification_source?: string | null;  // "metadata" or "ai"
 }
 
 export interface Contracts {

@@ -159,7 +159,8 @@ class BlockchainSyncService:
                 last_synced_at=datetime.utcnow(),
                 created_at=block_timestamp,  # Use blockchain timestamp
                 skills=oasf_data.get('skills'),
-                domains=oasf_data.get('domains')
+                domains=oasf_data.get('domains'),
+                classification_source=oasf_data.get('source')
             )
 
             db.add(agent)
@@ -213,6 +214,7 @@ class BlockchainSyncService:
         agent.sync_status = SyncStatus.SYNCED
         agent.skills = oasf_data.get('skills')
         agent.domains = oasf_data.get('domains')
+        agent.classification_source = oasf_data.get('source')
 
         db.commit()
 
@@ -375,7 +377,8 @@ class BlockchainSyncService:
             )
             return {
                 "skills": list(set(skills))[:5],  # 去重并限制数量
-                "domains": list(set(domains))[:3]
+                "domains": list(set(domains))[:3],
+                "source": "metadata"  # 标记来源为 metadata（agent 自带）
             }
 
         # 否则使用 AI 分类（但需要有足够的描述信息）
@@ -387,7 +390,7 @@ class BlockchainSyncService:
                 reason="insufficient_description",
                 description_preview=description[:50] if description else None
             )
-            return {"skills": [], "domains": []}
+            return {"skills": [], "domains": [], "source": None}
 
         try:
             classification = await ai_classifier_service.classify_agent(name, description)
@@ -397,10 +400,12 @@ class BlockchainSyncService:
                 skills_count=len(classification.get('skills', [])),
                 domains_count=len(classification.get('domains', []))
             )
+            # 添加 source 标记
+            classification["source"] = "ai"
             return classification
         except Exception as e:
             logger.warning("oasf_classification_failed", name=name, error=str(e))
-            return {"skills": [], "domains": []}
+            return {"skills": [], "domains": [], "source": None}
 
     def _get_sync_tracker(self, db: Session) -> BlockchainSync:
         """Get or create blockchain sync tracker"""

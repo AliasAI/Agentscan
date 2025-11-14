@@ -53,6 +53,7 @@ class Agent(Base):
     # OASF taxonomy fields (auto-classified from description if not in metadata)
     skills = Column(JSON, nullable=True)  # List of skill slugs: ["skill_category/skill_name"]
     domains = Column(JSON, nullable=True)  # List of domain slugs: ["domain_category/domain_name"]
+    classification_source = Column(String(20), nullable=True)  # 'metadata' or 'ai' - indicates source of classification
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
