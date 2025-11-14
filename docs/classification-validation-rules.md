@@ -10,17 +10,18 @@
 
 ### 1. 最小长度要求
 
-**规则**: Description 长度至少 **20 个字符**
+**规则**: Description 长度至少 **50 个字符**（已提高要求）
 
-**原因**: 少于 20 个字符的描述通常无法提供足够的上下文信息进行准确分类。
+**原因**: 少于 50 个字符的描述通常无法提供足够的语义信息进行准确分类。
 
 **示例**:
 ```python
 # ❌ 无效 - 太短
 "Code generator"  # 14 字符
+"An AI coding assistant"  # 22 字符
 
 # ✅ 有效
-"An AI agent that generates high-quality code from natural language"  # 68 字符
+"An AI agent that generates high-quality code from natural language descriptions"  # 81 字符
 ```
 
 ### 2. 非空检查
@@ -37,9 +38,9 @@ None
 "A comprehensive AI agent description"
 ```
 
-### 3. 错误信息过滤
+### 3. 错误信息和无效模式过滤
 
-**规则**: 排除常见的错误信息和默认值
+**规则**: 排除常见的错误信息、默认值、测试数据和占位符
 
 **无效描述模式**（不区分大小写）:
 - `no metadata`
@@ -52,16 +53,70 @@ None
 - `error fetching`
 - `not available`
 - `n/a`
+- `test agent`（测试数据）
+- `created at`（时间戳标记）
+- `updated`（更新标记）
+- `lorem ipsum`（占位符文本）
+- `todo`
+- `placeholder`
+- `example`
+- `demo agent`
 
 **示例**:
 ```python
-# ❌ 无效 - 包含错误信息
+# ❌ 无效 - 包含错误信息或测试标记
 "Metadata fetch failed"
 "No description available"
-"Agent from direct JSON"
+"Test Agent 123"
+"Created at 1761852369 - UPDATED"
 
 # ✅ 有效
-"A trading bot for cryptocurrency markets"
+"A trading bot for cryptocurrency markets with real-time analysis"
+```
+
+### 4. 数字字符比例检查
+
+**规则**: 数字字符不能超过描述长度的 **30%**
+
+**原因**: 过多数字通常表示时间戳或无意义的序列号。
+
+**示例**:
+```python
+# ❌ 无效 - 数字过多
+"Created at 1761852369 - UPDATED"  # 数字占 32%
+
+# ✅ 有效
+"Agent v2.0 for data analysis"  # 数字占 9%
+```
+
+### 5. 有意义词汇数量检查
+
+**规则**: 描述必须包含至少 **5 个英文单词**
+
+**原因**: 确保有足够的语义信息进行分类。
+
+**示例**:
+```python
+# ❌ 无效 - 词汇太少
+"AI bot 123"  # 只有 2 个单词
+
+# ✅ 有效
+"An advanced AI agent for automated trading strategies"  # 8 个单词
+```
+
+### 6. 平均单词长度检查
+
+**规则**: 平均单词长度必须至少 **3 个字符**
+
+**原因**: 过短的词汇（如大量的 "a", "is", "to"）可能缺乏实质信息。
+
+**示例**:
+```python
+# ❌ 无效 - 单词过短
+"An AI is ok to go"  # 平均 2.3 字符
+
+# ✅ 有效
+"An advanced AI agent for trading"  # 平均 4.7 字符
 ```
 
 ## 行为逻辑
@@ -224,15 +279,54 @@ POST /api/agents/classify-background?limit=100
 }
 ```
 
+## 标签数量限制
+
+**Skills**: 最多 **3 个**（之前是 5 个）
+**Domains**: 最多 **2 个**（之前是 3 个）
+
+**原因**: 更加克制，只返回最核心和最相关的分类。
+
+## 通用标签过滤
+
+**规则**: 自动过滤以下类型的标签：
+1. 重复模式（如 `technology/technology`, `ai/ai`）
+2. 单层标签（如 `ai`, `technology`）
+
+**原因**: 优先保留更具体的子分类，避免过于宽泛的标签。
+
+**示例**:
+```python
+# ❌ 会被过滤
+"technology/technology"
+"natural_language_processing/natural_language_processing"
+"ai"  # 单层标签
+
+# ✅ 会被保留
+"natural_language_processing/summarization"
+"technology/software_engineering/software_development"
+```
+
 ## 配置参数
 
 ### 最小长度阈值
 
-当前设置: **20 字符**
+当前设置: **50 字符**（已从 20 提高到 50）
 
 如需调整，修改以下文件中的 `MIN_DESCRIPTION_LENGTH`:
 - `backend/src/services/ai_classifier.py`
 - `backend/src/services/blockchain_sync.py`
+
+### 数字字符比例阈值
+
+当前设置: **30%**
+
+### 最少单词数量
+
+当前设置: **5 个单词**
+
+### 平均单词长度阈值
+
+当前设置: **3 个字符**
 
 ### 无效模式列表
 
@@ -290,11 +384,26 @@ WHERE LENGTH(description) < 20
    OR description LIKE '%no description%';
 ```
 
+## LLM Prompt 优化
+
+### 更加保守的分类原则
+
+LLM 现在遵循以下原则进行分类：
+
+1. **宁愿不分类，也不要错误分类**
+2. 最多选择 2-3 个 Skills，必须是描述中明确提到的功能
+3. 最多选择 1-2 个 Domains，必须是描述中明确提到的领域
+4. 只选择最核心和最具体的分类
+5. 如果描述信息不足或不清晰，返回空数组
+6. 避免猜测，只基于明确信息分类
+7. 优先选择更具体的子分类
+
 ## 更新历史
 
 | 日期 | 版本 | 变更 |
 |------|------|------|
 | 2025-11-14 | v1.0 | 初始版本，添加严格验证规则 |
+| 2025-11-14 | v2.0 | 重大优化：提高最小长度到 50 字符，增加数字比例、词汇数量、平均单词长度检查，减少标签数量限制，添加通用标签过滤，优化 LLM Prompt |
 
 ---
 

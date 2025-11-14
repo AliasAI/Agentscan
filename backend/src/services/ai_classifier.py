@@ -119,8 +119,10 @@ class AIClassifierService:
 
         规则:
         1. description 不能为空
-        2. 长度至少 20 个字符
+        2. 长度至少 50 个字符（提高要求）
         3. 不能是常见的错误信息或默认值
+        4. 不能是测试数据或时间戳
+        5. 必须包含足够的有意义的词汇
         """
         if not description or not isinstance(description, str):
             return False
@@ -128,8 +130,8 @@ class AIClassifierService:
         # 去除首尾空格
         description = description.strip()
 
-        # 检查最小长度（至少 20 个字符，确保有足够的上下文）
-        MIN_DESCRIPTION_LENGTH = 20
+        # 检查最小长度（提高到 50 个字符，确保有足够的语义信息）
+        MIN_DESCRIPTION_LENGTH = 50
         if len(description) < MIN_DESCRIPTION_LENGTH:
             return False
 
@@ -145,6 +147,14 @@ class AIClassifierService:
             'error fetching',
             'not available',
             'n/a',
+            'test agent',  # 测试数据
+            'created at',  # 时间戳标记
+            'updated',     # 更新标记
+            'lorem ipsum', # 占位符文本
+            'todo',
+            'placeholder',
+            'example',
+            'demo agent',
         ]
 
         description_lower = description.lower()
@@ -152,7 +162,46 @@ class AIClassifierService:
             if pattern in description_lower:
                 return False
 
+        # 检查是否主要由数字组成（如时间戳）
+        # 如果数字字符超过 30%，可能是无效描述
+        digit_count = sum(c.isdigit() for c in description)
+        if digit_count / len(description) > 0.3:
+            return False
+
+        # 检查是否包含足够的有意义的词汇（至少 5 个单词）
+        import re
+        words = re.findall(r'\b[a-zA-Z]+\b', description)
+        if len(words) < 5:
+            return False
+
+        # 检查平均单词长度（过短的词汇可能不够有意义）
+        avg_word_length = sum(len(w) for w in words) / len(words) if words else 0
+        if avg_word_length < 3:
+            return False
+
         return True
+
+    def _filter_generic_tags(self, tags: List[str]) -> List[str]:
+        """过滤过于通用的标签
+
+        避免返回像 "technology/technology" 这样重复的通用标签
+        优先保留更具体的子分类
+        """
+        filtered = []
+
+        # 检测重复模式（如 "technology/technology", "ai/ai"）
+        for tag in tags:
+            parts = tag.split('/')
+            # 如果所有部分都相同（如 technology/technology），跳过
+            if len(parts) > 1 and len(set(parts)) == 1:
+                continue
+            # 如果标签过于简短（可能是通用标签），跳过
+            if len(parts) == 1:
+                continue
+
+            filtered.append(tag)
+
+        return filtered
 
     async def classify_agent(self, name: str, description: str) -> Dict[str, List[str]]:
         """分析 agent 并返回分类结果
@@ -219,6 +268,10 @@ class AIClassifierService:
             skills = [s for s in classification.get("skills", []) if s in OASF_SKILLS]
             domains = [d for d in classification.get("domains", []) if d in OASF_DOMAINS]
 
+            # 过滤通用标签
+            skills = self._filter_generic_tags(skills)
+            domains = self._filter_generic_tags(domains)
+
             logger.info(
                 "llm_classification_success",
                 provider=self.llm_provider,
@@ -229,8 +282,8 @@ class AIClassifierService:
             )
 
             return {
-                "skills": skills[:5],
-                "domains": domains[:3]
+                "skills": skills[:3],  # 减少到最多 3 个
+                "domains": domains[:2]  # 减少到最多 2 个
             }
 
         except Exception as e:
@@ -279,6 +332,10 @@ class AIClassifierService:
             skills = [s for s in classification.get("skills", []) if s in OASF_SKILLS]
             domains = [d for d in classification.get("domains", []) if d in OASF_DOMAINS]
 
+            # 过滤通用标签
+            skills = self._filter_generic_tags(skills)
+            domains = self._filter_generic_tags(domains)
+
             logger.info(
                 "anthropic_classification_success",
                 name=name,
@@ -287,12 +344,12 @@ class AIClassifierService:
             )
 
             return {
-                "skills": skills[:5],
-                "domains": domains[:3]
+                "skills": skills[:3],  # 减少到最多 3 个
+                "domains": domains[:2]  # 减少到最多 2 个
             }
 
     def _build_prompt(self, name: str, description: str) -> str:
-        """构建分类提示词（提供完整列表，确保准确分类）"""
+        """构建分类提示词（更加保守和克制）"""
         # 提供完整的 skills 和 domains 列表（作为紧凑的字符串列表）
         all_skills = list(OASF_SKILLS)
         all_domains = list(OASF_DOMAINS)
@@ -302,21 +359,24 @@ class AIClassifierService:
 Agent 名称: {name}
 Agent 描述: {description}
 
-可用的 Skills（共 {len(all_skills)} 个，选择最多 5 个最相关的）:
+可用的 Skills（共 {len(all_skills)} 个）:
 {json.dumps(all_skills, ensure_ascii=False)}
 
-可用的 Domains（共 {len(all_domains)} 个，选择最多 3 个最相关的）:
+可用的 Domains（共 {len(all_domains)} 个）:
 {json.dumps(all_domains, ensure_ascii=False)}
 
-分析指南：
-1. Skills: 关注 agent 的功能和技术能力（如代码生成、数据处理、图像分类等）
-2. Domains: 关注 agent 的应用领域（如教育、金融、医疗、区块链等）
-3. 优先选择最具体和相关的分类
+【重要原则 - 宁愿不分类，也不要错误分类】:
+1. **最多选择 2-3 个 Skills**，必须是描述中明确提到或强烈暗示的功能
+2. **最多选择 1-2 个 Domains**，必须是描述中明确提到的应用领域
+3. **只选择最核心和最具体的分类**，避免通用标签（如 "technology/technology"）
+4. **如果描述信息不足或不清晰，返回空数组 []**
+5. **避免猜测**，只基于描述中的明确信息进行分类
+6. 优先选择更具体的子分类（如 "natural_language_processing/summarization"），而不是通用分类（如 "natural_language_processing/natural_language_processing"）
 
 返回格式（只返回 JSON，不要其他内容）:
 {{
-  "skills": ["skill1", "skill2", ...],
-  "domains": ["domain1", "domain2", ...]
+  "skills": ["skill1", "skill2"],  // 最多 2-3 个，描述不清晰时返回 []
+  "domains": ["domain1"]  // 最多 1-2 个，描述不清晰时返回 []
 }}"""
 
     def _fallback_classify(self, name: str, description: str) -> Dict[str, List[str]]:
@@ -431,6 +491,10 @@ Agent 描述: {description}
                     if domain not in matched_domains:
                         matched_domains.append(domain)
 
+        # 过滤通用标签
+        matched_skills = self._filter_generic_tags(matched_skills)
+        matched_domains = self._filter_generic_tags(matched_domains)
+
         logger.info(
             "fallback_classification",
             name=name,
@@ -439,8 +503,8 @@ Agent 描述: {description}
         )
 
         return {
-            "skills": matched_skills[:5],
-            "domains": matched_domains[:3]
+            "skills": matched_skills[:3],  # 减少到最多 3 个
+            "domains": matched_domains[:2]  # 减少到最多 2 个
         }
 
 
