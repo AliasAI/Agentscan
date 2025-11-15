@@ -203,7 +203,7 @@ export default function HomePage() {
           </div>
 
           {/* Tabs */}
-          <Tabs tabs={tabs} defaultTab="all" onChange={setActiveTab} />
+          <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
           {/* Agent List */}
           <div className="mt-6">

@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-
 export interface Tab {
   id: string
   label: string
@@ -10,15 +8,15 @@ export interface Tab {
 
 interface TabsProps {
   tabs: Tab[]
+  activeTab?: string
   defaultTab?: string
   onChange?: (tabId: string) => void
 }
 
-export default function Tabs({ tabs, defaultTab, onChange }: TabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id)
+export default function Tabs({ tabs, activeTab, defaultTab, onChange }: TabsProps) {
+  const currentTab = activeTab || defaultTab || tabs[0]?.id
 
   const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId)
     onChange?.(tabId)
   }
 
@@ -32,7 +30,7 @@ export default function Tabs({ tabs, defaultTab, onChange }: TabsProps) {
             className={`
               whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
               ${
-                activeTab === tab.id
+                currentTab === tab.id
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
               }
@@ -44,7 +42,7 @@ export default function Tabs({ tabs, defaultTab, onChange }: TabsProps) {
                 className={`
                   ml-2 py-0.5 px-2 rounded-full text-xs
                   ${
-                    activeTab === tab.id
+                    currentTab === tab.id
                       ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
                       : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                   }

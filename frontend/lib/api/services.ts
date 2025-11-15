@@ -19,19 +19,23 @@ export const statsService = {
 
 // 代理服务
 export const agentService = {
-  getAgents: (params?: {
-    tab?: string;
-    page?: number;
-    page_size?: number;
-    search?: string;
-  }) => {
+  getAgents: (
+    params?: {
+      tab?: string;
+      page?: number;
+      page_size?: number;
+      search?: string;
+    },
+    signal?: AbortSignal
+  ) => {
     const query = new URLSearchParams(
       Object.entries(params || {})
         .filter(([_, v]) => v !== undefined && v !== null)
         .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {})
     ).toString();
     return apiGet<PaginatedResponse<Agent>>(
-      `/agents${query ? `?${query}` : ''}`
+      `/agents${query ? `?${query}` : ''}`,
+      signal
     );
   },
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { AgentCard } from '@/components/agent/AgentCard'
 import Tabs from '@/components/common/Tabs'
 import { SearchBar } from '@/components/common/SearchBar'
@@ -18,30 +18,66 @@ export default function AgentsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
 
+  // Use ref to track the actual page to avoid React StrictMode issues
+  const pageRef = useRef(1)
+
   const pageSize = 20
 
-  useEffect(() => {
-    const fetchAgents = async () => {
-      try {
-        setLoading(true)
-        const response = await agentService.getAgents({
-          tab: activeTab,
-          page,
-          page_size: pageSize,
-          search: searchQuery || undefined,
-        })
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const fetchAgents = useCallback(async (pageNum: number) => {
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    try {
+      setLoading(true)
+      console.log(`Fetching agents for page ${pageNum}`)
+
+      const response = await agentService.getAgents({
+        tab: activeTab,
+        page: pageNum,
+        page_size: pageSize,
+        search: searchQuery || undefined,
+      }, abortController.signal)
+
+      // Only update state if the request wasn't aborted
+      if (!abortController.signal.aborted) {
         setAgents(response.items)
         setTotal(response.total)
         setTotalPages(response.total_pages)
-      } catch (error) {
+        setPage(pageNum) // Update page state after successful fetch
+        pageRef.current = pageNum // Update ref as well
+        console.log(`Successfully loaded page ${pageNum}`)
+      }
+    } catch (error: any) {
+      // Ignore abort errors
+      if (error.name !== 'AbortError' && !abortController.signal.aborted) {
         console.error('Failed to fetch agents:', error)
-      } finally {
+      }
+    } finally {
+      if (!abortController.signal.aborted) {
         setLoading(false)
       }
     }
+  }, [activeTab, searchQuery, pageSize])
 
-    fetchAgents()
-  }, [activeTab, searchQuery, page])
+  // Initial load and when activeTab or searchQuery changes
+  useEffect(() => {
+    fetchAgents(1) // Always fetch page 1 when these change
+
+    // Cleanup function - abort any pending requests
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    }
+  }, [activeTab, searchQuery, fetchAgents])
 
   const tabs = [
     { id: 'all', label: 'All Agents' },
@@ -52,13 +88,29 @@ export default function AgentsPage() {
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
-    setPage(1) // Reset to first page when changing tabs
+    // fetchAgents(1) will be called by useEffect when activeTab changes
   }
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-    setPage(1) // Reset to first page when searching
+    // fetchAgents(1) will be called by useEffect when searchQuery changes
   }
+
+  const handleNextPage = useCallback(() => {
+    const nextPage = Math.min(totalPages, page + 1);
+    if (nextPage !== page) {
+      console.log('Next page clicked:', page, '->', nextPage);
+      fetchAgents(nextPage);
+    }
+  }, [page, totalPages, fetchAgents]);
+
+  const handlePrevPage = useCallback(() => {
+    const prevPage = Math.max(1, page - 1);
+    if (prevPage !== page) {
+      console.log('Prev page clicked:', page, '->', prevPage);
+      fetchAgents(prevPage);
+    }
+  }, [page, fetchAgents]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -73,7 +125,7 @@ export default function AgentsPage() {
 
       {/* Tabs and Filters */}
       <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <Tabs tabs={tabs} defaultTab="all" onChange={handleTabChange} />
+        <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
         <FilterSort />
       </div>
 
@@ -109,7 +161,7 @@ export default function AgentsPage() {
           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-2">
               <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={handlePrevPage}
                 disabled={page === 1}
                 className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -119,7 +171,7 @@ export default function AgentsPage() {
                 Page {page} of {totalPages}
               </span>
               <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                onClick={handleNextPage}
                 disabled={page === totalPages}
                 className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
