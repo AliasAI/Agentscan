@@ -65,10 +65,13 @@ REGISTRY_ABI = [
 
 # Sync configuration
 START_BLOCK = 9419801  # Start from this block (contract deployment block)
-BLOCKS_PER_BATCH = 10000  # Process 10000 blocks at a time (faster sync)
-SYNC_INTERVAL_MINUTES = 5  # Sync every 5 minutes (avoid blocking API)
-MAX_RETRIES = 2  # Max retry attempts for failed operations
-RETRY_DELAY_SECONDS = 3  # Delay between retries
+BLOCKS_PER_BATCH = 1000  # Process 1000 blocks at a time (reduce RPC calls)
+# Note: Interval is now controlled by CronTrigger in scheduler.py (every 10 minutes)
+# This constant is kept for reference but not actively used
+SYNC_INTERVAL_MINUTES = 5  # Sync every 10 minutes (low cost, frequent updates)
+MAX_RETRIES = 1  # Max retry attempts for failed operations
+RETRY_DELAY_SECONDS = 5  # Delay between retries
+REQUEST_DELAY_SECONDS = 0.5  # Delay between individual requests to avoid rate limiting
 
 # IPFS gateway
 IPFS_GATEWAY = "https://ipfs.io/ipfs/"

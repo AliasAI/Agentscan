@@ -90,13 +90,16 @@ Web3.py ← Sepolia Network (ERC-8004 合约)
 
 **关键组件：**
 
-1. **区块链同步服务**（services/blockchain_sync.py）
+1. **区块链同步服务**（services/blockchain_sync.py）[UPDATED: 2025-11-15]
    - 从 Sepolia 网络监听 ERC-8004 合约事件
-   - 批量处理区块（BLOCKS_PER_BATCH = 10000）
-   - 增量同步：记录 last_block 避免重复处理
-   - 自动获取 IPFS 元数据（支持 HTTP 和 IPFS URI）
-   - 错误重试机制（MAX_RETRIES = 2）
+   - **批量处理区块**（BLOCKS_PER_BATCH = 1000，优化后降低 90%）
+   - **增量同步**：记录 last_block 避免重复处理
+   - **智能跳过**：无新区块时跳过同步，避免不必要的 RPC 调用
+   - **速率限制**：事件处理间延迟 0.5 秒，避免 429 错误
+   - 自动获取 IPFS 元数据（支持 HTTP、IPFS、data URI）
+   - 错误重试机制（MAX_RETRIES = 1）
    - **集成 OASF 自动分类**：新 agent 注册时自动分类 skills 和 domains
+   - **集成 Reputation 事件驱动更新**：监听 NewFeedback 和 FeedbackRevoked 事件
 
 2. **OASF 分类服务**（services/ai_classifier.py + background_classifier.py）[UPDATED: 2025-11-14]
    - 基于 OASF v0.8.0 规范自动分类 agent
@@ -120,11 +123,12 @@ Web3.py ← Sepolia Network (ERC-8004 合约)
      - 完整使用指南：`docs/background-classification-guide.md`
    - 完整文档：`docs/oasf-classification.md`
 
-3. **定时任务调度器**（services/scheduler.py）
+3. **定时任务调度器**（services/scheduler.py）[UPDATED: 2025-11-15]
    - 使用 APScheduler 管理定时任务
-   - blockchain_sync：每 5 分钟同步一次
-   - reputation_sync：每 30 分钟同步一次
-   - 启动时立即执行首次同步
+   - **blockchain_sync**：每 10 分钟同步一次（固定时间触发：:00, :10, :20, :30, :40, :50）
+   - **reputation_sync**：**完全事件驱动**（零定期轮询，通过 NewFeedback/FeedbackRevoked 事件触发）
+   - **固定时间触发**：避免启动时的请求峰值，无论何时重启都等待到下一个固定时间点
+   - **RPC 优化**：请求量从 ~686K/天 降至 ~300K/天（降低 56%）
 
 3. **数据库迁移**
    - 使用自定义迁移脚本（src/db/migrate_*.py）
@@ -203,22 +207,27 @@ Agent 模型保存到数据库
 3. init_networks() - 初始化网络数据
 4. startup_event: start_scheduler() - 启动定时任务
 
-### 区块链配置（backend/src/core/blockchain_config.py）
+### 区块链配置（backend/src/core/blockchain_config.py）[UPDATED: 2025-11-15]
 
 **必须配置的环境变量：**
 - SEPOLIA_RPC_URL：必填，否则启动失败
 - 从 .env 文件加载（需要 load_dotenv()）
 
-**同步配置参数：**
+**同步配置参数（RPC 优化后）：**
 - START_BLOCK = 9419801（合约部署区块）
-- BLOCKS_PER_BATCH = 10000（批量大小）
-- SYNC_INTERVAL_MINUTES = 5（同步间隔）
-- MAX_RETRIES = 2
-- RETRY_DELAY_SECONDS = 3
+- BLOCKS_PER_BATCH = 1000（批量大小，从 10000 降低 90%）
+- SYNC_INTERVAL_MINUTES = 10（同步间隔，实际由 CronTrigger 控制）
+- MAX_RETRIES = 1（从 2 降低，减少失败重试）
+- RETRY_DELAY_SECONDS = 5（从 3 增加，避免快速重试）
+- REQUEST_DELAY_SECONDS = 0.5（新增：事件处理间延迟）
 
 **合约地址：**
 - Identity Registry: 0x8004a6090Cd10A7288092483047B097295Fb8847
 - Reputation Registry: 0x8004B8FD1A363aa02fDC07635C0c5F94f6Af5B7E
+
+**定时执行时间表：**
+- Blockchain Sync: 每小时 :00, :10, :20, :30, :40, :50 执行（每天 144 次）
+- Reputation Sync: 事件驱动（监听 NewFeedback/FeedbackRevoked 事件，零定期轮询）
 
 ### API 设计模式
 
@@ -339,6 +348,7 @@ load_dotenv()
 - **background-classification-guide.md** - 异步批量分类使用指南
 - **classification-validation-rules.md** - 分类验证规则和标准
 - **reputation_sync_design.md** - 声誉系统设计文档
+- **rpc-optimization-final.md** - RPC 请求优化完整文档（事件驱动架构）[NEW: 2025-11-15]
 
 ### discuss/ - 讨论和历史记录
 

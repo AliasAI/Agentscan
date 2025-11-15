@@ -19,9 +19,10 @@ from src.core.blockchain_config import SEPOLIA_RPC_URL
 
 logger = structlog.get_logger(__name__)
 
-# 并发配置
-BATCH_SIZE = 50  # 每批处理的 agent 数量
-MAX_CONCURRENT_REQUESTS = 10  # 最大并发请求数
+# 并发配置（优化：降低并发和批量大小以减少 RPC 压力）
+BATCH_SIZE = 20  # 每批处理的 agent 数量（降低以减少内存和请求压力）
+MAX_CONCURRENT_REQUESTS = 3  # 最大并发请求数（降低以避免 429 错误）
+REQUEST_DELAY_SECONDS = 0.5  # 每批次之间的延迟（避免请求过快）
 
 
 class ReputationSyncService:
@@ -94,6 +95,10 @@ class ReputationSyncService:
                     processed=i + len(batch),
                     total=total_agents
                 )
+
+                # Add delay between batches to avoid rate limiting
+                if i + BATCH_SIZE < total_agents:  # Don't delay after last batch
+                    await asyncio.sleep(REQUEST_DELAY_SECONDS)
 
             logger.info(
                 "reputation_sync_completed",

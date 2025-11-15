@@ -15,7 +15,12 @@ from src.core.blockchain_config import (
     BLOCKS_PER_BATCH,
     MAX_RETRIES,
     RETRY_DELAY_SECONDS,
+    REQUEST_DELAY_SECONDS,
     IPFS_GATEWAY,
+)
+from src.core.reputation_config import (
+    REPUTATION_REGISTRY_ADDRESS,
+    REPUTATION_REGISTRY_ABI,
 )
 from src.models import Agent, BlockchainSync, SyncStatusEnum, SyncStatus, AgentStatus, Activity, ActivityType
 from src.db.database import SessionLocal
@@ -34,34 +39,49 @@ class BlockchainSyncService:
             address=REGISTRY_CONTRACT_ADDRESS,
             abi=REGISTRY_ABI
         )
+        self.reputation_contract = self.w3.eth.contract(
+            address=REPUTATION_REGISTRY_ADDRESS,
+            abi=REPUTATION_REGISTRY_ABI
+        )
 
     async def sync(self):
-        """Main sync method"""
+        """Main sync method with smart sync logic"""
         db = SessionLocal()
         try:
             # Get or create sync tracker
             sync_tracker = self._get_sync_tracker(db)
 
-            # Update status to running
-            sync_tracker.status = SyncStatusEnum.RUNNING
-            db.commit()
-
             # Get current block number
             current_block = self.w3.eth.block_number
             sync_tracker.current_block = current_block
 
-            # Process blocks in batches
+            # Calculate next batch
             from_block = sync_tracker.last_block + 1
             to_block = min(from_block + BLOCKS_PER_BATCH, current_block)
+
+            # Smart sync: skip if no new blocks
+            if from_block > current_block:
+                logger.info(
+                    "sync_skipped",
+                    reason="no_new_blocks",
+                    last_synced_block=sync_tracker.last_block,
+                    current_block=current_block
+                )
+                return
+
+            # Update status to running
+            sync_tracker.status = SyncStatusEnum.RUNNING
+            db.commit()
 
             logger.info(
                 "sync_started",
                 from_block=from_block,
                 to_block=to_block,
-                current_block=current_block
+                current_block=current_block,
+                blocks_to_process=to_block - from_block + 1
             )
 
-            # Get events
+            # Get events with rate limiting
             await self._process_events(db, from_block, to_block)
 
             # Update sync tracker
@@ -71,7 +91,11 @@ class BlockchainSyncService:
             sync_tracker.error_message = None
             db.commit()
 
-            logger.info("sync_completed", last_block=to_block)
+            logger.info(
+                "sync_completed",
+                last_block=to_block,
+                blocks_processed=to_block - from_block + 1
+            )
 
         except Exception as e:
             logger.error("sync_failed", error=str(e))
@@ -83,7 +107,7 @@ class BlockchainSyncService:
             db.close()
 
     async def _process_events(self, db: Session, from_block: int, to_block: int):
-        """Process blockchain events"""
+        """Process blockchain events with rate limiting"""
 
         # Get Registered events
         registered_events = self.contract.events.Registered.get_logs(
@@ -93,8 +117,11 @@ class BlockchainSyncService:
 
         logger.info("events_found", event_type="Registered", count=len(registered_events))
 
-        for event in registered_events:
+        for i, event in enumerate(registered_events):
             await self._process_registered_event(db, event)
+            # Add delay between events to avoid rate limiting
+            if i < len(registered_events) - 1:  # Don't delay after last event
+                await asyncio.sleep(REQUEST_DELAY_SECONDS)
 
         # Get UriUpdated events
         updated_events = self.contract.events.UriUpdated.get_logs(
@@ -104,8 +131,37 @@ class BlockchainSyncService:
 
         logger.info("events_found", event_type="UriUpdated", count=len(updated_events))
 
-        for event in updated_events:
+        for i, event in enumerate(updated_events):
             await self._process_updated_event(db, event)
+            # Add delay between events to avoid rate limiting
+            if i < len(updated_events) - 1:  # Don't delay after last event
+                await asyncio.sleep(REQUEST_DELAY_SECONDS)
+
+        # Get NewFeedback events from Reputation Registry (event-driven reputation sync)
+        feedback_events = self.reputation_contract.events.NewFeedback.get_logs(
+            from_block=from_block,
+            to_block=to_block
+        )
+
+        logger.info("events_found", event_type="NewFeedback", count=len(feedback_events))
+
+        for i, event in enumerate(feedback_events):
+            await self._process_feedback_event(db, event)
+            if i < len(feedback_events) - 1:
+                await asyncio.sleep(REQUEST_DELAY_SECONDS)
+
+        # Get FeedbackRevoked events from Reputation Registry
+        revoked_events = self.reputation_contract.events.FeedbackRevoked.get_logs(
+            from_block=from_block,
+            to_block=to_block
+        )
+
+        logger.info("events_found", event_type="FeedbackRevoked", count=len(revoked_events))
+
+        for i, event in enumerate(revoked_events):
+            await self._process_feedback_event(db, event)
+            if i < len(revoked_events) - 1:
+                await asyncio.sleep(REQUEST_DELAY_SECONDS)
 
     async def _process_registered_event(self, db: Session, event):
         """Process Registered event"""
@@ -462,6 +518,64 @@ class BlockchainSyncService:
         db.add(network)
         db.commit()
         return network.id
+
+    async def _process_feedback_event(self, db: Session, event):
+        """Process NewFeedback or FeedbackRevoked event (event-driven reputation sync)"""
+        token_id = event['args']['agentId']
+
+        # Find agent by token_id
+        agent = db.query(Agent).filter(Agent.token_id == token_id).first()
+
+        if not agent:
+            logger.warning("agent_not_found_for_feedback", token_id=token_id)
+            return
+
+        try:
+            # Call getSummary to get updated reputation
+            count, average_score = await asyncio.to_thread(
+                self.reputation_contract.functions.getSummary(
+                    token_id,
+                    [],  # All clients
+                    b'\x00' * 32,  # tag1 = 0 (no filter)
+                    b'\x00' * 32   # tag2 = 0 (no filter)
+                ).call
+            )
+
+            # Update reputation
+            old_score = agent.reputation_score
+            agent.reputation_score = float(average_score)
+            agent.reputation_count = int(count)
+            agent.reputation_last_updated = datetime.utcnow()
+
+            db.commit()
+
+            # Create activity record if score changed
+            if old_score != float(average_score):
+                activity = Activity(
+                    agent_id=agent.id,
+                    activity_type=ActivityType.REPUTATION_UPDATE,
+                    description=f"Reputation updated: {old_score:.1f} → {average_score:.1f} ({count} reviews)",
+                    tx_hash=event['transactionHash'].hex() if 'transactionHash' in event else None
+                )
+                db.add(activity)
+                db.commit()
+
+            logger.info(
+                "reputation_updated_from_event",
+                token_id=token_id,
+                agent_name=agent.name,
+                score=average_score,
+                count=count,
+                event_type=event['event']
+            )
+
+        except Exception as e:
+            logger.warning(
+                "reputation_update_from_event_failed",
+                token_id=token_id,
+                agent_name=agent.name,
+                error=str(e)
+            )
 
 
 # Global instance
