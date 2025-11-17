@@ -1,4 +1,4 @@
-# Agentscan Update - November 14, 2025
+# Agentscan Update - November 17, 2025
 
 ## 核心亮点
 

@@ -13,6 +13,7 @@ from src.core.blockchain_config import (
     REGISTRY_ABI,
     START_BLOCK,
     BLOCKS_PER_BATCH,
+    MAX_BATCHES_PER_RUN,
     MAX_RETRIES,
     RETRY_DELAY_SECONDS,
     REQUEST_DELAY_SECONDS,
@@ -45,7 +46,7 @@ class BlockchainSyncService:
         )
 
     async def sync(self):
-        """Main sync method with smart sync logic"""
+        """Main sync method with smart sync logic - processes multiple batches until caught up"""
         db = SessionLocal()
         try:
             # Get or create sync tracker
@@ -55,9 +56,8 @@ class BlockchainSyncService:
             current_block = self.w3.eth.block_number
             sync_tracker.current_block = current_block
 
-            # Calculate next batch
+            # Calculate starting point
             from_block = sync_tracker.last_block + 1
-            to_block = min(from_block + BLOCKS_PER_BATCH, current_block)
 
             # Smart sync: skip if no new blocks
             if from_block > current_block:
@@ -73,29 +73,76 @@ class BlockchainSyncService:
             sync_tracker.status = SyncStatusEnum.RUNNING
             db.commit()
 
+            # Calculate total blocks to sync
+            total_blocks_to_sync = current_block - from_block + 1
+
             logger.info(
                 "sync_started",
                 from_block=from_block,
-                to_block=to_block,
                 current_block=current_block,
-                blocks_to_process=to_block - from_block + 1
+                total_blocks_to_sync=total_blocks_to_sync,
+                max_batches=MAX_BATCHES_PER_RUN
             )
 
-            # Get events with rate limiting
-            await self._process_events(db, from_block, to_block)
+            # Loop through batches until caught up or hit limit
+            batch_count = 0
+            total_blocks_processed = 0
 
-            # Update sync tracker
-            sync_tracker.last_block = to_block
-            sync_tracker.last_synced_at = datetime.utcnow()
+            while from_block <= current_block and batch_count < MAX_BATCHES_PER_RUN:
+                batch_count += 1
+                to_block = min(from_block + BLOCKS_PER_BATCH - 1, current_block)
+                blocks_in_batch = to_block - from_block + 1
+
+                logger.info(
+                    "batch_processing",
+                    batch=batch_count,
+                    from_block=from_block,
+                    to_block=to_block,
+                    blocks=blocks_in_batch,
+                    progress=f"{total_blocks_processed}/{total_blocks_to_sync}"
+                )
+
+                # Process events for this batch
+                await self._process_events(db, from_block, to_block)
+
+                # Update sync tracker after each batch
+                sync_tracker.last_block = to_block
+                sync_tracker.last_synced_at = datetime.utcnow()
+                db.commit()
+
+                # Update counters
+                total_blocks_processed += blocks_in_batch
+                from_block = to_block + 1
+
+                # Small delay between batches to avoid overwhelming the RPC
+                if from_block <= current_block and batch_count < MAX_BATCHES_PER_RUN:
+                    await asyncio.sleep(1)
+
+            # Final status update
             sync_tracker.status = SyncStatusEnum.IDLE
             sync_tracker.error_message = None
             db.commit()
 
-            logger.info(
-                "sync_completed",
-                last_block=to_block,
-                blocks_processed=to_block - from_block + 1
-            )
+            # Log completion status
+            if from_block > current_block:
+                logger.info(
+                    "sync_completed",
+                    status="caught_up",
+                    batches_processed=batch_count,
+                    total_blocks_processed=total_blocks_processed,
+                    final_block=sync_tracker.last_block
+                )
+            else:
+                remaining_blocks = current_block - sync_tracker.last_block
+                logger.info(
+                    "sync_completed",
+                    status="partial",
+                    batches_processed=batch_count,
+                    total_blocks_processed=total_blocks_processed,
+                    final_block=sync_tracker.last_block,
+                    remaining_blocks=remaining_blocks,
+                    note="Will continue in next run"
+                )
 
         except Exception as e:
             logger.error("sync_failed", error=str(e))

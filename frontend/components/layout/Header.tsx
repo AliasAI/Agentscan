@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 export function Header() {
@@ -23,9 +24,18 @@ export function Header() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-8">
-              <Link href="/" className="flex items-baseline gap-2 text-foreground">
-                <span className="text-2xl font-bold">Agentscan</span>
-                <span className="text-sm font-normal text-foreground/60">by alias</span>
+              <Link href="/" className="flex items-center gap-3 text-foreground">
+                <Image
+                  src="/next-icon.svg"
+                  alt="Logo"
+                  width={32}
+                  height={32}
+                  className="dark:invert"
+                />
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold">Agentscan</span>
+                  <span className="text-sm font-normal text-foreground/60">by alias</span>
+                </div>
               </Link>
               <nav className="hidden md:flex space-x-6">
                 <Link href="/" className="text-foreground/80 hover:text-foreground">
@@ -52,10 +62,19 @@ export function Header() {
           <div className="flex items-center space-x-8">
             <Link
               href="/"
-              className="flex items-baseline gap-2 text-foreground"
+              className="flex items-center gap-3 text-foreground"
             >
-              <span className="text-2xl font-bold">Agentscan</span>
-              <span className="text-sm font-normal text-foreground/60">by alias</span>
+              <Image
+                src="/next-icon.svg"
+                alt="Logo"
+                width={32}
+                height={32}
+                className="dark:invert"
+              />
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">Agentscan</span>
+                <span className="text-sm font-normal text-foreground/60">by alias</span>
+              </div>
             </Link>
             <nav className="hidden md:flex space-x-6">
               <Link
