@@ -65,11 +65,11 @@ REGISTRY_ABI = [
 
 # Sync configuration
 START_BLOCK = 9419801  # Start from this block (contract deployment block)
-BLOCKS_PER_BATCH = 100  # Process 1000 blocks at a time (reduce RPC calls)
+BLOCKS_PER_BATCH = 1000  # Process 1000 blocks at a time (reduce RPC calls)
 MAX_BATCHES_PER_RUN = 50  # Max batches to process in one sync run (50 batches = 50k blocks = ~5-10 mins)
 # Note: Interval is now controlled by CronTrigger in scheduler.py (every 10 minutes)
 # This constant is kept for reference but not actively used
-SYNC_INTERVAL_MINUTES = 1  # Sync every 10 minutes (low cost, frequent updates)
+SYNC_INTERVAL_MINUTES = 2  # Sync every 10 minutes (low cost, frequent updates)
 MAX_RETRIES = 1  # Max retry attempts for failed operations
 RETRY_DELAY_SECONDS = 5  # Delay between retries
 REQUEST_DELAY_SECONDS = 0.5  # Delay between individual requests to avoid rate limiting
