@@ -31,7 +31,7 @@ def start_scheduler():
     # This ensures sync runs at predictable times regardless of when the server starts
     scheduler.add_job(
         sync_blockchain,
-        trigger=CronTrigger(minute='*/1'),  # Run every 10 minutes
+        trigger=CronTrigger(minute='*/2'),  # Run every 10 minutes
         id='blockchain_sync',
         name='Sync blockchain data',
         replace_existing=True,
