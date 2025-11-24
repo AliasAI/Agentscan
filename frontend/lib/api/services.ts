@@ -27,6 +27,8 @@ export const agentService = {
       page_size?: number;
       search?: string;
       network?: string;
+      reputation_min?: number;
+      reputation_max?: number;
     },
     signal?: AbortSignal
   ) => {

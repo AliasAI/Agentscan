@@ -15,6 +15,8 @@ export default function AgentsPage() {
   const [activeTab, setActiveTab] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedNetwork, setSelectedNetwork] = useState('all')
+  const [filters, setFilters] = useState<FilterOptions>({})
+  const [sortOption, setSortOption] = useState<SortOption>({ field: 'created_at', order: 'desc' })
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -47,6 +49,8 @@ export default function AgentsPage() {
         page_size: pageSize,
         search: searchQuery || undefined,
         network: selectedNetwork !== 'all' ? selectedNetwork : undefined,
+        reputation_min: filters.reputationMin,
+        reputation_max: filters.reputationMax,
       }, abortController.signal)
 
       // Only update state if the request wasn't aborted
@@ -68,7 +72,7 @@ export default function AgentsPage() {
         setLoading(false)
       }
     }
-  }, [activeTab, searchQuery, selectedNetwork, pageSize])
+  }, [activeTab, searchQuery, selectedNetwork, filters, pageSize])
 
   // Initial load and when filters change
   useEffect(() => {
@@ -80,7 +84,7 @@ export default function AgentsPage() {
         abortControllerRef.current.abort();
       }
     }
-  }, [activeTab, searchQuery, selectedNetwork, fetchAgents])
+  }, [activeTab, searchQuery, selectedNetwork, filters, fetchAgents])
 
   const tabs = [
     { id: 'all', label: 'All Agents' },
@@ -102,6 +106,22 @@ export default function AgentsPage() {
   const handleNetworkChange = (networkId: string) => {
     setSelectedNetwork(networkId)
     // fetchAgents(1) will be called by useEffect when selectedNetwork changes
+  }
+
+  const handleFilterChange = (newFilters: FilterOptions) => {
+    setFilters(newFilters)
+    // fetchAgents(1) will be called by useEffect when filters changes
+  }
+
+  const handleSortChange = (sort: SortOption) => {
+    setSortOption(sort)
+    // For now, sorting is handled by the backend through the tab parameter
+    // We could add explicit sort parameters to the API in the future
+    if (sort.field === 'reputation_score') {
+      setActiveTab('top')
+    } else if (activeTab === 'top') {
+      setActiveTab('all')
+    }
   }
 
   const handleNextPage = useCallback(() => {
@@ -140,7 +160,7 @@ export default function AgentsPage() {
           />
           <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
         </div>
-        <FilterSort />
+        <FilterSort onFilterChange={handleFilterChange} onSortChange={handleSortChange} />
       </div>
 
       {/* Results Info */}

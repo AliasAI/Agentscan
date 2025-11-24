@@ -19,6 +19,8 @@ async def get_agents(
     page_size: int = Query(20, ge=1, le=100),
     search: str | None = None,
     network: str | None = Query(None, description="Filter by network ID or 'all'"),
+    reputation_min: float | None = Query(None, ge=0, le=100, description="Minimum reputation score"),
+    reputation_max: float | None = Query(None, ge=0, le=100, description="Maximum reputation score"),
     db: Session = Depends(get_db),
 ):
     """Get agent list with tab filtering, pagination, search and network filter"""
@@ -52,6 +54,12 @@ async def get_agents(
             (Agent.address.contains(search)) |
             (Agent.description.contains(search))
         )
+
+    # Reputation score filtering
+    if reputation_min is not None:
+        query = query.filter(Agent.reputation_score >= reputation_min)
+    if reputation_max is not None:
+        query = query.filter(Agent.reputation_score <= reputation_max)
 
     # Default ordering: newest first (descending by created_at)
     # Only apply if "top" tab hasn't already set ordering
