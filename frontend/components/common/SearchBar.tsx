@@ -132,16 +132,16 @@ export function SearchBar({
     <form onSubmit={handleSubmit} className="w-full">
       <div className="relative group">
         {/* Search Icon */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors z-10">
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a3a3a3] group-focus-within:text-[#0a0a0a] dark:group-focus-within:text-[#fafafa] transition-colors z-10">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-current">
-            <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
 
         {/* 动态打字占位符层 */}
         {showTypingPlaceholder && (
           <div
-            className="absolute left-9 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500 pointer-events-none select-none"
+            className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-[#a3a3a3] dark:text-[#525252] pointer-events-none select-none"
             onClick={() => inputRef.current?.focus()}
           >
             {displayText}
@@ -157,7 +157,7 @@ export function SearchBar({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder={isFocused ? 'Type to search...' : ''}
-          className="w-full px-3 py-2 pl-9 pr-9 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20 transition-all"
+          className="w-full h-11 px-4 pl-10 pr-10 text-sm rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#0a0a0a] dark:text-[#fafafa] placeholder:text-[#a3a3a3] dark:placeholder:text-[#525252] focus:outline-none focus:border-[#0a0a0a] dark:focus:border-[#fafafa] focus:ring-2 focus:ring-[#0a0a0a]/10 dark:focus:ring-[#fafafa]/20 transition-all duration-200"
         />
 
         {/* Clear Button */}
@@ -165,7 +165,7 @@ export function SearchBar({
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors z-10"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#a3a3a3] hover:text-[#525252] dark:hover:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded transition-all duration-200 z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
             title="Clear search"
             aria-label="Clear search"
           >

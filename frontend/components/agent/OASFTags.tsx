@@ -52,17 +52,15 @@ export function OASFTags({ skills = [], domains = [], maxDisplay = 3, classifica
           key={`${tag.type}-${index}`}
           className={`inline-flex items-center rounded font-medium ${tagSize} ${
             tag.type === 'skill'
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-              : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+              ? 'bg-[#f5f5f5] text-[#0a0a0a] dark:bg-[#262626] dark:text-[#fafafa]'
+              : 'bg-[#f5f5f5] text-[#525252] dark:bg-[#262626] dark:text-[#a3a3a3]'
           }`}
         >
-          {tag.type === 'skill' && '⚡'}
-          {tag.type === 'domain' && '🏢'}
           {formatTagName(tag.value)}
         </span>
       ))}
       {remainingCount > 0 && (
-        <span className={`inline-flex items-center rounded font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 ${tagSize}`}>
+        <span className={`inline-flex items-center rounded font-medium bg-[#f5f5f5] text-[#737373] dark:bg-[#262626] dark:text-[#737373] ${tagSize}`}>
           +{remainingCount}
         </span>
       )}
@@ -109,7 +107,7 @@ export function OASFDetailTags({ skills = [], domains = [], classificationSource
 
   if (safeSkills.length === 0 && safeDomains.length === 0) {
     return (
-      <div className="text-sm text-foreground/60">
+      <div className="text-sm text-[#737373] dark:text-[#737373]">
         No skills or domains classified yet
       </div>
     );
@@ -118,15 +116,15 @@ export function OASFDetailTags({ skills = [], domains = [], classificationSource
   return (
     <div className="space-y-4">
       {classificationSource && (
-        <div className="flex items-center gap-2 pb-2 border-b border-border/50">
-          <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium ${
+        <div className="flex items-center gap-2 pb-2 border-b border-[#e5e5e5] dark:border-[#262626]">
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
             classificationSource === 'metadata'
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-              : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+              ? 'bg-[#f0fdf4] text-[#22c55e] dark:bg-[#14532d]/30 dark:text-[#4ade80]'
+              : 'bg-[#f5f5f5] text-[#525252] dark:bg-[#262626] dark:text-[#a3a3a3]'
           }`}>
-            {classificationSource === 'metadata' ? '🤖 Agent' : '🧠 AI'}
+            {classificationSource === 'metadata' ? 'Agent' : 'AI'}
           </span>
-          <span className="text-xs text-foreground/60">
+          <span className="text-xs text-[#737373] dark:text-[#737373]">
             {classificationSource === 'metadata'
               ? 'Extracted from agent metadata (OASF standard)'
               : 'Automatically classified by AI'}
@@ -135,17 +133,17 @@ export function OASFDetailTags({ skills = [], domains = [], classificationSource
       )}
       {safeSkills.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-2">Skills</h4>
+          <h4 className="text-sm font-semibold mb-2 text-[#0a0a0a] dark:text-[#fafafa]">Skills</h4>
           <div className="flex flex-wrap gap-2">
             {safeSkills.map((skill, index) => (
               <div
                 key={index}
-                className="inline-flex flex-col bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2"
+                className="inline-flex flex-col bg-[#f5f5f5] dark:bg-[#262626] border border-[#e5e5e5] dark:border-[#404040] rounded-lg px-3 py-2"
               >
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                <span className="text-xs text-[#737373] dark:text-[#737373] font-medium">
                   {getCategory(skill)}
                 </span>
-                <span className="text-sm text-blue-900 dark:text-blue-200">
+                <span className="text-sm text-[#0a0a0a] dark:text-[#fafafa]">
                   {formatTagName(skill)}
                 </span>
               </div>
@@ -156,17 +154,17 @@ export function OASFDetailTags({ skills = [], domains = [], classificationSource
 
       {safeDomains.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-2">Domains</h4>
+          <h4 className="text-sm font-semibold mb-2 text-[#0a0a0a] dark:text-[#fafafa]">Domains</h4>
           <div className="flex flex-wrap gap-2">
             {safeDomains.map((domain, index) => (
               <div
                 key={index}
-                className="inline-flex flex-col bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg px-3 py-2"
+                className="inline-flex flex-col bg-[#fafafa] dark:bg-[#1a1a1a] border border-[#d4d4d4] dark:border-[#404040] rounded-lg px-3 py-2"
               >
-                <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">
+                <span className="text-xs text-[#a3a3a3] dark:text-[#525252] font-medium">
                   {getCategory(domain)}
                 </span>
-                <span className="text-sm text-purple-900 dark:text-purple-200">
+                <span className="text-sm text-[#525252] dark:text-[#a3a3a3]">
                   {formatTagName(domain)}
                 </span>
               </div>

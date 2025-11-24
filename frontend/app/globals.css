@@ -1,87 +1,117 @@
 @import "tailwindcss";
 
 :root {
+  /* ========================================
+     Design Tokens - Monochrome Tech
+     风格：黑白灰科技极简
+     配色原则：高对比度 + 精致细节
+     ======================================== */
+
   /* Base Colors */
-  --background: #ffffff;
+  --background: #fafafa;
   --foreground: #0a0a0a;
 
-  /* Brand Colors - Modern Purple/Blue Gradient Palette */
-  --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --primary-light: #818cf8;
+  /* Brand Colors - 纯黑白灰系 */
+  /* 主色：纯黑 */
+  --primary: #0a0a0a;
+  --primary-dark: #000000;
+  --primary-light: #262626;
 
-  --secondary: #8b5cf6;
-  --secondary-dark: #7c3aed;
-  --secondary-light: #a78bfa;
+  /* 辅色：中灰 */
+  --secondary: #525252;
+  --secondary-dark: #404040;
+  --secondary-light: #737373;
 
-  --accent: #06b6d4;
-  --accent-dark: #0891b2;
-  --accent-light: #22d3ee;
+  /* 强调色：亮白/浅灰（用于高亮） */
+  --accent: #e5e5e5;
+  --accent-dark: #d4d4d4;
+  --accent-light: #f5f5f5;
 
-  /* Semantic Colors */
-  --success: #10b981;
-  --success-light: #34d399;
-  --warning: #f59e0b;
-  --warning-light: #fbbf24;
+  /* Semantic Colors - 低饱和度 */
+  --success: #22c55e;
+  --success-light: #4ade80;
+  --warning: #eab308;
+  --warning-light: #facc15;
   --error: #ef4444;
   --error-light: #f87171;
   --info: #3b82f6;
   --info-light: #60a5fa;
 
-  /* Neutral Colors */
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
+  /* Neutral Colors - 纯灰色系 */
+  --gray-50: #fafafa;
+  --gray-100: #f5f5f5;
+  --gray-200: #e5e5e5;
+  --gray-300: #d4d4d4;
+  --gray-400: #a3a3a3;
+  --gray-500: #737373;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
 
   /* Surface Colors */
   --surface: #ffffff;
-  --surface-elevated: #f9fafb;
-  --surface-hover: #f3f4f6;
+  --surface-elevated: #fafafa;
+  --surface-hover: #f5f5f5;
 
-  /* Border & Divider */
-  --border: #e5e7eb;
-  --border-light: #f3f4f6;
-  --divider: #e5e7eb;
+  /* Border & Divider - 精细边框 */
+  --border: #e5e5e5;
+  --border-light: #f5f5f5;
+  --divider: #e5e5e5;
 
   /* Text Colors */
   --text-primary: #0a0a0a;
-  --text-secondary: #4b5563;
-  --text-tertiary: #9ca3af;
-  --text-disabled: #d1d5db;
+  --text-secondary: #525252;
+  --text-tertiary: #737373;
+  --text-disabled: #a3a3a3;
 
-  /* Shadows */
+  /* Shadows - 精致阴影 */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 8px 24px -4px rgb(0 0 0 / 0.12);
+  --shadow-xl: 0 16px 32px -8px rgb(0 0 0 / 0.15);
+  --shadow-2xl: 0 24px 48px -12px rgb(0 0 0 / 0.18);
 
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --gradient-secondary: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-  --gradient-accent: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-  --gradient-premium: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  /* Gradients - 黑白渐变 */
+  --gradient-primary: linear-gradient(135deg, #0a0a0a 0%, #262626 100%);
+  --gradient-secondary: linear-gradient(135deg, #525252 0%, #737373 100%);
+  --gradient-accent: linear-gradient(135deg, #e5e5e5 0%, #f5f5f5 100%);
+  --gradient-success: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);
+  --gradient-premium: linear-gradient(135deg, #0a0a0a 0%, #262626 100%);
 
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Transitions - 优雅过渡 */
+  --transition-fast: 150ms ease-out;
+  --transition-base: 200ms ease-out;
+  --transition-slow: 300ms ease-out;
 
-  /* Border Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
+  /* Border Radius - 统一12px */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
   --radius-full: 9999px;
+
+  /* Spacing Scale - 8的倍数 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Type Scale */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-4xl: 36px;
 }
 
 @theme inline {
@@ -98,32 +128,37 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Base Colors */
+    /* Base Colors - 纯黑背景 */
     --background: #0a0a0a;
-    --foreground: #f9fafb;
+    --foreground: #fafafa;
+
+    /* Brand Colors - 反转 */
+    --primary: #fafafa;
+    --primary-dark: #e5e5e5;
+    --primary-light: #ffffff;
 
     /* Surface Colors */
-    --surface: #111827;
-    --surface-elevated: #1f2937;
-    --surface-hover: #374151;
+    --surface: #171717;
+    --surface-elevated: #262626;
+    --surface-hover: #404040;
 
     /* Border & Divider */
-    --border: #374151;
-    --border-light: #1f2937;
-    --divider: #374151;
+    --border: #262626;
+    --border-light: #171717;
+    --divider: #262626;
 
     /* Text Colors */
-    --text-primary: #f9fafb;
-    --text-secondary: #d1d5db;
-    --text-tertiary: #9ca3af;
-    --text-disabled: #6b7280;
+    --text-primary: #fafafa;
+    --text-secondary: #a3a3a3;
+    --text-tertiary: #737373;
+    --text-disabled: #525252;
 
-    /* Shadows (darker for dark mode) */
+    /* Shadows (subtle for dark mode) */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.5);
-    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 8px 24px -4px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 16px 32px -8px rgb(0 0 0 / 0.6);
+    --shadow-2xl: 0 24px 48px -12px rgb(0 0 0 / 0.7);
   }
 }
 
@@ -315,39 +350,78 @@ body {
   box-shadow: var(--shadow-xl);
 }
 
-/* Button base styles */
+/* Button base styles - 带完整四态 */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.625rem 1.25rem;
-  font-weight: 500;
+  height: 40px;
+  padding: 0 16px;
+  font-weight: 600;
+  font-size: 14px;
   border-radius: var(--radius-lg);
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
   cursor: pointer;
   outline: none;
   border: none;
+  position: relative;
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
+  background: var(--primary);
   color: white;
   box-shadow: var(--shadow-md);
 }
 
+/* hover: 亮度提升=可点击 */
 .btn-primary:hover {
-  transform: translateY(-2px);
+  filter: brightness(1.1);
   box-shadow: var(--shadow-lg);
 }
 
+/* active: 缩放=按下反馈 */
+.btn-primary:active {
+  transform: scale(0.98);
+  filter: brightness(0.95);
+}
+
+/* focus-visible: 描边=键盘可达 */
+.btn-primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* disabled: 禁用态 */
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: none;
+}
+
 .btn-secondary {
-  background: var(--surface-elevated);
+  background: var(--surface);
   color: var(--text-primary);
   border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
   background: var(--surface-hover);
+  border-color: var(--gray-300);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Input focus ring */

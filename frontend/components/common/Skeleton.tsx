@@ -1,4 +1,4 @@
-// Skeleton loading components for better UX
+// Skeleton loading components for better UX - 黑白灰科技风格
 
 interface SkeletonProps {
   className?: string;
@@ -7,20 +7,20 @@ interface SkeletonProps {
 export function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-gray-200 dark:bg-gray-800 rounded ${className}`}
+      className={`animate-pulse bg-[#e5e5e5] dark:bg-[#262626] rounded ${className}`}
     />
   );
 }
 
 export function AgentCardSkeleton() {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 h-full flex flex-col">
+    <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] p-4 h-full flex flex-col">
       <div className="flex items-center justify-between gap-2 mb-1.5">
         <div className="flex items-center gap-1.5 flex-1">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-3 w-8" />
         </div>
-        <Skeleton className="h-5 w-12 rounded-full" />
+        <Skeleton className="h-5 w-12 rounded-lg" />
       </div>
       <Skeleton className="h-3 w-32 mb-2" />
       <div className="space-y-1.5 mb-2 flex-1">
@@ -31,7 +31,7 @@ export function AgentCardSkeleton() {
         <Skeleton className="h-4 w-16 rounded" />
         <Skeleton className="h-4 w-14 rounded" />
       </div>
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700/50">
+      <div className="flex items-center justify-between pt-2 border-t border-[#e5e5e5] dark:border-[#262626]">
         <Skeleton className="h-3 w-16" />
         <Skeleton className="h-4 w-12" />
       </div>
@@ -41,7 +41,7 @@ export function AgentCardSkeleton() {
 
 export function StatCardSkeleton() {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-3">
+    <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] p-3">
       <div className="flex items-center gap-2">
         <Skeleton className="h-8 w-8 rounded-lg" />
         <div>
@@ -70,7 +70,7 @@ export function ActivityItemSkeleton() {
 
 export function TableRowSkeleton({ columns = 4 }: { columns?: number }) {
   return (
-    <tr className="border-b border-gray-200 dark:border-gray-800">
+    <tr className="border-b border-[#e5e5e5] dark:border-[#262626]">
       {Array.from({ length: columns }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <Skeleton className="h-4 w-full" />
@@ -96,8 +96,8 @@ export function DetailPageSkeleton() {
             <Skeleton className="h-5 w-32" />
           </div>
           <div className="flex gap-2">
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-20 rounded-lg" />
+            <Skeleton className="h-8 w-20 rounded-lg" />
           </div>
         </div>
         <Skeleton className="h-6 w-full max-w-2xl" />
@@ -106,7 +106,7 @@ export function DetailPageSkeleton() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main content skeleton */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+          <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] p-6">
             <Skeleton className="h-6 w-40 mb-4" />
             <div className="space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -121,7 +121,7 @@ export function DetailPageSkeleton() {
 
         {/* Sidebar skeleton */}
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+          <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] p-6">
             <Skeleton className="h-6 w-32 mb-4" />
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (

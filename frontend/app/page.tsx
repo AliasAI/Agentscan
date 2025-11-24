@@ -89,22 +89,15 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/20">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-cyan-500/10 dark:from-indigo-500/5 dark:via-purple-500/5 dark:to-cyan-500/5"></div>
-
-        {/* Animated Gradient Blobs */}
-        <div className="absolute top-0 left-1/4 w-64 h-64 bg-indigo-400/15 dark:bg-indigo-400/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-purple-400/15 dark:bg-purple-400/10 rounded-full blur-3xl"></div>
-
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
+      {/* Hero Section - 黑白极简风格 */}
+      <div className="relative overflow-hidden border-b border-[#e5e5e5] dark:border-[#262626]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center pt-8 pb-6 lg:pt-12 lg:pb-8">
+          <div className="text-center pt-10 pb-8 lg:pt-14 lg:pb-10">
             {/* Multi-Network Sync Status */}
             {stats?.multi_network_sync && (
               <>
-                <div className="hidden md:block absolute top-3 right-6">
+                <div className="hidden md:block absolute top-4 right-6">
                   <MultiNetworkSyncStatus syncStatus={stats.multi_network_sync} />
                 </div>
                 <div className="flex md:hidden justify-center mb-4">
@@ -114,35 +107,36 @@ export default function HomePage() {
             )}
 
             <div className="max-w-3xl mx-auto">
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 leading-tight">
-                <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 dark:from-indigo-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                  ERC-8004 AI Agent Explorer
-                </span>
+              {/* 标题使用纯黑 */}
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 leading-tight text-[#0a0a0a] dark:text-[#fafafa] tracking-tight">
+                ERC-8004 AI Agent Explorer
               </h1>
 
-              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-5 max-w-xl mx-auto">
+              <p className="text-sm md:text-base text-[#525252] dark:text-[#a3a3a3] mb-6 max-w-xl mx-auto leading-relaxed">
                 Discover and track AI agents on the blockchain
               </p>
 
-              <div className="flex justify-center mb-4">
+              <div className="flex justify-center mb-5">
                 <div className="w-full max-w-lg">
                   <SearchBar onSearch={setSearchQuery} />
                 </div>
               </div>
 
               <div className="flex flex-wrap justify-center gap-3">
+                {/* 主按钮：纯黑背景 */}
                 <Link
                   href="/agents"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg shadow-md shadow-indigo-500/25 transition-all hover:shadow-lg hover:shadow-indigo-500/30"
+                  className="inline-flex items-center gap-1.5 h-10 px-5 bg-[#0a0a0a] hover:bg-[#262626] active:scale-[0.98] text-white text-sm font-semibold rounded-lg shadow-md transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] dark:bg-[#fafafa] dark:hover:bg-[#e5e5e5] dark:text-[#0a0a0a]"
                 >
                   <span>Browse Agents</span>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </Link>
+                {/* 次按钮：细边框风格 */}
                 <Link
                   href="/networks"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 transition-all"
+                  className="inline-flex items-center gap-1.5 h-10 px-5 bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] active:scale-[0.98] text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
                 >
                   <span>Networks</span>
                 </Link>
@@ -153,8 +147,8 @@ export default function HomePage() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {/* Overall Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8 -mt-4 relative z-10">
+        {/* Overall Stats - 黑白灰配色 */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 pt-6 relative z-10">
           {!stats ? (
             <>
               <StatCardSkeleton />
@@ -165,17 +159,17 @@ export default function HomePage() {
           ) : (
             <>
               {/* Total Agents Card */}
-              <div className="group relative bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200/50 dark:border-gray-700/50 hover:shadow-md transition-all">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-indigo-100 dark:bg-indigo-950/50 rounded-lg">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-indigo-600 dark:text-indigo-400">
-                      <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040] hover:shadow-lg transition-all duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#f5f5f5] dark:bg-[#262626] rounded-lg">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#0a0a0a] dark:text-[#fafafa]">
+                      <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 dark:text-gray-400">Total Agents</div>
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                    <div className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Total Agents</div>
+                    <div className="text-xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
                       {formatNumber(stats.total_agents)}
                     </div>
                   </div>
@@ -183,16 +177,16 @@ export default function HomePage() {
               </div>
 
               {/* Active Agents Card */}
-              <div className="group relative bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200/50 dark:border-gray-700/50 hover:shadow-md transition-all">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-green-100 dark:bg-green-950/50 rounded-lg">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-green-600 dark:text-green-400">
-                      <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040] hover:shadow-lg transition-all duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#f0fdf4] dark:bg-[#14532d]/30 rounded-lg">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#22c55e] dark:text-[#4ade80]">
+                      <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 dark:text-gray-400">Active (7d)</div>
-                    <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                    <div className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Active (7d)</div>
+                    <div className="text-xl font-bold text-[#22c55e] dark:text-[#4ade80]">
                       {formatNumber(stats.active_agents)}
                     </div>
                   </div>
@@ -200,17 +194,17 @@ export default function HomePage() {
               </div>
 
               {/* Networks Card */}
-              <div className="group relative bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200/50 dark:border-gray-700/50 hover:shadow-md transition-all">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-cyan-100 dark:bg-cyan-950/50 rounded-lg">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-cyan-600 dark:text-cyan-400">
-                      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M2 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040] hover:shadow-lg transition-all duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#f5f5f5] dark:bg-[#262626] rounded-lg">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#525252] dark:text-[#a3a3a3]">
+                      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 12H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 dark:text-gray-400">Networks</div>
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                    <div className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Networks</div>
+                    <div className="text-xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
                       {formatNumber(stats.total_networks)}
                     </div>
                   </div>
@@ -218,17 +212,17 @@ export default function HomePage() {
               </div>
 
               {/* Total Activities Card */}
-              <div className="group relative bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-200/50 dark:border-gray-700/50 hover:shadow-md transition-all">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-purple-100 dark:bg-purple-950/50 rounded-lg">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-purple-600 dark:text-purple-400">
-                      <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040] hover:shadow-lg transition-all duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#f5f5f5] dark:bg-[#262626] rounded-lg">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#525252] dark:text-[#a3a3a3]">
+                      <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
                     </svg>
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 dark:text-gray-400">Activities</div>
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                    <div className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Activities</div>
+                    <div className="text-xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
                       {formatNumber(stats.total_activities)}
                     </div>
                   </div>
@@ -238,16 +232,16 @@ export default function HomePage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Featured Agents with Tabs */}
           <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-[#0a0a0a] dark:text-[#fafafa]">
                 AI Agents
               </h2>
               <Link
                 href="/agents"
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-950/50 rounded-md transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#0a0a0a] dark:text-[#fafafa] hover:text-[#525252] dark:hover:text-[#d4d4d4] bg-[#f5f5f5] dark:bg-[#262626] hover:bg-[#e5e5e5] dark:hover:bg-[#404040] rounded-md transition-all duration-200"
               >
                 <span>View All</span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-current">
@@ -268,14 +262,14 @@ export default function HomePage() {
                   ))}
                 </div>
               ) : agents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 px-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-3">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-gray-400 dark:text-gray-500">
-                      <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <div className="flex flex-col items-center justify-center py-12 px-4 bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626]">
+                  <div className="w-12 h-12 bg-[#f5f5f5] dark:bg-[#262626] rounded-full flex items-center justify-center mb-3">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#a3a3a3] dark:text-[#525252]">
+                      <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white mb-0.5">No agents found</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Try adjusting your search or filters</p>
+                  <p className="text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa] mb-0.5">No agents found</p>
+                  <p className="text-xs text-[#737373] dark:text-[#737373]">Try adjusting your search or filters</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -288,19 +282,19 @@ export default function HomePage() {
           </div>
 
           {/* Sidebar: Registration Trend + Recent Activity */}
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* Registration Trend Chart */}
             <div>
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+              <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-3">
                 Registration Trend
               </h2>
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200/50 dark:border-gray-700/50">
+              <div className="bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626]">
                 {trendData.length > 0 ? (
                   <RegistrationTrendChart data={trendData} />
                 ) : (
                   <div className="h-[160px] flex flex-col items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-indigo-600 dark:border-indigo-400 border-t-transparent rounded-full animate-spin mb-2"></div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Loading...</p>
+                    <div className="w-8 h-8 border-2 border-[#0a0a0a] dark:border-[#fafafa] border-t-transparent rounded-full animate-spin mb-2"></div>
+                    <p className="text-xs text-[#737373] dark:text-[#737373]">Loading...</p>
                   </div>
                 )}
               </div>
@@ -308,10 +302,10 @@ export default function HomePage() {
 
             {/* Recent Activity */}
             <div>
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+              <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-3">
                 Recent Activity
               </h2>
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+              <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
                 {activities.length === 0 ? (
                   loading ? (
                     <div className="p-4 space-y-3">
@@ -321,13 +315,13 @@ export default function HomePage() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 px-4">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-2">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-gray-400 dark:text-gray-500">
-                          <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                      <div className="w-10 h-10 bg-[#f5f5f5] dark:bg-[#262626] rounded-full flex items-center justify-center mb-2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-[#a3a3a3] dark:text-[#525252]">
+                          <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
                         </svg>
                       </div>
-                      <p className="text-xs font-medium text-gray-900 dark:text-white">No activity yet</p>
+                      <p className="text-xs font-medium text-[#0a0a0a] dark:text-[#fafafa]">No activity yet</p>
                     </div>
                   )
                 ) : (

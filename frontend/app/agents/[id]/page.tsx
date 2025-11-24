@@ -51,10 +51,11 @@ export default function AgentDetailPage() {
     }
   }
 
+  // 黑白灰科技风格状态配色
   const statusColors = {
-    active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    inactive: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-    validating: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    active: 'bg-[#f0fdf4] text-[#22c55e] dark:bg-[#14532d]/30 dark:text-[#4ade80]',
+    inactive: 'bg-[#f5f5f5] text-[#737373] dark:bg-[#262626] dark:text-[#737373]',
+    validating: 'bg-[#fefce8] text-[#eab308] dark:bg-[#422006]/30 dark:text-[#facc15]',
   }
 
   const statusLabels = {
@@ -64,9 +65,9 @@ export default function AgentDetailPage() {
   }
 
   const syncStatusColors = {
-    syncing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    synced: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    syncing: 'bg-[#f5f5f5] text-[#525252] dark:bg-[#262626] dark:text-[#a3a3a3]',
+    synced: 'bg-[#f0fdf4] text-[#22c55e] dark:bg-[#14532d]/30 dark:text-[#4ade80]',
+    failed: 'bg-[#fef2f2] text-[#ef4444] dark:bg-[#450a0a]/30 dark:text-[#f87171]',
   }
 
   const syncStatusLabels = {
@@ -83,8 +84,8 @@ export default function AgentDetailPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
-          <p className="text-red-600 mb-4">{error || 'Agent not found'}</p>
-          <Link href="/" className="text-blue-600 hover:underline">
+          <p className="text-[#ef4444] mb-4">{error || 'Agent not found'}</p>
+          <Link href="/" className="text-[#0a0a0a] dark:text-[#fafafa] hover:text-[#525252] dark:hover:text-[#a3a3a3] underline transition-colors">
             Back to Home
           </Link>
         </div>
@@ -95,42 +96,42 @@ export default function AgentDetailPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
-      <div className="mb-6 text-sm text-foreground/60">
-        <Link href="/" className="hover:text-foreground">Home</Link>
-        <span className="mx-2">/</span>
-        <span>Agent Details</span>
+      <div className="mb-5 text-xs text-[#737373] dark:text-[#737373]">
+        <Link href="/" className="hover:text-[#0a0a0a] dark:hover:text-[#fafafa] transition-colors">Home</Link>
+        <span className="mx-2 text-[#d4d4d4] dark:text-[#404040]">/</span>
+        <span className="text-[#0a0a0a] dark:text-[#fafafa]">Agent Details</span>
       </div>
 
       {/* Agent Header */}
-      <div className="mb-8">
-        <div className="flex items-start justify-between mb-4">
+      <div className="mb-6">
+        <div className="flex items-start justify-between mb-3">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{agent.name}</h1>
-            <div className="flex items-center gap-3 text-foreground/60">
+            <h1 className="text-xl md:text-2xl font-bold mb-2 text-[#0a0a0a] dark:text-[#fafafa]">{agent.name}</h1>
+            <div className="flex items-center gap-2 text-[#737373] dark:text-[#737373]">
               {/* Network Badge */}
               {agent.network_name && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
-                  <NetworkIcon networkName={agent.network_name} className="w-4 h-4" />
-                  <span className="text-sm font-medium">{agent.network_name}</span>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#f5f5f5] dark:bg-[#262626] rounded-full">
+                  <NetworkIcon networkName={agent.network_name} className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium text-[#525252] dark:text-[#a3a3a3]">{agent.network_name}</span>
                 </div>
               )}
               {agent.token_id !== undefined && agent.token_id !== null && (
-                <span className="text-lg">Token ID: #{agent.token_id}</span>
+                <span className="text-sm font-mono text-[#525252] dark:text-[#a3a3a3]">#{agent.token_id}</span>
               )}
             </div>
           </div>
           <div className="flex gap-2">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[agent.status]}`}>
+            <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${statusColors[agent.status]}`}>
               {statusLabels[agent.status]}
             </span>
             {agent.sync_status && (
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${syncStatusColors[agent.sync_status]}`}>
+              <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${syncStatusColors[agent.sync_status]}`}>
                 {syncStatusLabels[agent.sync_status]}
               </span>
             )}
           </div>
         </div>
-        <p className="text-foreground/80">{agent.description}</p>
+        <p className="text-sm text-[#525252] dark:text-[#a3a3a3] leading-relaxed">{agent.description}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -138,27 +139,27 @@ export default function AgentDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Information */}
           <Card>
-            <h2 className="text-xl font-bold mb-4">Basic Information</h2>
+            <h2 className="text-lg font-bold mb-4 text-[#0a0a0a] dark:text-[#fafafa]">Basic Information</h2>
             <div className="space-y-3">
               {agent.network_name && (
-                <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                  <span className="text-foreground/60">Network</span>
+                <div className="flex justify-between py-2 border-b border-[#e5e5e5] dark:border-[#262626] text-sm">
+                  <span className="text-[#737373] dark:text-[#737373]">Network</span>
                   <div className="flex items-center gap-1.5">
-                    <NetworkIcon networkName={agent.network_name} className="w-4 h-4" />
-                    <span className="font-medium">{agent.network_name}</span>
+                    <NetworkIcon networkName={agent.network_name} className="w-3.5 h-3.5" />
+                    <span className="font-medium text-[#0a0a0a] dark:text-[#fafafa]">{agent.network_name}</span>
                   </div>
                 </div>
               )}
 
-              <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                <span className="text-foreground/60">Owner Address</span>
+              <div className="flex justify-between py-2 border-b border-[#e5e5e5] dark:border-[#262626] text-sm">
+                <span className="text-[#737373] dark:text-[#737373]">Owner Address</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm">
+                  <span className="font-mono text-[#0a0a0a] dark:text-[#fafafa]">
                     {formatAddress(agent.owner_address || agent.address)}
                   </span>
                   <button
                     onClick={() => copyToClipboard(agent.owner_address || agent.address, 'Address')}
-                    className="text-blue-600 hover:text-blue-700 text-xs"
+                    className="text-[#0a0a0a] dark:text-[#fafafa] hover:text-[#525252] dark:hover:text-[#a3a3a3] text-xs font-medium underline transition-colors"
                     title="Copy address"
                   >
                     Copy
@@ -166,32 +167,32 @@ export default function AgentDetailPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                <span className="text-foreground/60">Reputation</span>
-                <span className="font-semibold">
+              <div className="flex justify-between py-2 border-b border-[#e5e5e5] dark:border-[#262626] text-sm">
+                <span className="text-[#737373] dark:text-[#737373]">Reputation</span>
+                <span className="font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
                   {agent.reputation_count && agent.reputation_count > 0 ? (
                     <>
                       {agent.reputation_score.toFixed(0)}/100{' '}
-                      <span className="text-sm text-foreground/60 font-normal">
+                      <span className="text-xs text-[#737373] dark:text-[#737373] font-normal">
                         ({agent.reputation_count} {agent.reputation_count === 1 ? 'review' : 'reviews'})
                       </span>
                     </>
                   ) : (
-                    <span className="text-foreground/50 text-sm font-normal">
+                    <span className="text-[#a3a3a3] dark:text-[#525252] text-xs font-normal">
                       No reviews yet
                     </span>
                   )}
                 </span>
               </div>
 
-              <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                <span className="text-foreground/60">Created At</span>
-                <span>{formatDate(agent.created_at)}</span>
+              <div className="flex justify-between py-2 border-b border-[#e5e5e5] dark:border-[#262626] text-sm">
+                <span className="text-[#737373] dark:text-[#737373]">Created At</span>
+                <span className="text-[#0a0a0a] dark:text-[#fafafa]">{formatDate(agent.created_at)}</span>
               </div>
 
-              <div className="flex justify-between py-2">
-                <span className="text-foreground/60">Last Updated</span>
-                <span>{formatDate(agent.updated_at)}</span>
+              <div className="flex justify-between py-2 text-sm">
+                <span className="text-[#737373] dark:text-[#737373]">Last Updated</span>
+                <span className="text-[#0a0a0a] dark:text-[#fafafa]">{formatDate(agent.updated_at)}</span>
               </div>
             </div>
           </Card>
@@ -199,7 +200,7 @@ export default function AgentDetailPage() {
           {/* OASF Taxonomy */}
           {(agent.skills && agent.skills.length > 0) || (agent.domains && agent.domains.length > 0) ? (
             <Card>
-              <h2 className="text-xl font-bold mb-4">OASF Taxonomy</h2>
+              <h2 className="text-lg font-bold mb-4 text-[#0a0a0a] dark:text-[#fafafa]">OASF Taxonomy</h2>
               <OASFDetailTags
                 skills={agent.skills}
                 domains={agent.domains}
@@ -211,11 +212,11 @@ export default function AgentDetailPage() {
           {/* Blockchain Data */}
           {agent.token_id !== undefined && agent.token_id !== null && (
             <Card>
-              <h2 className="text-xl font-bold mb-4">Blockchain Data</h2>
+              <h2 className="text-lg font-bold mb-4 text-[#0a0a0a] dark:text-[#fafafa]">Blockchain Data</h2>
               <div className="space-y-3">
                 {agent.metadata_uri && (
-                  <div className="py-2 border-b border-gray-200 dark:border-gray-800">
-                    <span className="text-foreground/60 block mb-1">Metadata URI</span>
+                  <div className="py-2 border-b border-[#e5e5e5] dark:border-[#262626]">
+                    <span className="text-[#737373] dark:text-[#737373] block mb-1">Metadata URI</span>
                     <div className="flex items-center gap-2">
                       <a
                         href={agent.metadata_uri.startsWith('ipfs://')
@@ -224,13 +225,13 @@ export default function AgentDetailPage() {
                         }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline text-sm font-mono break-all"
+                        className="text-[#0a0a0a] dark:text-[#fafafa] hover:text-[#525252] dark:hover:text-[#a3a3a3] underline text-sm font-mono break-all transition-colors"
                       >
                         {agent.metadata_uri}
                       </a>
                       <button
                         onClick={() => copyToClipboard(agent.metadata_uri!, 'Metadata URI')}
-                        className="text-blue-600 hover:text-blue-700 text-xs shrink-0"
+                        className="text-[#0a0a0a] dark:text-[#fafafa] hover:text-[#525252] dark:hover:text-[#a3a3a3] text-xs shrink-0 font-medium underline transition-colors"
                         title="Copy URI"
                       >
                         Copy
@@ -240,9 +241,9 @@ export default function AgentDetailPage() {
                 )}
 
                 {agent.last_synced_at && (
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                    <span className="text-foreground/60">Last Synced</span>
-                    <span>{formatDate(agent.last_synced_at)}</span>
+                  <div className="flex justify-between py-2 border-b border-[#e5e5e5] dark:border-[#262626]">
+                    <span className="text-[#737373] dark:text-[#737373]">Last Synced</span>
+                    <span className="text-[#0a0a0a] dark:text-[#fafafa]">{formatDate(agent.last_synced_at)}</span>
                   </div>
                 )}
 
@@ -252,7 +253,7 @@ export default function AgentDetailPage() {
                       href={getNftExplorerUrl(agent.network_name, agent.token_id)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                      className="text-[#0a0a0a] dark:text-[#fafafa] hover:text-[#525252] dark:hover:text-[#a3a3a3] underline inline-flex items-center gap-1 transition-colors"
                     >
                       View on Explorer
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,8 +269,8 @@ export default function AgentDetailPage() {
           {/* On-chain Data */}
           {agent.on_chain_data && Object.keys(agent.on_chain_data).length > 0 && (
             <Card>
-              <h2 className="text-xl font-bold mb-4">On-chain Data</h2>
-              <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded text-sm overflow-x-auto">
+              <h2 className="text-lg font-bold mb-4 text-[#0a0a0a] dark:text-[#fafafa]">On-chain Data</h2>
+              <pre className="bg-[#f5f5f5] dark:bg-[#262626] p-4 rounded-lg text-sm overflow-x-auto text-[#0a0a0a] dark:text-[#fafafa] font-mono">
                 {JSON.stringify(agent.on_chain_data, null, 2)}
               </pre>
             </Card>
@@ -277,12 +278,12 @@ export default function AgentDetailPage() {
 
           {/* Activity History */}
           <Card>
-            <h2 className="text-xl font-bold mb-4">Activity History</h2>
-            <div className="text-sm text-foreground/60 mb-4">
+            <h2 className="text-lg font-bold mb-4 text-[#0a0a0a] dark:text-[#fafafa]">Activity History</h2>
+            <div className="text-sm text-[#737373] dark:text-[#737373] mb-4">
               Recent activities and events for this agent
             </div>
             {/* Placeholder for activity timeline - would fetch from API in production */}
-            <div className="text-center py-8 text-foreground/60">
+            <div className="text-center py-8 text-[#a3a3a3] dark:text-[#525252]">
               Activity timeline will be displayed here when activity data is available
             </div>
           </Card>
@@ -292,36 +293,36 @@ export default function AgentDetailPage() {
         <div className="space-y-6">
           {/* Stats */}
           <Card>
-            <h2 className="text-xl font-bold mb-4">Statistics</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                <span className="text-foreground/60">Status</span>
-                <span className="font-semibold">{statusLabels[agent.status]}</span>
+            <h2 className="text-lg font-bold mb-4 text-[#0a0a0a] dark:text-[#fafafa]">Statistics</h2>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between py-2 border-b border-[#e5e5e5] dark:border-[#262626]">
+                <span className="text-[#737373] dark:text-[#737373]">Status</span>
+                <span className="font-semibold text-[#0a0a0a] dark:text-[#fafafa]">{statusLabels[agent.status]}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                <span className="text-foreground/60">Reputation</span>
-                <span className="font-semibold">
+              <div className="flex justify-between py-2 border-b border-[#e5e5e5] dark:border-[#262626]">
+                <span className="text-[#737373] dark:text-[#737373]">Reputation</span>
+                <span className="font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
                   {agent.reputation_count && agent.reputation_count > 0 ? (
                     `${agent.reputation_score.toFixed(2)}/100`
                   ) : (
-                    <span className="text-foreground/50 text-sm font-normal">No reviews yet</span>
+                    <span className="text-[#a3a3a3] dark:text-[#525252] text-xs font-normal">No reviews yet</span>
                   )}
                 </span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                <span className="text-foreground/60">Reviews</span>
-                <span className="font-semibold">
+              <div className="flex justify-between py-2 border-b border-[#e5e5e5] dark:border-[#262626]">
+                <span className="text-[#737373] dark:text-[#737373]">Reviews</span>
+                <span className="font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
                   {agent.reputation_count && agent.reputation_count > 0 ? (
                     agent.reputation_count
                   ) : (
-                    <span className="text-foreground/50 text-sm font-normal">0</span>
+                    <span className="text-[#a3a3a3] dark:text-[#525252] text-xs font-normal">0</span>
                   )}
                 </span>
               </div>
               {agent.token_id !== undefined && agent.token_id !== null && (
                 <div className="flex justify-between py-2">
-                  <span className="text-foreground/60">Token ID</span>
-                  <span className="font-semibold">#{agent.token_id}</span>
+                  <span className="text-[#737373] dark:text-[#737373]">Token ID</span>
+                  <span className="font-semibold font-mono text-[#0a0a0a] dark:text-[#fafafa]">#{agent.token_id}</span>
                 </div>
               )}
             </div>
@@ -329,12 +330,12 @@ export default function AgentDetailPage() {
 
           {/* Quick Actions */}
           <Card>
-            <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
+            <h2 className="text-lg font-bold mb-4 text-[#0a0a0a] dark:text-[#fafafa]">Quick Actions</h2>
             <div className="space-y-2">
               {agent.owner_address && (
                 <button
                   onClick={() => copyToClipboard(agent.owner_address!, 'Owner Address')}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  className="w-full px-4 py-2 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] rounded-lg hover:bg-[#262626] dark:hover:bg-[#e5e5e5] transition-colors text-sm font-medium"
                 >
                   Copy Owner Address
                 </button>
@@ -347,7 +348,7 @@ export default function AgentDetailPage() {
                   }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center"
+                  className="block w-full px-4 py-2 bg-[#f5f5f5] dark:bg-[#262626] text-[#0a0a0a] dark:text-[#fafafa] border border-[#e5e5e5] dark:border-[#404040] rounded-lg hover:bg-[#e5e5e5] dark:hover:bg-[#404040] transition-colors text-center text-sm font-medium"
                 >
                   View Metadata
                 </a>
