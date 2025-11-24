@@ -4,6 +4,7 @@ import { apiGet } from './client';
 import type {
   Agent,
   Network,
+  NetworkWithStats,
   Activity,
   Stats,
   PaginatedResponse,
@@ -25,6 +26,7 @@ export const agentService = {
       page?: number;
       page_size?: number;
       search?: string;
+      network?: string;
     },
     signal?: AbortSignal
   ) => {
@@ -49,6 +51,8 @@ export const agentService = {
 // 网络服务
 export const networkService = {
   getNetworks: () => apiGet<Network[]>('/networks'),
+
+  getNetworksWithStats: () => apiGet<NetworkWithStats[]>('/networks/stats'),
 
   getNetworkById: (id: string) =>
     apiGet<Network>(`/networks/${id}`),

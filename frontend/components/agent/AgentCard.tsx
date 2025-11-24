@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Agent } from '@/types';
 import { formatAddress } from '@/lib/utils/format';
+import { NetworkIcon } from '@/components/common/NetworkIcons';
 import { OASFTags } from './OASFTags';
 
 interface AgentCardProps {
@@ -39,11 +40,16 @@ export function AgentCard({ agent }: AgentCardProps) {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
-                  <path d="M20 7H4C2.89543 7 2 7.89543 2 9V19C2 20.1046 2.89543 21 4 21H20C21.1046 21 22 20.1046 22 19V9C22 7.89543 21.1046 7 20 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M16 21V5C16 4.46957 15.7893 3.96086 15.4142 3.58579C15.0391 3.21071 14.5304 3 14 3H10C9.46957 3 8.96086 3.21071 8.58579 3.58579C8.21071 3.96086 8 4.46957 8 5V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                {agent.network_name && (
+                  <>
+                    <div className="flex items-center gap-1" title={agent.network_name}>
+                      <NetworkIcon networkName={agent.network_name} className="w-4 h-4" />
+                      <span className="text-xs">{agent.network_name}</span>
+                    </div>
+                    <span className="text-gray-300 dark:text-gray-600">|</span>
+                  </>
+                )}
                 <span className="truncate font-mono text-xs">{formatAddress(agent.address)}</span>
               </div>
             </div>

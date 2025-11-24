@@ -6,13 +6,12 @@ from dotenv import load_dotenv
 # 加载 .env 文件
 load_dotenv()
 
-# Sepolia network configuration
+# Legacy Sepolia configuration (kept for backward compatibility)
+# New multi-network configuration is in networks_config.py
 SEPOLIA_RPC_URL = os.getenv("SEPOLIA_RPC_URL", "")
-if not SEPOLIA_RPC_URL:
-    raise ValueError("SEPOLIA_RPC_URL environment variable is required")
 SEPOLIA_CHAIN_ID = 11155111
 
-# ERC-8004 ID Registry contract (replace with actual contract address)
+# ERC-8004 ID Registry contract (Sepolia - legacy)
 REGISTRY_CONTRACT_ADDRESS = "0x8004a6090Cd10A7288092483047B097295Fb8847"  
 
 # ERC-8004 ID Registry ABI (from IdentityRegistry contract)

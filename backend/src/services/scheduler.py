@@ -1,11 +1,16 @@
-"""Task scheduler service"""
+"""Task scheduler service - Multi-network support"""
 
 import asyncio
 from datetime import datetime, timezone
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from src.services.blockchain_sync import blockchain_sync_service
+from src.services.blockchain_sync import (
+    get_sync_service,
+    sync_sepolia,
+    sync_base_sepolia,
+)
+from src.core.networks_config import get_enabled_networks
 import structlog
 
 logger = structlog.get_logger()
@@ -15,64 +20,73 @@ scheduler = AsyncIOScheduler()
 
 
 def start_scheduler():
-    """Start the background task scheduler"""
+    """Start the background task scheduler with multi-network support"""
 
-    async def sync_blockchain():
-        """Periodic blockchain sync task - runs in background thread to avoid blocking"""
+    async def sync_sepolia_task():
+        """Periodic Sepolia blockchain sync task"""
         try:
-            logger.info("scheduler_task_started", task="blockchain_sync")
-            # Run in thread pool to avoid blocking the main event loop
-            await asyncio.to_thread(_sync_blockchain_blocking)
-            logger.info("scheduler_task_completed", task="blockchain_sync")
+            logger.info("scheduler_task_started", task="sepolia_sync")
+            await asyncio.to_thread(_sync_network_blocking, "sepolia")
+            logger.info("scheduler_task_completed", task="sepolia_sync")
         except Exception as e:
-            logger.error("scheduler_task_failed", task="blockchain_sync", error=str(e))
+            logger.error("scheduler_task_failed", task="sepolia_sync", error=str(e))
 
-    # Add blockchain sync job - runs every 10 minutes (low cost, needs frequent updates)
-    # This ensures sync runs at predictable times regardless of when the server starts
+    async def sync_base_sepolia_task():
+        """Periodic Base Sepolia blockchain sync task"""
+        try:
+            logger.info("scheduler_task_started", task="base_sepolia_sync")
+            await asyncio.to_thread(_sync_network_blocking, "base-sepolia")
+            logger.info("scheduler_task_completed", task="base_sepolia_sync")
+        except Exception as e:
+            logger.error(
+                "scheduler_task_failed", task="base_sepolia_sync", error=str(e)
+            )
+
+    # Add Sepolia sync job - runs every 2 minutes
     scheduler.add_job(
-        sync_blockchain,
-        trigger=CronTrigger(minute='*/2'),  # Run every 10 minutes
-        id='blockchain_sync',
-        name='Sync blockchain data',
+        sync_sepolia_task,
+        trigger=CronTrigger(minute='*/2'),
+        id='sepolia_sync',
+        name='Sync Sepolia blockchain data',
         replace_existing=True,
-        max_instances=1  # Only allow one instance to run at a time
+        max_instances=1
     )
 
-    # Reputation sync is now EVENT-DRIVEN (via NewFeedback/FeedbackRevoked events)
-    # No need for periodic full sync - reputation updates happen automatically when feedback is given
-    #
-    # Optional: Add a weekly full sync as a safety net to catch any missed events
-    # scheduler.add_job(
-    #     sync_reputation,
-    #     trigger=CronTrigger(day_of_week='sun', hour='2', minute='0'),  # Sunday 2:00 AM
-    #     id='reputation_sync',
-    #     name='Sync reputation scores (weekly safety net)',
-    #     replace_existing=True,
-    #     max_instances=1
-    # )
+    # Add Base Sepolia sync job - runs every 2 minutes (offset by 1 minute to avoid overlap)
+    scheduler.add_job(
+        sync_base_sepolia_task,
+        trigger=CronTrigger(minute='1-59/2'),  # Runs at 1, 3, 5, ... minutes
+        id='base_sepolia_sync',
+        name='Sync Base Sepolia blockchain data',
+        replace_existing=True,
+        max_instances=1
+    )
 
     # Start scheduler
     scheduler.start()
 
     # Get next run times for logging
-    blockchain_job = scheduler.get_job('blockchain_sync')
+    sepolia_job = scheduler.get_job('sepolia_sync')
+    base_sepolia_job = scheduler.get_job('base_sepolia_sync')
 
     logger.info(
         "scheduler_started",
-        blockchain_schedule="Every 10 minutes",
-        blockchain_next_run=blockchain_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if blockchain_job.next_run_time else 'N/A',
-        reputation_mode="EVENT-DRIVEN (via NewFeedback/FeedbackRevoked events)",
-        note="Blockchain sync uses fixed time triggers; Reputation updates happen automatically on-chain events"
+        networks=["sepolia", "base-sepolia"],
+        sepolia_schedule="Every 2 minutes (:00, :02, :04, ...)",
+        sepolia_next_run=sepolia_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if sepolia_job and sepolia_job.next_run_time else 'N/A',
+        base_sepolia_schedule="Every 2 minutes (:01, :03, :05, ...)",
+        base_sepolia_next_run=base_sepolia_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if base_sepolia_job and base_sepolia_job.next_run_time else 'N/A',
+        reputation_mode="EVENT-DRIVEN (via NewFeedback/FeedbackRevoked events)"
     )
 
 
-def _sync_blockchain_blocking():
-    """Blocking wrapper for blockchain sync - runs in thread pool"""
-    import asyncio
+def _sync_network_blocking(network_key: str):
+    """Blocking wrapper for network sync - runs in thread pool"""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        loop.run_until_complete(blockchain_sync_service.sync())
+        service = get_sync_service(network_key)
+        loop.run_until_complete(service.sync())
     finally:
         loop.close()
 

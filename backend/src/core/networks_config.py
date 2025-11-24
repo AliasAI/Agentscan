@@ -1,13 +1,19 @@
 """Multi-network configuration for ERC-8004"""
 
+import os
 from typing import Dict, Any
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv()
 
 # Network configurations
+# RPC URLs are loaded from environment variables to prevent exposure
 NETWORKS: Dict[str, Dict[str, Any]] = {
     "sepolia": {
         "name": "Sepolia",
         "chain_id": 11155111,
-        "rpc_url": "https://dry-summer-diamond.ethereum-sepolia.quiknode.pro/a919991bab9313b5845be8362dc01e9969f3000c/",
+        "rpc_url": os.getenv("SEPOLIA_RPC_URL", ""),
         "explorer_url": "https://sepolia.etherscan.io",
         "contracts": {
             "identity": "0x8004a6090Cd10A7288092483047B097295Fb8847",
@@ -21,14 +27,14 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
     "base-sepolia": {
         "name": "Base Sepolia",
         "chain_id": 84532,
-        "rpc_url": "https://sepolia.base.org",
+        "rpc_url": os.getenv("BASE_SEPOLIA_RPC_URL", ""),
         "explorer_url": "https://sepolia.basescan.org",
         "contracts": {
             "identity": "0x8004AA63c570c570eBF15376c0dB199918BFe9Fb",
             "reputation": "0x8004bd8daB57f14Ed299135749a5CB5c42d341BF",
             "validation": "0x8004C269D0A5647E51E121FeB226200ECE932d55",
         },
-        "start_block": 0,  # 需要填入实际的部署区块
+        "start_block": 32481444,
         "blocks_per_batch": 10000,
         "enabled": True,
     },

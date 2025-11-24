@@ -1,4 +1,4 @@
-"""Blockchain synchronization service"""
+"""Blockchain synchronization service - Multi-network support"""
 
 import asyncio
 import httpx
@@ -8,45 +8,91 @@ from web3 import Web3
 from sqlalchemy.orm import Session
 
 from src.core.blockchain_config import (
-    SEPOLIA_RPC_URL,
-    REGISTRY_CONTRACT_ADDRESS,
     REGISTRY_ABI,
-    START_BLOCK,
-    BLOCKS_PER_BATCH,
-    MAX_BATCHES_PER_RUN,
     MAX_RETRIES,
     RETRY_DELAY_SECONDS,
     REQUEST_DELAY_SECONDS,
     IPFS_GATEWAY,
 )
-from src.core.reputation_config import (
-    REPUTATION_REGISTRY_ADDRESS,
-    REPUTATION_REGISTRY_ABI,
+from src.core.reputation_config import REPUTATION_REGISTRY_ABI
+from src.core.networks_config import NETWORKS, get_network
+from src.models import (
+    Agent, BlockchainSync, SyncStatusEnum, SyncStatus,
+    AgentStatus, Activity, ActivityType, Network
 )
-from src.models import Agent, BlockchainSync, SyncStatusEnum, SyncStatus, AgentStatus, Activity, ActivityType
 from src.db.database import SessionLocal
 from src.services.ai_classifier import ai_classifier_service
 import structlog
 
 logger = structlog.get_logger()
 
+# Default sync configuration
+DEFAULT_BLOCKS_PER_BATCH = 1000
+DEFAULT_MAX_BATCHES_PER_RUN = 50
 
-class BlockchainSyncService:
-    """Service for synchronizing blockchain data"""
 
-    def __init__(self):
-        self.w3 = Web3(Web3.HTTPProvider(SEPOLIA_RPC_URL))
+class NetworkSyncService:
+    """Service for synchronizing blockchain data for a specific network"""
+
+    def __init__(self, network_key: str):
+        """Initialize sync service for a specific network
+
+        Args:
+            network_key: Key from networks_config.py (e.g., 'sepolia', 'base-sepolia')
+        """
+        self.network_key = network_key
+        self.network_config = get_network(network_key)
+
+        if not self.network_config:
+            raise ValueError(f"Network '{network_key}' not found in configuration")
+
+        if not self.network_config.get("enabled", True):
+            raise ValueError(f"Network '{network_key}' is disabled")
+
+        # Initialize Web3 with network-specific RPC
+        rpc_url = self.network_config["rpc_url"]
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
+
+        # Get contract addresses
+        contracts = self.network_config.get("contracts", {})
+        identity_address = contracts.get("identity")
+        reputation_address = contracts.get("reputation")
+
+        if not identity_address:
+            raise ValueError(f"Identity contract not configured for '{network_key}'")
+
+        # Initialize contracts
         self.contract = self.w3.eth.contract(
-            address=REGISTRY_CONTRACT_ADDRESS,
+            address=identity_address,
             abi=REGISTRY_ABI
         )
-        self.reputation_contract = self.w3.eth.contract(
-            address=REPUTATION_REGISTRY_ADDRESS,
-            abi=REPUTATION_REGISTRY_ABI
+
+        if reputation_address:
+            self.reputation_contract = self.w3.eth.contract(
+                address=reputation_address,
+                abi=REPUTATION_REGISTRY_ABI
+            )
+        else:
+            self.reputation_contract = None
+            logger.warning("no_reputation_contract", network=network_key)
+
+        # Sync configuration
+        self.start_block = self.network_config.get("start_block", 0)
+        self.blocks_per_batch = self.network_config.get(
+            "blocks_per_batch", DEFAULT_BLOCKS_PER_BATCH
+        )
+
+        logger.info(
+            "network_sync_initialized",
+            network=network_key,
+            chain_id=self.network_config["chain_id"],
+            identity_contract=identity_address,
+            reputation_contract=reputation_address,
+            start_block=self.start_block
         )
 
     async def sync(self):
-        """Main sync method with smart sync logic - processes multiple batches until caught up"""
+        """Main sync method with smart sync logic"""
         db = SessionLocal()
         try:
             # Get or create sync tracker
@@ -63,6 +109,7 @@ class BlockchainSyncService:
             if from_block > current_block:
                 logger.info(
                     "sync_skipped",
+                    network=self.network_key,
                     reason="no_new_blocks",
                     last_synced_block=sync_tracker.last_block,
                     current_block=current_block
@@ -78,23 +125,25 @@ class BlockchainSyncService:
 
             logger.info(
                 "sync_started",
+                network=self.network_key,
                 from_block=from_block,
                 current_block=current_block,
                 total_blocks_to_sync=total_blocks_to_sync,
-                max_batches=MAX_BATCHES_PER_RUN
+                max_batches=DEFAULT_MAX_BATCHES_PER_RUN
             )
 
             # Loop through batches until caught up or hit limit
             batch_count = 0
             total_blocks_processed = 0
 
-            while from_block <= current_block and batch_count < MAX_BATCHES_PER_RUN:
+            while from_block <= current_block and batch_count < DEFAULT_MAX_BATCHES_PER_RUN:
                 batch_count += 1
-                to_block = min(from_block + BLOCKS_PER_BATCH - 1, current_block)
+                to_block = min(from_block + self.blocks_per_batch - 1, current_block)
                 blocks_in_batch = to_block - from_block + 1
 
                 logger.info(
                     "batch_processing",
+                    network=self.network_key,
                     batch=batch_count,
                     from_block=from_block,
                     to_block=to_block,
@@ -115,7 +164,7 @@ class BlockchainSyncService:
                 from_block = to_block + 1
 
                 # Small delay between batches to avoid overwhelming the RPC
-                if from_block <= current_block and batch_count < MAX_BATCHES_PER_RUN:
+                if from_block <= current_block and batch_count < DEFAULT_MAX_BATCHES_PER_RUN:
                     await asyncio.sleep(1)
 
             # Final status update
@@ -127,6 +176,7 @@ class BlockchainSyncService:
             if from_block > current_block:
                 logger.info(
                     "sync_completed",
+                    network=self.network_key,
                     status="caught_up",
                     batches_processed=batch_count,
                     total_blocks_processed=total_blocks_processed,
@@ -136,6 +186,7 @@ class BlockchainSyncService:
                 remaining_blocks = current_block - sync_tracker.last_block
                 logger.info(
                     "sync_completed",
+                    network=self.network_key,
                     status="partial",
                     batches_processed=batch_count,
                     total_blocks_processed=total_blocks_processed,
@@ -145,7 +196,7 @@ class BlockchainSyncService:
                 )
 
         except Exception as e:
-            logger.error("sync_failed", error=str(e))
+            logger.error("sync_failed", network=self.network_key, error=str(e))
             if 'sync_tracker' in locals():
                 sync_tracker.status = SyncStatusEnum.ERROR
                 sync_tracker.error_message = str(e)[:500]
@@ -162,12 +213,16 @@ class BlockchainSyncService:
             to_block=to_block
         )
 
-        logger.info("events_found", event_type="Registered", count=len(registered_events))
+        logger.info(
+            "events_found",
+            network=self.network_key,
+            event_type="Registered",
+            count=len(registered_events)
+        )
 
         for i, event in enumerate(registered_events):
             await self._process_registered_event(db, event)
-            # Add delay between events to avoid rate limiting
-            if i < len(registered_events) - 1:  # Don't delay after last event
+            if i < len(registered_events) - 1:
                 await asyncio.sleep(REQUEST_DELAY_SECONDS)
 
         # Get UriUpdated events
@@ -176,34 +231,56 @@ class BlockchainSyncService:
             to_block=to_block
         )
 
-        logger.info("events_found", event_type="UriUpdated", count=len(updated_events))
+        logger.info(
+            "events_found",
+            network=self.network_key,
+            event_type="UriUpdated",
+            count=len(updated_events)
+        )
 
         for i, event in enumerate(updated_events):
             await self._process_updated_event(db, event)
-            # Add delay between events to avoid rate limiting
-            if i < len(updated_events) - 1:  # Don't delay after last event
+            if i < len(updated_events) - 1:
                 await asyncio.sleep(REQUEST_DELAY_SECONDS)
 
-        # Get NewFeedback events from Reputation Registry (event-driven reputation sync)
+        # Get reputation events if reputation contract is configured
+        if self.reputation_contract:
+            await self._process_reputation_events(db, from_block, to_block)
+
+    async def _process_reputation_events(
+        self, db: Session, from_block: int, to_block: int
+    ):
+        """Process reputation events (NewFeedback, FeedbackRevoked)"""
+        # Get NewFeedback events
         feedback_events = self.reputation_contract.events.NewFeedback.get_logs(
             from_block=from_block,
             to_block=to_block
         )
 
-        logger.info("events_found", event_type="NewFeedback", count=len(feedback_events))
+        logger.info(
+            "events_found",
+            network=self.network_key,
+            event_type="NewFeedback",
+            count=len(feedback_events)
+        )
 
         for i, event in enumerate(feedback_events):
             await self._process_feedback_event(db, event)
             if i < len(feedback_events) - 1:
                 await asyncio.sleep(REQUEST_DELAY_SECONDS)
 
-        # Get FeedbackRevoked events from Reputation Registry
+        # Get FeedbackRevoked events
         revoked_events = self.reputation_contract.events.FeedbackRevoked.get_logs(
             from_block=from_block,
             to_block=to_block
         )
 
-        logger.info("events_found", event_type="FeedbackRevoked", count=len(revoked_events))
+        logger.info(
+            "events_found",
+            network=self.network_key,
+            event_type="FeedbackRevoked",
+            count=len(revoked_events)
+        )
 
         for i, event in enumerate(revoked_events):
             await self._process_feedback_event(db, event)
@@ -222,26 +299,47 @@ class BlockchainSyncService:
         block = self.w3.eth.get_block(event['blockNumber'])
         block_timestamp = datetime.fromtimestamp(block['timestamp'])
 
-        logger.info("processing_agent", agent_id=token_id, owner=owner, block_timestamp=block_timestamp)
+        logger.info(
+            "processing_agent",
+            network=self.network_key,
+            agent_id=token_id,
+            owner=owner,
+            block_timestamp=block_timestamp
+        )
 
-        # Check if agent already exists
-        existing_agent = db.query(Agent).filter(Agent.token_id == token_id).first()
+        # Check if agent already exists (with network_id to allow same token_id on different networks)
+        network_id = self._get_network_id(db)
+        existing_agent = db.query(Agent).filter(
+            Agent.token_id == token_id,
+            Agent.network_id == network_id
+        ).first()
 
         if existing_agent:
-            logger.info("agent_already_exists", token_id=token_id)
+            logger.info(
+                "agent_already_exists",
+                network=self.network_key,
+                token_id=token_id
+            )
             return
 
         # Fetch metadata
         metadata = await self._fetch_metadata(metadata_uri)
 
         try:
-            # Double-check before insert (in case of concurrent sync)
-            existing_agent = db.query(Agent).filter(Agent.token_id == token_id).first()
+            # Double-check before insert
+            existing_agent = db.query(Agent).filter(
+                Agent.token_id == token_id,
+                Agent.network_id == network_id
+            ).first()
             if existing_agent:
-                logger.info("agent_already_exists_recheck", token_id=token_id)
+                logger.info(
+                    "agent_already_exists_recheck",
+                    network=self.network_key,
+                    token_id=token_id
+                )
                 return
 
-            # 提取或分类 OASF skills 和 domains
+            # Extract or classify OASF skills and domains
             name = metadata.get('name', f'Agent #{token_id}')
             description = metadata.get('description', 'No description')
             oasf_data = await self._extract_oasf_data(metadata, name, description)
@@ -253,14 +351,14 @@ class BlockchainSyncService:
                 address=owner.lower(),
                 owner_address=owner.lower(),
                 description=description,
-                reputation_score=0.0,  # Will be updated by reputation sync service
+                reputation_score=0.0,
                 status=AgentStatus.ACTIVE,
-                network_id=self._get_default_network_id(db),
+                network_id=network_id,
                 metadata_uri=metadata_uri,
                 on_chain_data=dict(event['args']),
                 sync_status=SyncStatus.SYNCED,
                 last_synced_at=datetime.utcnow(),
-                created_at=block_timestamp,  # Use blockchain timestamp
+                created_at=block_timestamp,
                 skills=oasf_data.get('skills'),
                 domains=oasf_data.get('domains'),
                 classification_source=oasf_data.get('source')
@@ -269,24 +367,30 @@ class BlockchainSyncService:
             db.add(agent)
             db.commit()
 
-            # Create activity record with blockchain timestamp
+            # Create activity record
             activity = Activity(
                 agent_id=agent.id,
                 activity_type=ActivityType.REGISTERED,
-                description=f"Agent '{agent.name}' (#{token_id}) registered on-chain",
+                description=f"Agent '{agent.name}' (#{token_id}) registered on {self.network_config['name']}",
                 tx_hash=event['transactionHash'].hex() if 'transactionHash' in event else None,
-                created_at=block_timestamp  # Use blockchain timestamp
+                created_at=block_timestamp
             )
             db.add(activity)
             db.commit()
 
-            logger.info("agent_created", token_id=token_id, name=agent.name, registered_at=block_timestamp)
+            logger.info(
+                "agent_created",
+                network=self.network_key,
+                token_id=token_id,
+                name=agent.name,
+                registered_at=block_timestamp
+            )
 
-        except IntegrityError as e:
-            # Handle concurrent insert from another sync task
+        except IntegrityError:
             db.rollback()
             logger.warning(
                 "agent_insert_conflict",
+                network=self.network_key,
                 token_id=token_id,
                 error="Concurrent insert detected, skipping"
             )
@@ -296,16 +400,24 @@ class BlockchainSyncService:
         token_id = event['args']['agentId']
         metadata_uri = event['args']['newUri']
 
-        agent = db.query(Agent).filter(Agent.token_id == token_id).first()
+        network_id = self._get_network_id(db)
+        agent = db.query(Agent).filter(
+            Agent.token_id == token_id,
+            Agent.network_id == network_id
+        ).first()
 
         if not agent:
-            logger.warning("agent_not_found", token_id=token_id)
+            logger.warning(
+                "agent_not_found",
+                network=self.network_key,
+                token_id=token_id
+            )
             return
 
         # Fetch updated metadata
         metadata = await self._fetch_metadata(metadata_uri)
 
-        # Update agent (reputation_score is managed by reputation sync service)
+        # Update agent
         name = metadata.get('name', agent.name)
         description = metadata.get('description', agent.description)
         oasf_data = await self._extract_oasf_data(metadata, name, description)
@@ -321,260 +433,28 @@ class BlockchainSyncService:
 
         db.commit()
 
-        logger.info("agent_updated", token_id=token_id)
-
-    async def _fetch_metadata(self, uri: str, retries: int = MAX_RETRIES) -> dict:
-        """Fetch metadata from URI with retry logic"""
-        import base64
-        import json
-
-        # Handle empty URI
-        if not uri or uri.strip() == '':
-            logger.debug("empty_metadata_uri")
-            return {
-                'name': 'Unknown Agent',
-                'description': 'No metadata URI provided'
-            }
-
-        # Handle direct JSON string (some contracts store JSON directly)
-        if uri.startswith('{'):
-            try:
-                metadata = json.loads(uri)
-                logger.info("direct_json_parsed", agent_id=metadata.get('agent_id', 'Unknown'))
-                # Map agent_id to name if name not present
-                if 'name' not in metadata and 'agent_id' in metadata:
-                    metadata['name'] = metadata['agent_id']
-                if 'description' not in metadata:
-                    metadata['description'] = 'Agent from direct JSON'
-                return metadata
-            except Exception as e:
-                logger.warning("direct_json_parse_failed", error=str(e), uri=uri[:100])
-
-        # Handle data URI (data:application/json;base64,... or data:application/json,{...})
-        if uri.startswith('data:'):
-            try:
-                # Handle base64 encoded data URI
-                if 'base64,' in uri:
-                    base64_data = uri.split('base64,')[1]
-                    json_data = base64.b64decode(base64_data).decode('utf-8')
-                    metadata = json.loads(json_data)
-                    logger.info("data_uri_parsed", format="base64", name=metadata.get('name', 'Unknown'))
-                    return metadata
-                # Handle plain JSON data URI (data:application/json,{...})
-                elif ',' in uri:
-                    json_data = uri.split(',', 1)[1]  # Split only on first comma
-                    # URL decode if needed
-                    from urllib.parse import unquote
-                    json_data = unquote(json_data)
-                    metadata = json.loads(json_data)
-                    logger.info("data_uri_parsed", format="plain", name=metadata.get('name', 'Unknown'))
-                    return metadata
-                else:
-                    logger.warning("unsupported_data_uri_format", uri=uri[:100])
-            except Exception as e:
-                logger.warning("data_uri_parse_failed", error=str(e), uri=uri[:100])
-                return {
-                    'name': 'Unknown Agent',
-                    'description': 'Data URI parse failed'
-                }
-
-        # Handle IPFS URI
-        if uri.startswith('ipfs://'):
-            url = f"{IPFS_GATEWAY}{uri[7:]}"
-        else:
-            url = uri
-
-        # Fetch from HTTP/HTTPS URL
-        for attempt in range(retries):
-            try:
-                async with httpx.AsyncClient(timeout=10) as client:
-                    response = await client.get(url)
-                    response.raise_for_status()
-                    return response.json()
-            except Exception as e:
-                logger.warning(
-                    "metadata_fetch_failed",
-                    url=url,
-                    attempt=attempt + 1,
-                    error=str(e)
-                )
-                if attempt < retries - 1:
-                    await asyncio.sleep(RETRY_DELAY_SECONDS)
-
-        # Return default metadata if all retries failed
-        return {
-            'name': 'Unknown Agent',
-            'description': 'Metadata fetch failed'
-        }
-
-    def _is_valid_description(self, description: str) -> bool:
-        """检查 description 是否足够有效以进行 AI 分类
-
-        返回 True 如果 description 有效，否则返回 False
-
-        规则:
-        1. description 不能为空
-        2. 长度至少 20 个字符（基础要求）
-        3. 不能是常见的错误信息或默认值
-        4. 不能是测试数据或明显的时间戳
-
-        注: 语义是否充分由 LLM 判断，LLM 会在语义不足时返回空数组
-        """
-        if not description or not isinstance(description, str):
-            return False
-
-        # 去除首尾空格
-        description = description.strip()
-
-        # 检查最小长度（20 个字符，过滤极短描述）
-        MIN_DESCRIPTION_LENGTH = 20
-        if len(description) < MIN_DESCRIPTION_LENGTH:
-            return False
-
-        # 常见的无效描述模式（小写比较）
-        invalid_patterns = [
-            'no metadata',
-            'metadata fetch failed',
-            'no description',
-            'unknown agent',
-            'agent from direct json',
-            'no metadata uri provided',
-            'failed to fetch',
-            'error fetching',
-            'not available',
-            'n/a',
-            'test agent',  # 测试数据
-            'created at',  # 时间戳标记
-            'updated',     # 更新标记
-            'lorem ipsum', # 占位符文本
-            'todo',
-            'placeholder',
-            'example',
-            'demo agent',
-        ]
-
-        description_lower = description.lower()
-        for pattern in invalid_patterns:
-            if pattern in description_lower:
-                return False
-
-        # 检查是否主要由数字组成（如纯时间戳）
-        # 如果数字字符超过 50%，很可能是无效描述
-        digit_count = sum(c.isdigit() for c in description)
-        if digit_count / len(description) > 0.5:
-            return False
-
-        return True
-
-    async def _extract_oasf_data(self, metadata: dict, name: str, description: str) -> dict:
-        """提取或自动分类 OASF skills 和 domains
-
-        优先级：
-        1. 如果 metadata 中有 endpoints[].skills/domains (OASF 格式)，直接使用
-        2. 否则使用 AI 分类服务自动分析 description
-        """
-        skills = []
-        domains = []
-
-        # 尝试从 metadata 的 endpoints 中提取 OASF 信息
-        if 'endpoints' in metadata and isinstance(metadata['endpoints'], list):
-            for endpoint in metadata['endpoints']:
-                if isinstance(endpoint, dict):
-                    # 提取 skills
-                    if 'skills' in endpoint and isinstance(endpoint['skills'], list):
-                        skills.extend(endpoint['skills'])
-                    # 提取 domains
-                    if 'domains' in endpoint and isinstance(endpoint['domains'], list):
-                        domains.extend(endpoint['domains'])
-
-        # 如果从 metadata 中提取到了 skills/domains，直接使用
-        if skills or domains:
-            logger.info(
-                "oasf_extracted_from_metadata",
-                name=name,
-                skills_count=len(skills),
-                domains_count=len(domains)
-            )
-            return {
-                "skills": list(set(skills))[:5],  # 去重并限制数量
-                "domains": list(set(domains))[:3],
-                "source": "metadata"  # 标记来源为 metadata（agent 自带）
-            }
-
-        # 否则使用 AI 分类（但需要有足够的描述信息）
-        # 检查 description 是否有效且足够详细
-        if not self._is_valid_description(description):
-            logger.info(
-                "oasf_classification_skipped",
-                name=name,
-                reason="insufficient_description",
-                description_preview=description[:50] if description else None
-            )
-            return {"skills": [], "domains": [], "source": None}
-
-        try:
-            classification = await ai_classifier_service.classify_agent(name, description)
-            logger.info(
-                "oasf_auto_classified",
-                name=name,
-                skills_count=len(classification.get('skills', [])),
-                domains_count=len(classification.get('domains', []))
-            )
-            # 添加 source 标记
-            classification["source"] = "ai"
-            return classification
-        except Exception as e:
-            logger.warning("oasf_classification_failed", name=name, error=str(e))
-            return {"skills": [], "domains": [], "source": None}
-
-    def _get_sync_tracker(self, db: Session) -> BlockchainSync:
-        """Get or create blockchain sync tracker"""
-        sync = db.query(BlockchainSync).filter(
-            BlockchainSync.network_name == "sepolia"
-        ).first()
-
-        if not sync:
-            sync = BlockchainSync(
-                network_name="sepolia",
-                contract_address=REGISTRY_CONTRACT_ADDRESS,
-                last_block=START_BLOCK - 1,  # Start from configured block
-                status=SyncStatusEnum.IDLE
-            )
-            db.add(sync)
-            db.commit()
-
-        return sync
-
-    def _get_default_network_id(self, db: Session) -> str:
-        """Get default network ID (Sepolia)"""
-        from src.models import Network
-        network = db.query(Network).filter(
-            Network.name == "Sepolia"
-        ).first()
-
-        if network:
-            return network.id
-
-        # Create if not exists
-        network = Network(
-            name="Sepolia",
-            chain_id=11155111,
-            rpc_url=SEPOLIA_RPC_URL,
-            explorer_url="https://sepolia.etherscan.io"
+        logger.info(
+            "agent_updated",
+            network=self.network_key,
+            token_id=token_id
         )
-        db.add(network)
-        db.commit()
-        return network.id
 
     async def _process_feedback_event(self, db: Session, event):
-        """Process NewFeedback or FeedbackRevoked event (event-driven reputation sync)"""
+        """Process NewFeedback or FeedbackRevoked event"""
         token_id = event['args']['agentId']
 
-        # Find agent by token_id
-        agent = db.query(Agent).filter(Agent.token_id == token_id).first()
+        network_id = self._get_network_id(db)
+        agent = db.query(Agent).filter(
+            Agent.token_id == token_id,
+            Agent.network_id == network_id
+        ).first()
 
         if not agent:
-            logger.warning("agent_not_found_for_feedback", token_id=token_id)
+            logger.warning(
+                "agent_not_found_for_feedback",
+                network=self.network_key,
+                token_id=token_id
+            )
             return
 
         try:
@@ -582,9 +462,9 @@ class BlockchainSyncService:
             count, average_score = await asyncio.to_thread(
                 self.reputation_contract.functions.getSummary(
                     token_id,
-                    [],  # All clients
-                    b'\x00' * 32,  # tag1 = 0 (no filter)
-                    b'\x00' * 32   # tag2 = 0 (no filter)
+                    [],
+                    b'\x00' * 32,
+                    b'\x00' * 32
                 ).call
             )
 
@@ -609,6 +489,7 @@ class BlockchainSyncService:
 
             logger.info(
                 "reputation_updated_from_event",
+                network=self.network_key,
                 token_id=token_id,
                 agent_name=agent.name,
                 score=average_score,
@@ -619,11 +500,294 @@ class BlockchainSyncService:
         except Exception as e:
             logger.warning(
                 "reputation_update_from_event_failed",
+                network=self.network_key,
                 token_id=token_id,
                 agent_name=agent.name,
                 error=str(e)
             )
 
+    async def _fetch_metadata(self, uri: str, retries: int = MAX_RETRIES) -> dict:
+        """Fetch metadata from URI with retry logic"""
+        import base64
+        import json
 
-# Global instance
-blockchain_sync_service = BlockchainSyncService()
+        # Handle empty URI
+        if not uri or uri.strip() == '':
+            logger.debug("empty_metadata_uri", network=self.network_key)
+            return {
+                'name': 'Unknown Agent',
+                'description': 'No metadata URI provided'
+            }
+
+        # Handle direct JSON string
+        if uri.startswith('{'):
+            try:
+                metadata = json.loads(uri)
+                logger.info(
+                    "direct_json_parsed",
+                    network=self.network_key,
+                    agent_id=metadata.get('agent_id', 'Unknown')
+                )
+                if 'name' not in metadata and 'agent_id' in metadata:
+                    metadata['name'] = metadata['agent_id']
+                if 'description' not in metadata:
+                    metadata['description'] = 'Agent from direct JSON'
+                return metadata
+            except Exception as e:
+                logger.warning(
+                    "direct_json_parse_failed",
+                    network=self.network_key,
+                    error=str(e),
+                    uri=uri[:100]
+                )
+
+        # Handle data URI
+        if uri.startswith('data:'):
+            try:
+                if 'base64,' in uri:
+                    base64_data = uri.split('base64,')[1]
+                    json_data = base64.b64decode(base64_data).decode('utf-8')
+                    metadata = json.loads(json_data)
+                    logger.info(
+                        "data_uri_parsed",
+                        network=self.network_key,
+                        format="base64",
+                        name=metadata.get('name', 'Unknown')
+                    )
+                    return metadata
+                elif ',' in uri:
+                    json_data = uri.split(',', 1)[1]
+                    from urllib.parse import unquote
+                    json_data = unquote(json_data)
+                    metadata = json.loads(json_data)
+                    logger.info(
+                        "data_uri_parsed",
+                        network=self.network_key,
+                        format="plain",
+                        name=metadata.get('name', 'Unknown')
+                    )
+                    return metadata
+                else:
+                    logger.warning(
+                        "unsupported_data_uri_format",
+                        network=self.network_key,
+                        uri=uri[:100]
+                    )
+            except Exception as e:
+                logger.warning(
+                    "data_uri_parse_failed",
+                    network=self.network_key,
+                    error=str(e),
+                    uri=uri[:100]
+                )
+                return {
+                    'name': 'Unknown Agent',
+                    'description': 'Data URI parse failed'
+                }
+
+        # Handle IPFS URI
+        if uri.startswith('ipfs://'):
+            url = f"{IPFS_GATEWAY}{uri[7:]}"
+        else:
+            url = uri
+
+        # Fetch from HTTP/HTTPS URL
+        for attempt in range(retries):
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    response = await client.get(url)
+                    response.raise_for_status()
+                    return response.json()
+            except Exception as e:
+                logger.warning(
+                    "metadata_fetch_failed",
+                    network=self.network_key,
+                    url=url,
+                    attempt=attempt + 1,
+                    error=str(e)
+                )
+                if attempt < retries - 1:
+                    await asyncio.sleep(RETRY_DELAY_SECONDS)
+
+        return {
+            'name': 'Unknown Agent',
+            'description': 'Metadata fetch failed'
+        }
+
+    def _is_valid_description(self, description: str) -> bool:
+        """Check if description is valid for AI classification"""
+        if not description or not isinstance(description, str):
+            return False
+
+        description = description.strip()
+
+        MIN_DESCRIPTION_LENGTH = 20
+        if len(description) < MIN_DESCRIPTION_LENGTH:
+            return False
+
+        invalid_patterns = [
+            'no metadata', 'metadata fetch failed', 'no description',
+            'unknown agent', 'agent from direct json', 'no metadata uri provided',
+            'failed to fetch', 'error fetching', 'not available', 'n/a',
+            'test agent', 'created at', 'updated', 'lorem ipsum',
+            'todo', 'placeholder', 'example', 'demo agent',
+        ]
+
+        description_lower = description.lower()
+        for pattern in invalid_patterns:
+            if pattern in description_lower:
+                return False
+
+        digit_count = sum(c.isdigit() for c in description)
+        if digit_count / len(description) > 0.5:
+            return False
+
+        return True
+
+    async def _extract_oasf_data(
+        self, metadata: dict, name: str, description: str
+    ) -> dict:
+        """Extract or auto-classify OASF skills and domains"""
+        skills = []
+        domains = []
+
+        # Try to extract from metadata endpoints
+        if 'endpoints' in metadata and isinstance(metadata['endpoints'], list):
+            for endpoint in metadata['endpoints']:
+                if isinstance(endpoint, dict):
+                    if 'skills' in endpoint and isinstance(endpoint['skills'], list):
+                        skills.extend(endpoint['skills'])
+                    if 'domains' in endpoint and isinstance(endpoint['domains'], list):
+                        domains.extend(endpoint['domains'])
+
+        if skills or domains:
+            logger.info(
+                "oasf_extracted_from_metadata",
+                network=self.network_key,
+                name=name,
+                skills_count=len(skills),
+                domains_count=len(domains)
+            )
+            return {
+                "skills": list(set(skills))[:5],
+                "domains": list(set(domains))[:3],
+                "source": "metadata"
+            }
+
+        # Use AI classification if description is valid
+        if not self._is_valid_description(description):
+            logger.info(
+                "oasf_classification_skipped",
+                network=self.network_key,
+                name=name,
+                reason="insufficient_description",
+                description_preview=description[:50] if description else None
+            )
+            return {"skills": [], "domains": [], "source": None}
+
+        try:
+            classification = await ai_classifier_service.classify_agent(
+                name, description
+            )
+            logger.info(
+                "oasf_auto_classified",
+                network=self.network_key,
+                name=name,
+                skills_count=len(classification.get('skills', [])),
+                domains_count=len(classification.get('domains', []))
+            )
+            classification["source"] = "ai"
+            return classification
+        except Exception as e:
+            logger.warning(
+                "oasf_classification_failed",
+                network=self.network_key,
+                name=name,
+                error=str(e)
+            )
+            return {"skills": [], "domains": [], "source": None}
+
+    def _get_sync_tracker(self, db: Session) -> BlockchainSync:
+        """Get or create blockchain sync tracker for this network"""
+        contracts = self.network_config.get("contracts", {})
+        identity_address = contracts.get("identity", "")
+
+        sync = db.query(BlockchainSync).filter(
+            BlockchainSync.network_name == self.network_key
+        ).first()
+
+        if not sync:
+            sync = BlockchainSync(
+                network_name=self.network_key,
+                contract_address=identity_address,
+                last_block=self.start_block - 1,
+                status=SyncStatusEnum.IDLE
+            )
+            db.add(sync)
+            db.commit()
+
+        return sync
+
+    def _get_network_id(self, db: Session) -> str:
+        """Get network ID from database"""
+        network = db.query(Network).filter(
+            Network.chain_id == self.network_config["chain_id"]
+        ).first()
+
+        if network:
+            return network.id
+
+        # Create if not exists
+        network = Network(
+            name=self.network_config["name"],
+            chain_id=self.network_config["chain_id"],
+            rpc_url=self.network_config["rpc_url"],
+            explorer_url=self.network_config["explorer_url"],
+            contracts=self.network_config.get("contracts")
+        )
+        db.add(network)
+        db.commit()
+        return network.id
+
+
+# Global instances for each enabled network
+_sync_services: dict[str, NetworkSyncService] = {}
+
+
+def get_sync_service(network_key: str) -> NetworkSyncService:
+    """Get or create sync service for a network"""
+    if network_key not in _sync_services:
+        _sync_services[network_key] = NetworkSyncService(network_key)
+    return _sync_services[network_key]
+
+
+# Backward compatibility: default Sepolia sync service
+blockchain_sync_service = get_sync_service("sepolia")
+
+
+# Convenience functions for scheduler
+async def sync_sepolia():
+    """Sync Sepolia network"""
+    service = get_sync_service("sepolia")
+    await service.sync()
+
+
+async def sync_base_sepolia():
+    """Sync Base Sepolia network"""
+    service = get_sync_service("base-sepolia")
+    await service.sync()
+
+
+async def sync_all_networks():
+    """Sync all enabled networks sequentially"""
+    for network_key, config in NETWORKS.items():
+        if config.get("enabled", True):
+            try:
+                service = get_sync_service(network_key)
+                await service.sync()
+            except Exception as e:
+                logger.error(
+                    "network_sync_failed",
+                    network=network_key,
+                    error=str(e)
+                )

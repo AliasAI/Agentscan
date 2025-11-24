@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Float, Enum, DateTime, ForeignKey, Integer, JSON, Text
+from sqlalchemy import Column, String, Float, Enum, DateTime, ForeignKey, Integer, JSON, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 import enum
 
@@ -29,6 +29,10 @@ class Agent(Base):
     """AI Agent model"""
 
     __tablename__ = "agents"
+    __table_args__ = (
+        # token_id is unique per network (same token_id can exist on different networks)
+        UniqueConstraint('token_id', 'network_id', name='uq_agent_token_network'),
+    )
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, nullable=False, index=True)
@@ -39,7 +43,7 @@ class Agent(Base):
     network_id = Column(String, ForeignKey("networks.id"), nullable=False)
 
     # Blockchain data fields
-    token_id = Column(Integer, nullable=True, unique=True, index=True)
+    token_id = Column(Integer, nullable=True, index=True)  # Unique per network, not globally
     owner_address = Column(String, nullable=True, index=True)
     metadata_uri = Column(Text, nullable=True)
     on_chain_data = Column(JSON, nullable=True)

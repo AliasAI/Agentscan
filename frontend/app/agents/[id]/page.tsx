@@ -8,6 +8,8 @@ import { DetailPageSkeleton } from '@/components/common/Skeleton'
 import { useToast } from '@/components/common/Toast'
 import { agentService } from '@/lib/api/services'
 import { formatAddress, formatDate } from '@/lib/utils/format'
+import { getNftExplorerUrl } from '@/lib/utils/network'
+import { NetworkIcon } from '@/components/common/NetworkIcons'
 import { OASFDetailTags } from '@/components/agent/OASFTags'
 import type { Agent } from '@/types'
 
@@ -104,11 +106,18 @@ export default function AgentDetailPage() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">{agent.name}</h1>
-            {agent.token_id !== undefined && agent.token_id !== null && (
-              <p className="text-lg text-foreground/60">
-                Token ID: #{agent.token_id}
-              </p>
-            )}
+            <div className="flex items-center gap-3 text-foreground/60">
+              {/* Network Badge */}
+              {agent.network_name && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+                  <NetworkIcon networkName={agent.network_name} className="w-4 h-4" />
+                  <span className="text-sm font-medium">{agent.network_name}</span>
+                </div>
+              )}
+              {agent.token_id !== undefined && agent.token_id !== null && (
+                <span className="text-lg">Token ID: #{agent.token_id}</span>
+              )}
+            </div>
           </div>
           <div className="flex gap-2">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[agent.status]}`}>
@@ -131,6 +140,16 @@ export default function AgentDetailPage() {
           <Card>
             <h2 className="text-xl font-bold mb-4">Basic Information</h2>
             <div className="space-y-3">
+              {agent.network_name && (
+                <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
+                  <span className="text-foreground/60">Network</span>
+                  <div className="flex items-center gap-1.5">
+                    <NetworkIcon networkName={agent.network_name} className="w-4 h-4" />
+                    <span className="font-medium">{agent.network_name}</span>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
                 <span className="text-foreground/60">Owner Address</span>
                 <div className="flex items-center gap-2">
@@ -227,19 +246,21 @@ export default function AgentDetailPage() {
                   </div>
                 )}
 
-                <div className="pt-2">
-                  <a
-                    href={`https://sepolia.etherscan.io/nft/0x8004a6090Cd10A7288092483047B097295Fb8847/${agent.token_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline inline-flex items-center gap-1"
-                  >
-                    View on Etherscan
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                </div>
+                {agent.network_name && (
+                  <div className="pt-2">
+                    <a
+                      href={getNftExplorerUrl(agent.network_name, agent.token_id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                    >
+                      View on Explorer
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+                )}
               </div>
             </Card>
           )}

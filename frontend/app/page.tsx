@@ -7,6 +7,7 @@ import { SearchBar } from '@/components/common/SearchBar'
 import { AgentCard } from '@/components/agent/AgentCard'
 import { ActivityList } from '@/components/common/ActivityList'
 import { RegistrationTrendChart } from '@/components/charts/RegistrationTrendChart'
+import { MultiNetworkSyncStatus } from '@/components/common/MultiNetworkSyncStatus'
 import Tabs from '@/components/common/Tabs'
 import { formatNumber } from '@/lib/utils/format'
 import { AgentCardSkeleton, StatCardSkeleton, ActivityItemSkeleton } from '@/components/common/Skeleton'
@@ -100,61 +101,17 @@ export default function HomePage() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center pt-16 pb-12 lg:pt-20 lg:pb-16">
-            {/* Blockchain Sync Status - Desktop: Absolute Position Top Right, Mobile: Above Title */}
-            {stats?.blockchain_sync && (
+            {/* Multi-Network Sync Status - Desktop: Absolute Position Top Right, Mobile: Above Title */}
+            {stats?.multi_network_sync && (
               <>
-                <div className="hidden md:flex absolute top-4 right-8 items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    {stats.blockchain_sync.is_syncing ? (
-                      <>
-                        <div className="relative">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        </div>
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Syncing</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-2 h-2 bg-green-500 rounded-full shadow-sm shadow-green-500/50"></div>
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Synced</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
-                  <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                    {stats.blockchain_sync.sync_progress.toFixed(1)}%
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    Block {formatNumber(stats.blockchain_sync.current_block)}
-                  </span>
+                {/* Desktop */}
+                <div className="hidden md:block absolute top-4 right-8">
+                  <MultiNetworkSyncStatus syncStatus={stats.multi_network_sync} />
                 </div>
 
+                {/* Mobile */}
                 <div className="flex md:hidden justify-center mb-6">
-                  <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      {stats.blockchain_sync.is_syncing ? (
-                        <>
-                          <div className="relative">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          </div>
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Syncing</span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="w-2 h-2 bg-green-500 rounded-full shadow-sm shadow-green-500/50"></div>
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Synced</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
-                    <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                      {stats.blockchain_sync.sync_progress.toFixed(1)}%
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      Block {formatNumber(stats.blockchain_sync.current_block)}
-                    </span>
-                  </div>
+                  <MultiNetworkSyncStatus syncStatus={stats.multi_network_sync} />
                 </div>
               </>
             )}

@@ -40,6 +40,9 @@ class AgentResponse(AgentBase):
     created_at: datetime
     updated_at: datetime
 
+    # Network info (from relationship)
+    network_name: str | None = None
+
     # Blockchain data fields
     token_id: int | None = None
     owner_address: str | None = None
@@ -58,3 +61,31 @@ class AgentResponse(AgentBase):
     classification_source: str | None = None  # "metadata" or "ai"
 
     model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_orm_with_network(cls, agent) -> "AgentResponse":
+        """从 ORM 对象创建响应，包含网络名称"""
+        data = {
+            "id": agent.id,
+            "name": agent.name,
+            "address": agent.address,
+            "description": agent.description,
+            "reputation_score": agent.reputation_score,
+            "status": agent.status,
+            "network_id": agent.network_id,
+            "network_name": agent.network.name if agent.network else None,
+            "created_at": agent.created_at,
+            "updated_at": agent.updated_at,
+            "token_id": agent.token_id,
+            "owner_address": agent.owner_address,
+            "metadata_uri": agent.metadata_uri,
+            "on_chain_data": agent.on_chain_data,
+            "last_synced_at": agent.last_synced_at,
+            "sync_status": agent.sync_status,
+            "reputation_count": agent.reputation_count or 0,
+            "reputation_last_updated": agent.reputation_last_updated,
+            "skills": agent.skills,
+            "domains": agent.domains,
+            "classification_source": agent.classification_source,
+        }
+        return cls(**data)

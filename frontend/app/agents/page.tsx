@@ -6,6 +6,7 @@ import Tabs from '@/components/common/Tabs'
 import { SearchBar } from '@/components/common/SearchBar'
 import { AgentCardSkeleton } from '@/components/common/Skeleton'
 import { FilterSort, type FilterOptions, type SortOption } from '@/components/common/FilterSort'
+import { NetworkSelector } from '@/components/common/NetworkSelector'
 import { agentService } from '@/lib/api/services'
 import type { Agent } from '@/types'
 
@@ -13,6 +14,7 @@ export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([])
   const [activeTab, setActiveTab] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedNetwork, setSelectedNetwork] = useState('all')
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -44,6 +46,7 @@ export default function AgentsPage() {
         page: pageNum,
         page_size: pageSize,
         search: searchQuery || undefined,
+        network: selectedNetwork !== 'all' ? selectedNetwork : undefined,
       }, abortController.signal)
 
       // Only update state if the request wasn't aborted
@@ -65,9 +68,9 @@ export default function AgentsPage() {
         setLoading(false)
       }
     }
-  }, [activeTab, searchQuery, pageSize])
+  }, [activeTab, searchQuery, selectedNetwork, pageSize])
 
-  // Initial load and when activeTab or searchQuery changes
+  // Initial load and when filters change
   useEffect(() => {
     fetchAgents(1) // Always fetch page 1 when these change
 
@@ -77,7 +80,7 @@ export default function AgentsPage() {
         abortControllerRef.current.abort();
       }
     }
-  }, [activeTab, searchQuery, fetchAgents])
+  }, [activeTab, searchQuery, selectedNetwork, fetchAgents])
 
   const tabs = [
     { id: 'all', label: 'All Agents' },
@@ -94,6 +97,11 @@ export default function AgentsPage() {
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     // fetchAgents(1) will be called by useEffect when searchQuery changes
+  }
+
+  const handleNetworkChange = (networkId: string) => {
+    setSelectedNetwork(networkId)
+    // fetchAgents(1) will be called by useEffect when selectedNetwork changes
   }
 
   const handleNextPage = useCallback(() => {
@@ -123,9 +131,15 @@ export default function AgentsPage() {
         <SearchBar onSearch={handleSearch} />
       </div>
 
-      {/* Tabs and Filters */}
+      {/* Network Selector and Filters */}
       <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <NetworkSelector
+            selectedNetwork={selectedNetwork}
+            onNetworkChange={handleNetworkChange}
+          />
+          <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
+        </div>
         <FilterSort />
       </div>
 

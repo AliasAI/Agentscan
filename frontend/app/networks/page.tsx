@@ -112,12 +112,6 @@ export default function NetworksPage() {
         ))}
       </div>
 
-      <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <div className="text-sm text-foreground/80">
-          <strong>Note:</strong> Currently, only Sepolia network is actively syncing data.
-          Multi-network synchronization will be enabled after database schema updates.
-        </div>
-      </div>
     </div>
   );
 }

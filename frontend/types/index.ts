@@ -26,6 +26,7 @@ export interface Agent {
   reputation_score: number;
   status: AgentStatus;
   network_id: string;
+  network_name?: string;  // 前端根据 network_id 映射
   created_at: string;
   updated_at: string;
 
@@ -63,6 +64,14 @@ export interface Network {
   created_at: string;
 }
 
+export interface NetworkWithStats {
+  id: string;
+  name: string;
+  chain_id: number;
+  explorer_url: string;
+  agent_count: number;
+}
+
 export interface Activity {
   id: string;
   agent_id: string;
@@ -81,6 +90,22 @@ export interface BlockchainSyncStatus {
   last_synced_at: string | null;
 }
 
+export interface NetworkSyncStatus {
+  network_name: string;
+  network_key: string;
+  current_block: number;
+  latest_block: number;
+  sync_progress: number; // 0-100
+  is_syncing: boolean;
+  last_synced_at: string | null;
+}
+
+export interface MultiNetworkSyncStatus {
+  overall_progress: number;
+  is_syncing: boolean;
+  networks: NetworkSyncStatus[];
+}
+
 export interface Stats {
   total_agents: number;
   active_agents: number;
@@ -88,6 +113,7 @@ export interface Stats {
   total_activities: number;
   updated_at: string;
   blockchain_sync?: BlockchainSyncStatus;
+  multi_network_sync?: MultiNetworkSyncStatus;
 }
 
 export interface PaginatedResponse<T> {

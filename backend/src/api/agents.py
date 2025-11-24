@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from src.db.database import get_db
 from src.models import Agent, AgentStatus
@@ -18,11 +18,16 @@ async def get_agents(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     search: str | None = None,
+    network: str | None = Query(None, description="Filter by network ID or 'all'"),
     db: Session = Depends(get_db),
 ):
-    """Get agent list with tab filtering, pagination and search"""
+    """Get agent list with tab filtering, pagination, search and network filter"""
 
-    query = db.query(Agent)
+    query = db.query(Agent).options(joinedload(Agent.network))
+
+    # Network filtering
+    if network and network != "all":
+        query = query.filter(Agent.network_id == network)
 
     # Tab filtering
     if tab == "active":
@@ -58,7 +63,10 @@ async def get_agents(
     total_pages = (total + page_size - 1) // page_size
 
     # Apply pagination
-    items = query.offset((page - 1) * page_size).limit(page_size).all()
+    agents = query.offset((page - 1) * page_size).limit(page_size).all()
+
+    # Convert to response with network_name
+    items = [AgentResponse.from_orm_with_network(agent) for agent in agents]
 
     return PaginatedResponse(
         items=items,
@@ -73,15 +81,26 @@ async def get_agents(
 async def get_featured_agents(db: Session = Depends(get_db)):
     """获取精选代理（前8个）"""
 
-    agents = db.query(Agent).order_by(Agent.reputation_score.desc()).limit(8).all()
-    return agents
+    agents = (
+        db.query(Agent)
+        .options(joinedload(Agent.network))
+        .order_by(Agent.reputation_score.desc())
+        .limit(8)
+        .all()
+    )
+    return [AgentResponse.from_orm_with_network(agent) for agent in agents]
 
 
 @router.get("/agents/{agent_id}", response_model=AgentResponse)
 async def get_agent(agent_id: str, db: Session = Depends(get_db)):
     """获取代理详情"""
 
-    agent = db.query(Agent).filter(Agent.id == agent_id).first()
+    agent = (
+        db.query(Agent)
+        .options(joinedload(Agent.network))
+        .filter(Agent.id == agent_id)
+        .first()
+    )
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
-    return agent
+    return AgentResponse.from_orm_with_network(agent)
