@@ -22,76 +22,81 @@ export function AgentCard({ agent }: AgentCardProps) {
   };
 
   return (
-    <Link href={`/agents/${agent.id}`} className="block group">
-      <div className="relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/20 transition-all duration-300 cursor-pointer min-h-[220px] flex flex-col hover:-translate-y-1 overflow-hidden">
+    <Link href={`/agents/${agent.id}`} className="block group h-full">
+      <div className="relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-lg hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/20 transition-all duration-200 cursor-pointer h-full flex flex-col hover:-translate-y-0.5 overflow-hidden">
         {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-cyan-500/5 dark:from-indigo-500/10 dark:via-purple-500/10 dark:to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-cyan-500/5 dark:from-indigo-500/10 dark:via-purple-500/10 dark:to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
 
-        <div className="relative z-10">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  {agent.name}
-                </h3>
-                {agent.token_id !== undefined && agent.token_id !== null && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400 font-mono flex-shrink-0 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
-                    #{agent.token_id}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                {agent.network_name && (
-                  <>
-                    <div className="flex items-center gap-1" title={agent.network_name}>
-                      <NetworkIcon networkName={agent.network_name} className="w-4 h-4" />
-                      <span className="text-xs">{agent.network_name}</span>
-                    </div>
-                    <span className="text-gray-300 dark:text-gray-600">|</span>
-                  </>
-                )}
-                <span className="truncate font-mono text-xs">{formatAddress(agent.address)}</span>
-              </div>
+        <div className="relative z-10 flex flex-col h-full">
+          {/* Header: Name + Status */}
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                {agent.name}
+              </h3>
+              {agent.token_id !== undefined && agent.token_id !== null && (
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex-shrink-0">
+                  #{agent.token_id}
+                </span>
+              )}
             </div>
             <span
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${statusColors[agent.status]}`}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 ${statusColors[agent.status]}`}
             >
               {statusLabels[agent.status]}
             </span>
           </div>
 
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 line-clamp-2 leading-relaxed">
+          {/* Network + Address */}
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mb-2">
+            {agent.network_name && (
+              <>
+                <div className="flex items-center gap-1" title={agent.network_name}>
+                  <NetworkIcon networkName={agent.network_name} className="w-3.5 h-3.5" />
+                  <span>{agent.network_name}</span>
+                </div>
+                <span className="text-gray-300 dark:text-gray-600">|</span>
+              </>
+            )}
+            <span className="truncate font-mono text-[11px]">{formatAddress(agent.address)}</span>
+          </div>
+
+          {/* Description */}
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2 leading-relaxed flex-grow">
             {agent.description}
           </p>
 
-          <div className="mb-4">
+          {/* OASF Tags */}
+          <div className="mb-2">
             <OASFTags
               skills={agent.skills}
               domains={agent.domains}
               maxDisplay={3}
               classificationSource={agent.classification_source}
+              compact
             />
           </div>
 
-          <div className="flex items-center justify-between text-sm mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          {/* Reputation Footer */}
+          <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100 dark:border-gray-700/50 mt-auto">
+            <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="font-medium">Reputation</span>
+              <span>Reputation</span>
             </div>
             <div>
               {agent.reputation_count && agent.reputation_count > 0 ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-bold text-indigo-600 dark:text-indigo-400">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                     {agent.reputation_score.toFixed(0)}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    / 100 ({agent.reputation_count} {agent.reputation_count === 1 ? 'review' : 'reviews'})
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                    ({agent.reputation_count})
                   </span>
                 </div>
               ) : (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-[10px] text-gray-400 dark:text-gray-500">
                   No reviews yet
                 </span>
               )}

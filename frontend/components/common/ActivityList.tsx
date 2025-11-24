@@ -19,35 +19,32 @@ export function ActivityList({ activities }: ActivityListProps) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {activities.map((activity) => (
         <div
           key={activity.id}
-          className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
         >
-          <div className="text-2xl">
+          <div className="text-sm flex-shrink-0">
             {activityIcons[activity.activity_type]}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-medium text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-medium text-xs text-gray-900 dark:text-white truncate">
                 {activityLabels[activity.activity_type]}
               </span>
-              <span className="text-xs text-foreground/60">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0">
                 {formatRelativeTime(activity.created_at)}
               </span>
             </div>
             {activity.agent && (
-              <p className="text-xs text-foreground/60 mb-1">
-                Agent: {activity.agent.name}
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                {activity.agent.name}
                 {activity.agent.token_id && ` (#${activity.agent.token_id})`}
               </p>
             )}
-            <p className="text-sm text-foreground/80">
-              {activity.description}
-            </p>
             {activity.tx_hash && (
-              <p className="text-xs text-foreground/60 mt-1">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 font-mono">
                 Tx: {formatAddress(activity.tx_hash)}
               </p>
             )}

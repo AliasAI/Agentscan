@@ -14,24 +14,26 @@ export function Skeleton({ className = '' }: SkeletonProps) {
 
 export function AgentCardSkeleton() {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 h-[180px] flex flex-col">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-4 w-12" />
-          </div>
-          <Skeleton className="h-4 w-40" />
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 h-full flex flex-col">
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-1.5 flex-1">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-3 w-8" />
         </div>
-        <Skeleton className="h-6 w-16" />
+        <Skeleton className="h-5 w-12 rounded-full" />
       </div>
-      <div className="space-y-2 mb-3 flex-1">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-32 mb-2" />
+      <div className="space-y-1.5 mb-2 flex-1">
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-2/3" />
       </div>
-      <div className="flex items-center justify-between mt-auto">
-        <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-4 w-24" />
+      <div className="flex gap-1 mb-2">
+        <Skeleton className="h-4 w-16 rounded" />
+        <Skeleton className="h-4 w-14 rounded" />
+      </div>
+      <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700/50">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-4 w-12" />
       </div>
     </div>
   );
@@ -39,22 +41,28 @@ export function AgentCardSkeleton() {
 
 export function StatCardSkeleton() {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
-      <Skeleton className="h-4 w-24 mb-3" />
-      <Skeleton className="h-8 w-20" />
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-3">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-8 w-8 rounded-lg" />
+        <div>
+          <Skeleton className="h-2.5 w-16 mb-1" />
+          <Skeleton className="h-5 w-12" />
+        </div>
+      </div>
     </div>
   );
 }
 
 export function ActivityItemSkeleton() {
   return (
-    <div className="py-3 border-b border-gray-200 dark:border-gray-800 last:border-0">
-      <div className="flex items-start gap-3">
-        <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
-        <div className="flex-1 min-w-0 space-y-2">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
+    <div className="flex items-start gap-2 p-2">
+      <Skeleton className="h-4 w-4 rounded flex-shrink-0" />
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-2.5 w-12" />
         </div>
+        <Skeleton className="h-2.5 w-20" />
       </div>
     </div>
   );

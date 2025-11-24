@@ -9,9 +9,10 @@ interface OASFTagsProps {
   domains?: string[];
   maxDisplay?: number;
   classificationSource?: string | null;
+  compact?: boolean;
 }
 
-export function OASFTags({ skills = [], domains = [], maxDisplay = 3, classificationSource }: OASFTagsProps) {
+export function OASFTags({ skills = [], domains = [], maxDisplay = 3, classificationSource, compact = false }: OASFTagsProps) {
   // 确保 skills 和 domains 是数组（处理 null/undefined 情况）
   const safeSkills = Array.isArray(skills) ? skills : [];
   const safeDomains = Array.isArray(domains) ? domains : [];
@@ -41,34 +42,28 @@ export function OASFTags({ skills = [], domains = [], maxDisplay = 3, classifica
 
   const remainingCount = (safeSkills.length + safeDomains.length) - allTags.length;
 
+  const tagSize = compact ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs';
+  const gapSize = compact ? 'gap-1' : 'gap-1.5';
+
   return (
-    <div className="flex flex-wrap gap-1.5 mt-2 items-center">
+    <div className={`flex flex-wrap ${gapSize} items-center`}>
       {allTags.map((tag, index) => (
         <span
           key={`${tag.type}-${index}`}
-          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+          className={`inline-flex items-center rounded font-medium ${tagSize} ${
             tag.type === 'skill'
-              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-              : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+              : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
           }`}
         >
-          {tag.type === 'skill' && '⚡ '}
-          {tag.type === 'domain' && '🏢 '}
+          {tag.type === 'skill' && '⚡'}
+          {tag.type === 'domain' && '🏢'}
           {formatTagName(tag.value)}
         </span>
       ))}
       {remainingCount > 0 && (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-          +{remainingCount} more
-        </span>
-      )}
-      {classificationSource && (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-          classificationSource === 'metadata'
-            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-            : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-        }`}>
-          {classificationSource === 'metadata' ? '🤖 Agent' : '🧠 AI'}
+        <span className={`inline-flex items-center rounded font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 ${tagSize}`}>
+          +{remainingCount}
         </span>
       )}
     </div>
