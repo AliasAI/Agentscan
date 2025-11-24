@@ -108,17 +108,17 @@ export function NetworkSelector({
               onNetworkChange('all')
               setIsOpen(false)
             }}
-            className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between ${
+            className={`w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between ${
               selectedNetwork === 'all'
                 ? 'bg-blue-50 dark:bg-blue-900/20'
                 : ''
             }`}
           >
             <span className="flex items-center gap-2">
-              <DefaultNetworkIcon className="w-5 h-5" />
-              <span className="font-medium">All Networks</span>
+              <DefaultNetworkIcon className="w-4 h-4" />
+              <span className="text-sm font-medium">All Networks</span>
             </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
               {totalAgents} agents
             </span>
           </button>
@@ -133,17 +133,17 @@ export function NetworkSelector({
                 onNetworkChange(network.id)
                 setIsOpen(false)
               }}
-              className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between ${
+              className={`w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between ${
                 selectedNetwork === network.id
                   ? 'bg-blue-50 dark:bg-blue-900/20'
                   : ''
               }`}
             >
               <span className="flex items-center gap-2">
-                <NetworkIcon networkName={network.name} className="w-5 h-5" />
-                <span className="font-medium">{network.name}</span>
+                <NetworkIcon networkName={network.name} className="w-4 h-4" />
+                <span className="text-sm font-medium">{network.name}</span>
               </span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {network.agent_count} agents
               </span>
             </button>

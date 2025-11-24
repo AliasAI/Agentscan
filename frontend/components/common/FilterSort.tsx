@@ -99,7 +99,7 @@ export function FilterSort({ onFilterChange, onSortChange }: FilterSortProps) {
 
       {/* Filter Panel */}
       {isOpen && (
-        <div className="absolute top-full mt-2 right-0 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-4 z-10">
+        <div className="absolute top-full mt-2 right-0 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-4 z-50">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Filters</h3>
             <button
