@@ -65,13 +65,14 @@ echo ""
 echo "🔧 Executing database reset..."
 echo ""
 
-# Build command
-CMD="uv run python -m src.db.reset_database"
-[ "$BACKUP" = true ] && CMD="$CMD --backup"
-[ "$RESYNC" = true ] && CMD="$CMD --resync"
+# Build command arguments
+ARGS=""
+[ "$BACKUP" = true ] && ARGS="$ARGS --backup"
+[ "$RESYNC" = true ] && ARGS="$ARGS --resync"
 
-# Execute reset in container
-docker compose exec backend sh -c "$CMD"
+# Execute reset in container (use python -m from backend directory)
+echo "Running: cd /app && uv run python -m src.db.reset_database$ARGS"
+docker compose exec backend sh -c "cd /app && uv run python -m src.db.reset_database$ARGS"
 
 # Restart backend to apply changes
 echo ""

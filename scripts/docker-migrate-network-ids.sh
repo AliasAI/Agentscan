@@ -32,13 +32,13 @@ echo ""
 
 # Execute migration in container
 echo "🔧 Running migration..."
-docker compose exec backend uv run python -m src.db.migrate_network_ids
+docker compose exec backend sh -c "cd /app && uv run python -m src.db.migrate_network_ids"
 
 echo ""
 echo -e "${GREEN}✅ Migration completed${NC}"
 echo ""
 echo "📋 Verification:"
-docker compose exec backend uv run python -c "
+docker compose exec backend sh -c "cd /app && uv run python -c \"
 from src.db.database import SessionLocal
 from src.models import Agent, Network
 
@@ -71,7 +71,7 @@ try:
 
 finally:
     db.close()
-"
+\""
 
 echo ""
 echo "📋 Next steps:"
