@@ -10,6 +10,7 @@ from src.services.scheduler import start_scheduler, shutdown_scheduler
 from src.db.migrate_add_contracts import migrate as migrate_contracts
 from src.db.migrate_add_oasf_fields import migrate as migrate_oasf
 from src.db.migrate_add_classification_source import migrate as migrate_classification_source
+from src.db.migrate_multi_network import migrate as migrate_multi_network
 from src.db.init_networks import init_networks
 
 # Create database tables
@@ -20,6 +21,7 @@ try:
     migrate_contracts()
     migrate_oasf()
     migrate_classification_source()
+    migrate_multi_network()
 except Exception as e:
     print(f"Migration warning: {e}")
 

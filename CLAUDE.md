@@ -27,8 +27,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 运行数据库迁移
 ./scripts/migrate-db.sh
 
+# 多网络迁移（添加联合唯一索引）
+./scripts/migrate-multi-network.sh
+
 # 初始化网络数据
 ./scripts/init-networks.sh
+
+# 重置网络同步状态（重新扫描）
+./scripts/reset-sync.sh base-sepolia
+
+# 手动触发同步
+./scripts/trigger-sync.sh base-sepolia
 ```
 
 ### 后端直接命令
