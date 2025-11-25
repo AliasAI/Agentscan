@@ -78,7 +78,7 @@ def migrate():
             print(f"   Old ID: {old_id}")
             print(f"   New ID: {new_id}")
 
-            # Step 1: Update related tables (agents, blockchain_sync)
+            # Step 1: Update related tables (agents, blockchain_syncs)
             cursor.execute(
                 "UPDATE agents SET network_id = ? WHERE network_id = ?",
                 (new_id, old_id)
@@ -87,11 +87,11 @@ def migrate():
             print(f"   ✅ Updated {agents_updated} agents")
 
             cursor.execute(
-                "UPDATE blockchain_sync SET network_id = ? WHERE network_id = ?",
+                "UPDATE blockchain_syncs SET network_name = ? WHERE network_name = ?",
                 (new_id, old_id)
             )
             sync_updated = cursor.rowcount
-            print(f"   ✅ Updated {sync_updated} blockchain_sync records")
+            print(f"   ✅ Updated {sync_updated} blockchain_syncs records")
 
             # Step 2: Create new network record with new ID
             cursor.execute(
