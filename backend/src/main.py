@@ -11,6 +11,7 @@ from src.db.migrate_add_contracts import migrate as migrate_contracts
 from src.db.migrate_add_oasf_fields import migrate as migrate_oasf
 from src.db.migrate_add_classification_source import migrate as migrate_classification_source
 from src.db.migrate_multi_network import migrate as migrate_multi_network
+from src.db.migrate_network_ids import migrate as migrate_network_ids
 from src.db.init_networks import init_networks
 
 # Create database tables
@@ -22,6 +23,7 @@ try:
     migrate_oasf()
     migrate_classification_source()
     migrate_multi_network()
+    migrate_network_ids()  # Fix orphaned network_id references
 except Exception as e:
     print(f"Migration warning: {e}")
 

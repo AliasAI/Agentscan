@@ -23,21 +23,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 数据库操作
 
+**本地开发环境：**
+
 ```bash
-# 运行数据库迁移
-./scripts/migrate-db.sh
+# 完整重置数据库（备份 + 重建 + 重新同步）
+./scripts/reset-db.sh --backup --resync
 
-# 多网络迁移（添加联合唯一索引）
-./scripts/migrate-multi-network.sh
-
-# 初始化网络数据
-./scripts/init-networks.sh
+# 仅修复 network_id 问题（不删除数据）
+cd backend && uv run python -m src.db.migrate_network_ids
 
 # 重置网络同步状态（重新扫描）
 ./scripts/reset-sync.sh base-sepolia
 
 # 手动触发同步
 ./scripts/trigger-sync.sh base-sepolia
+```
+
+**Docker 生产环境：**
+
+```bash
+# 完整重置数据库（备份 + 重建 + 重新同步）
+./scripts/docker-reset-db.sh --backup --resync
+
+# 仅修复 network_id 问题（推荐用于服务器修复）
+./scripts/docker-migrate-network-ids.sh
+
+# 重置网络同步状态
+./scripts/docker-reset-sync.sh base-sepolia
+
+# 手动触发同步
+./scripts/docker-trigger-sync.sh base-sepolia
 ```
 
 ### 后端直接命令
@@ -203,16 +218,55 @@ Agent 模型保存到数据库
 - 存储多个合约地址：`{identity: "0x...", reputation: "0x...", validation: "0x..."}`
 - 在 migrate_add_contracts.py 中添加
 
+### 数据库迁移系统 [UPDATED: 2025-11-25]
+
+**自动迁移流程（main.py 启动时）：**
+1. `Base.metadata.create_all()` - 创建基础表结构
+2. `migrate_contracts()` - 添加 contracts 字段到 networks 表
+3. `migrate_oasf()` - 添加 skills/domains 字段到 agents 表
+4. `migrate_classification_source()` - 添加分类来源字段
+5. `migrate_multi_network()` - 添加 (token_id, network_id) 联合唯一索引
+6. `migrate_network_ids()` - **修复孤立的 network_id（UUID → network_key）**
+7. `init_networks()` - 初始化/更新网络配置
+8. `startup_event: start_scheduler()` - 启动定时任务
+
+**关键迁移说明：**
+
+- **migrate_network_ids**: 修复历史数据中使用 UUID 的 network_id
+  - 自动检测并映射旧 UUID 到新 network_key（如 `sepolia`）
+  - 更新 agents 表和 blockchain_syncs 表
+  - 保证所有 agents 都能关联到正确的网络
+  - **服务器部署时必须执行此迁移**
+
+**手动迁移工具：**
+
+```bash
+# 本地开发：完整重置数据库
+./scripts/reset-db.sh --backup --resync
+
+# Docker：仅修复 network_id（推荐服务器使用）
+./scripts/docker-migrate-network-ids.sh
+
+# Docker：完整重置（慎用，会删除所有数据）
+./scripts/docker-reset-db.sh --backup --resync
+```
+
+**迁移脚本位置：**
+- `backend/src/db/migrate_*.py` - 各个独立迁移
+- `backend/src/db/reset_database.py` - 完整重置工具
+- `scripts/docker-migrate-network-ids.sh` - Docker 快速修复
+- `scripts/docker-reset-db.sh` - Docker 完整重置
+
 ### 启动流程和依赖顺序
 
 **后端启动顺序（dev-backend.sh）：**
-1. 运行数据库迁移（migrate_add_contracts.py）
-2. 初始化数据库表（init_data.py）- 如果已有数据则跳过
+1. 运行数据库迁移（自动执行所有 migrate_*.py）
+2. 初始化网络数据（init_networks）
 3. 启动 uvicorn 服务器
 
 **应用启动顺序（main.py）：**
 1. Base.metadata.create_all() - 创建表
-2. migrate() - 运行迁移
+2. migrate_*() - 运行所有迁移（包括 network_id 修复）
 3. init_networks() - 初始化网络数据
 4. startup_event: start_scheduler() - 启动定时任务
 
@@ -276,8 +330,108 @@ GET /api/agents?tab={all|active|new|top}&page=1&page_size=20&search=query
 
 1. 在 `backend/src/db/` 创建 `migrate_*.py`
 2. 使用 sqlite3 直接操作（ALTER TABLE 等）
-3. 实现 migrate() 函数
-4. 在 `main.py` 中调用
+3. 实现 migrate() 函数，包含幂等性检查
+4. 在 `main.py` 中 import 并调用
+5. 测试本地环境：重启后端验证迁移成功
+6. 测试 Docker 环境：`docker compose restart backend` 验证
+
+### 服务器部署与数据库迁移 [NEW: 2025-11-25]
+
+**服务器首次部署（Docker）：**
+
+```bash
+# 1. 拉取最新代码
+git pull origin master
+
+# 2. 启动容器（自动运行所有迁移）
+docker compose up -d
+
+# 3. 查看迁移日志
+docker compose logs backend | grep -E "Migration|migrate"
+
+# 4. 验证网络数据
+docker compose exec backend uv run python -c "
+from src.db.database import SessionLocal
+from src.models import Network, Agent
+db = SessionLocal()
+print(f'Networks: {db.query(Network).count()}')
+print(f'Agents: {db.query(Agent).count()}')
+db.close()
+"
+```
+
+**服务器修复 network_id 问题（推荐）：**
+
+如果服务器上前端看不到 Sepolia 等网络，使用此脚本修复（不删除数据）：
+
+```bash
+# 执行 network_id 迁移
+./scripts/docker-migrate-network-ids.sh
+
+# 脚本会自动：
+# 1. 检查孤立的 network_id
+# 2. 映射 UUID → network_key
+# 3. 验证修复结果
+# 4. 显示每个网络的 agent 数量
+
+# 无需重启，但建议重启以确保前端刷新
+docker compose restart backend
+```
+
+**服务器完整重置（慎用）：**
+
+只在需要完全重新同步区块链数据时使用：
+
+```bash
+# 完整重置（会删除所有数据）
+./scripts/docker-reset-db.sh --backup --resync
+
+# 脚本会自动：
+# 1. 备份当前数据库
+# 2. 删除所有表
+# 3. 重建表结构
+# 4. 运行所有迁移
+# 5. 初始化网络配置
+# 6. 重置同步状态
+# 7. 重启后端容器
+```
+
+**故障排查：**
+
+```bash
+# 检查容器状态
+docker compose ps
+
+# 查看后端日志
+docker compose logs -f backend
+
+# 进入容器手动检查
+docker compose exec backend sh
+
+# 查看数据库表结构
+docker compose exec backend uv run python -c "
+import sqlite3
+conn = sqlite3.connect('8004scan.db')
+cursor = conn.cursor()
+cursor.execute('PRAGMA table_info(agents)')
+print([col[1] for col in cursor.fetchall()])
+"
+
+# 检查网络和 agents 关联
+docker compose exec backend uv run python -c "
+from src.db.database import SessionLocal
+db = SessionLocal()
+result = db.execute('''
+    SELECT n.name, COUNT(a.id)
+    FROM networks n
+    LEFT JOIN agents a ON n.id = a.network_id
+    GROUP BY n.id
+''')
+for name, count in result:
+    print(f'{name}: {count} agents')
+db.close()
+"
+```
 
 ### 响应式组件实现
 
