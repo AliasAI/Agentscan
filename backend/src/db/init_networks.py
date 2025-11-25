@@ -19,9 +19,9 @@ def init_networks():
             if not config.get("enabled", True):
                 continue
 
-            # Check if network already exists (by chain_id)
+            # Check if network already exists (by id or chain_id)
             existing_network = db.query(Network).filter(
-                Network.chain_id == config["chain_id"]
+                (Network.id == network_key) | (Network.chain_id == config["chain_id"])
             ).first()
 
             if existing_network:
@@ -30,9 +30,15 @@ def init_networks():
                     existing_network.contracts = config["contracts"]
                     updated_count += 1
                     print(f"✅ Updated contracts for {existing_network.name}")
+                # Update id if it's a UUID (migrate from old schema)
+                if existing_network.id != network_key and len(existing_network.id) > 20:
+                    existing_network.id = network_key
+                    updated_count += 1
+                    print(f"✅ Updated id for {existing_network.name}: {network_key}")
             else:
-                # Create new network
+                # Create new network with network_key as id
                 network = Network(
+                    id=network_key,  # Use network_key as id (e.g., "base-sepolia")
                     name=config["name"],
                     chain_id=config["chain_id"],
                     rpc_url=config["rpc_url"],
@@ -42,7 +48,7 @@ def init_networks():
                 db.add(network)
                 added_count += 1
                 has_contracts = "✓" if network.contracts else "✗"
-                print(f"✅ Added network: {network.name} (Chain ID: {network.chain_id}) [Contracts: {has_contracts}]")
+                print(f"✅ Added network: {network.name} (ID: {network_key}, Chain ID: {network.chain_id}) [Contracts: {has_contracts}]")
 
         db.commit()
 
