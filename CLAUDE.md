@@ -350,14 +350,14 @@ docker compose up -d
 docker compose logs backend | grep -E "Migration|migrate"
 
 # 4. 验证网络数据
-docker compose exec backend uv run python -c "
+docker compose exec backend sh -c "cd /app && uv run python -c \"
 from src.db.database import SessionLocal
 from src.models import Network, Agent
 db = SessionLocal()
 print(f'Networks: {db.query(Network).count()}')
 print(f'Agents: {db.query(Agent).count()}')
 db.close()
-"
+\""
 ```
 
 **服务器修复 network_id 问题（推荐）：**
@@ -418,19 +418,20 @@ print([col[1] for col in cursor.fetchall()])
 "
 
 # 检查网络和 agents 关联
-docker compose exec backend uv run python -c "
+docker compose exec backend sh -c "cd /app && uv run python -c \"
 from src.db.database import SessionLocal
+from sqlalchemy import text
 db = SessionLocal()
-result = db.execute('''
+result = db.execute(text('''
     SELECT n.name, COUNT(a.id)
     FROM networks n
     LEFT JOIN agents a ON n.id = a.network_id
     GROUP BY n.id
-''')
+'''))
 for name, count in result:
     print(f'{name}: {count} agents')
 db.close()
-"
+\""
 ```
 
 ### 响应式组件实现

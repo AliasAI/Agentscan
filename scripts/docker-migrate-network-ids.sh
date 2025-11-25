@@ -40,29 +40,29 @@ echo ""
 echo "📋 Verification:"
 docker compose exec backend sh -c "cd /app && uv run python -c \"
 from src.db.database import SessionLocal
-from src.models import Agent, Network
+from sqlalchemy import text
 
 db = SessionLocal()
 try:
     # Count agents by network
-    result = db.execute('''
+    result = db.execute(text('''
         SELECT n.name, COUNT(a.id) as count
         FROM networks n
         LEFT JOIN agents a ON n.id = a.network_id
         GROUP BY n.id
         ORDER BY count DESC
-    ''')
+    '''))
 
     print('Agents per network:')
     for name, count in result:
         print(f'  {name}: {count} agents')
 
     # Check for orphaned agents
-    orphaned = db.execute('''
+    orphaned = db.execute(text('''
         SELECT COUNT(*)
         FROM agents a
         WHERE a.network_id NOT IN (SELECT id FROM networks)
-    ''').scalar()
+    ''')).scalar()
 
     if orphaned > 0:
         print(f'\n⚠️  Warning: {orphaned} orphaned agents found')
