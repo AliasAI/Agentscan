@@ -845,6 +845,12 @@ async def sync_base_sepolia():
     await service.sync()
 
 
+async def sync_bsc_testnet():
+    """Sync BSC Testnet network"""
+    service = get_sync_service("bsc-testnet")
+    await service.sync()
+
+
 async def sync_all_networks():
     """Sync all enabled networks sequentially"""
     for network_key, config in NETWORKS.items():

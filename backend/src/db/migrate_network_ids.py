@@ -18,6 +18,7 @@ NETWORK_KEY_MAPPING = {
     84532: "base-sepolia",
     59141: "linea-sepolia",
     296: "hedera-testnet",
+    97: "bsc-testnet",
 }
 
 

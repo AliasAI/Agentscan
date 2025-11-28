@@ -9,6 +9,7 @@ from src.services.blockchain_sync import (
     get_sync_service,
     sync_sepolia,
     sync_base_sepolia,
+    sync_bsc_testnet,
 )
 from src.core.networks_config import get_enabled_networks
 import structlog
@@ -42,6 +43,17 @@ def start_scheduler():
                 "scheduler_task_failed", task="base_sepolia_sync", error=str(e)
             )
 
+    async def sync_bsc_testnet_task():
+        """Periodic BSC Testnet blockchain sync task"""
+        try:
+            logger.info("scheduler_task_started", task="bsc_testnet_sync")
+            await asyncio.to_thread(_sync_network_blocking, "bsc-testnet")
+            logger.info("scheduler_task_completed", task="bsc_testnet_sync")
+        except Exception as e:
+            logger.error(
+                "scheduler_task_failed", task="bsc_testnet_sync", error=str(e)
+            )
+
     # Add Sepolia sync job - runs every 2 minutes
     scheduler.add_job(
         sync_sepolia_task,
@@ -62,20 +74,33 @@ def start_scheduler():
         max_instances=1
     )
 
+    # Add BSC Testnet sync job - runs every 2 minutes (offset by 30 seconds using different minute pattern)
+    scheduler.add_job(
+        sync_bsc_testnet_task,
+        trigger=CronTrigger(minute='*/2', second='30'),  # Runs at :00:30, :02:30, :04:30, ...
+        id='bsc_testnet_sync',
+        name='Sync BSC Testnet blockchain data',
+        replace_existing=True,
+        max_instances=1
+    )
+
     # Start scheduler
     scheduler.start()
 
     # Get next run times for logging
     sepolia_job = scheduler.get_job('sepolia_sync')
     base_sepolia_job = scheduler.get_job('base_sepolia_sync')
+    bsc_testnet_job = scheduler.get_job('bsc_testnet_sync')
 
     logger.info(
         "scheduler_started",
-        networks=["sepolia", "base-sepolia"],
+        networks=["sepolia", "base-sepolia", "bsc-testnet"],
         sepolia_schedule="Every 2 minutes (:00, :02, :04, ...)",
         sepolia_next_run=sepolia_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if sepolia_job and sepolia_job.next_run_time else 'N/A',
         base_sepolia_schedule="Every 2 minutes (:01, :03, :05, ...)",
         base_sepolia_next_run=base_sepolia_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if base_sepolia_job and base_sepolia_job.next_run_time else 'N/A',
+        bsc_testnet_schedule="Every 2 minutes (:00:30, :02:30, :04:30, ...)",
+        bsc_testnet_next_run=bsc_testnet_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if bsc_testnet_job and bsc_testnet_job.next_run_time else 'N/A',
         reputation_mode="EVENT-DRIVEN (via NewFeedback/FeedbackRevoked events)"
     )
 

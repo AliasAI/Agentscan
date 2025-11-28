@@ -47,6 +47,19 @@ export function HederaIcon({ className = 'w-5 h-5' }: IconProps) {
   )
 }
 
+export function BSCIcon({ className = 'w-5 h-5' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 126 126" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="63" r="63" fill="#F0B90B"/>
+      <path d="M63 28L78.5 43.5L68.8 53.2L63 47.4L57.2 53.2L47.5 43.5L63 28Z" fill="white"/>
+      <path d="M88.5 53.5L98.2 63.2L88.5 72.9L78.8 63.2L88.5 53.5Z" fill="white"/>
+      <path d="M63 79L78.5 63.5L88.2 73.2L63 98.4L37.8 73.2L47.5 63.5L63 79Z" fill="white"/>
+      <path d="M37.5 53.5L47.2 63.2L37.5 72.9L27.8 63.2L37.5 53.5Z" fill="white"/>
+      <path d="M63 53.5L72.7 63.2L63 72.9L53.3 63.2L63 53.5Z" fill="white"/>
+    </svg>
+  )
+}
+
 export function DefaultNetworkIcon({ className = 'w-5 h-5' }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -72,6 +85,8 @@ export function NetworkIcon({ networkName, className = 'w-5 h-5' }: NetworkIconP
       return <LineaIcon className={className} />
     case 'Hedera Testnet':
       return <HederaIcon className={className} />
+    case 'BSC Testnet':
+      return <BSCIcon className={className} />
     default:
       return <DefaultNetworkIcon className={className} />
   }

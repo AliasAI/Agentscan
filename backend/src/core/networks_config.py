@@ -58,11 +58,25 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         "rpc_url": "https://testnet.hashio.io/api",
         "explorer_url": "https://hashscan.io/testnet",
         "contracts": {
-            "identity": "0x0ddaa2de07deb24d5f0288ee29c3c57c4159dcc7",
-            "reputation": "0xcf4d195db80483eff011814a52d290bbab340a77",
-            "validation": "0x833984fb21688d6a409e02ac67a6e0a63a06f55a",
+            "identity": "0x0dDaa2de07deb24D5F0288ee29c3c57c4159DcC7",
+            "reputation": "0xcF4D195DB80483EFF011814a52D290BBAb340a77",
+            "validation": "0x833984fB21688d6A409E02Ac67a6e0a63a06f55a",
         },
         "start_block": 0,  # 需要填入实际的部署区块
+        "blocks_per_batch": 10000,
+        "enabled": True,
+    },
+    "bsc-testnet": {
+        "name": "BSC Testnet",
+        "chain_id": 97,
+        "rpc_url": os.getenv("BSC_TESTNET_RPC_URL", "https://data-seed-prebsc-1-s1.binance.org:8545"),
+        "explorer_url": "https://testnet.bscscan.com",
+        "contracts": {
+            "identity": "0x4f8c8694eAB93bbF7616EDD522503544E61E7dB7",
+            "reputation": "0xe55d10F699bCF2207573b7Be697C983C0d92c2b5",
+            "validation": "0xCd40E749C64761DA2298436Fe0eA4dc23f58c1f3",
+        },
+        "start_block": 75120134,
         "blocks_per_batch": 10000,
         "enabled": True,
     },
