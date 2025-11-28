@@ -519,10 +519,30 @@ class NetworkSyncService:
                 'description': 'No metadata URI provided'
             }
 
-        # Handle direct JSON string
-        if uri.startswith('{'):
+        # Handle direct JSON string (object or array)
+        if uri.startswith('{') or uri.startswith('['):
             try:
                 metadata = json.loads(uri)
+                # Handle list case
+                if isinstance(metadata, list):
+                    logger.warning(
+                        "direct_json_is_list",
+                        network=self.network_key,
+                        list_length=len(metadata)
+                    )
+                    if len(metadata) > 0 and isinstance(metadata[0], dict):
+                        metadata = metadata[0]
+                    else:
+                        return {
+                            'name': 'Unknown Agent',
+                            'description': 'Direct JSON is a list',
+                            'raw_data': metadata
+                        }
+                if not isinstance(metadata, dict):
+                    return {
+                        'name': 'Unknown Agent',
+                        'description': f'Direct JSON has unexpected type: {type(metadata).__name__}'
+                    }
                 logger.info(
                     "direct_json_parsed",
                     network=self.network_key,
@@ -548,31 +568,50 @@ class NetworkSyncService:
                     base64_data = uri.split('base64,')[1]
                     json_data = base64.b64decode(base64_data).decode('utf-8')
                     metadata = json.loads(json_data)
-                    logger.info(
-                        "data_uri_parsed",
-                        network=self.network_key,
-                        format="base64",
-                        name=metadata.get('name', 'Unknown')
-                    )
-                    return metadata
                 elif ',' in uri:
                     json_data = uri.split(',', 1)[1]
                     from urllib.parse import unquote
                     json_data = unquote(json_data)
                     metadata = json.loads(json_data)
-                    logger.info(
-                        "data_uri_parsed",
-                        network=self.network_key,
-                        format="plain",
-                        name=metadata.get('name', 'Unknown')
-                    )
-                    return metadata
                 else:
                     logger.warning(
                         "unsupported_data_uri_format",
                         network=self.network_key,
                         uri=uri[:100]
                     )
+                    return {
+                        'name': 'Unknown Agent',
+                        'description': 'Unsupported data URI format'
+                    }
+
+                # Ensure metadata is a dict
+                if isinstance(metadata, list):
+                    logger.warning(
+                        "data_uri_is_list",
+                        network=self.network_key,
+                        list_length=len(metadata)
+                    )
+                    if len(metadata) > 0 and isinstance(metadata[0], dict):
+                        metadata = metadata[0]
+                    else:
+                        return {
+                            'name': 'Unknown Agent',
+                            'description': 'Data URI contains a list',
+                            'raw_data': metadata
+                        }
+                if not isinstance(metadata, dict):
+                    return {
+                        'name': 'Unknown Agent',
+                        'description': f'Data URI has unexpected type: {type(metadata).__name__}'
+                    }
+
+                logger.info(
+                    "data_uri_parsed",
+                    network=self.network_key,
+                    format="base64" if 'base64,' in uri else "plain",
+                    name=metadata.get('name', 'Unknown')
+                )
+                return metadata
             except Exception as e:
                 logger.warning(
                     "data_uri_parse_failed",
@@ -597,7 +636,35 @@ class NetworkSyncService:
                 async with httpx.AsyncClient(timeout=10) as client:
                     response = await client.get(url)
                     response.raise_for_status()
-                    return response.json()
+                    data = response.json()
+                    # Ensure we always return a dict, not a list
+                    if isinstance(data, list):
+                        logger.warning(
+                            "metadata_is_list",
+                            network=self.network_key,
+                            url=url,
+                            list_length=len(data)
+                        )
+                        # If it's a list, try to use first item or wrap it
+                        if len(data) > 0 and isinstance(data[0], dict):
+                            return data[0]
+                        return {
+                            'name': 'Unknown Agent',
+                            'description': 'Metadata is a list, not an object',
+                            'raw_data': data
+                        }
+                    if not isinstance(data, dict):
+                        logger.warning(
+                            "metadata_unexpected_type",
+                            network=self.network_key,
+                            url=url,
+                            type=type(data).__name__
+                        )
+                        return {
+                            'name': 'Unknown Agent',
+                            'description': f'Metadata has unexpected type: {type(data).__name__}'
+                        }
+                    return data
             except Exception as e:
                 logger.warning(
                     "metadata_fetch_failed",
