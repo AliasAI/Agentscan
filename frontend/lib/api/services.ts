@@ -9,6 +9,7 @@ import type {
   Stats,
   PaginatedResponse,
   RegistrationTrendResponse,
+  CategoryDistributionData,
 } from '@/types';
 
 // 统计数据服务
@@ -76,4 +77,11 @@ export const activityService = {
 
   getAgentActivities: (agentId: string) =>
     apiGet<Activity[]>(`/activities/agent/${agentId}`),
+};
+
+// 分类服务 (OASF Taxonomy)
+export const taxonomyService = {
+  // 获取分类分布统计
+  getDistribution: () =>
+    apiGet<CategoryDistributionData>('/taxonomy/distribution'),
 };

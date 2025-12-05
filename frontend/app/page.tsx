@@ -2,23 +2,24 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Card } from '@/components/common/Card'
 import { SearchBar } from '@/components/common/SearchBar'
 import { AgentCard } from '@/components/agent/AgentCard'
 import { ActivityList } from '@/components/common/ActivityList'
 import { RegistrationTrendChart } from '@/components/charts/RegistrationTrendChart'
+import { CategoryDistribution } from '@/components/charts/CategoryDistribution'
 import { MultiNetworkSyncStatus } from '@/components/common/MultiNetworkSyncStatus'
 import Tabs from '@/components/common/Tabs'
 import { formatNumber } from '@/lib/utils/format'
 import { AgentCardSkeleton, StatCardSkeleton, ActivityItemSkeleton } from '@/components/common/Skeleton'
-import { statsService, agentService, activityService } from '@/lib/api/services'
-import type { Agent, Activity, Stats, RegistrationTrendData } from '@/types'
+import { statsService, agentService, activityService, taxonomyService } from '@/lib/api/services'
+import type { Agent, Activity, Stats, RegistrationTrendData, CategoryDistributionData } from '@/types'
 
 export default function HomePage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [activities, setActivities] = useState<Activity[]>([])
   const [trendData, setTrendData] = useState<RegistrationTrendData[]>([])
+  const [categoryData, setCategoryData] = useState<CategoryDistributionData | null>(null)
   const [activeTab, setActiveTab] = useState('all')
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -78,6 +79,14 @@ export default function HomePage() {
       .then((response) => {
         setTrendData(response.data)
       })
+      .catch(console.error)
+  }, [])
+
+  // Fetch category distribution data on mount only
+  useEffect(() => {
+    taxonomyService
+      .getDistribution()
+      .then(setCategoryData)
       .catch(console.error)
   }, [])
 
@@ -281,8 +290,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Sidebar: Registration Trend + Recent Activity */}
+          {/* Sidebar: Category Trends + Registration Trend + Recent Activity */}
           <div className="space-y-6">
+            {/* Category Distribution */}
+            <CategoryDistribution data={categoryData || undefined} isLoading={!categoryData} />
+
             {/* Registration Trend Chart */}
             <div>
               <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-3">
