@@ -53,6 +53,11 @@ class NetworkSyncService:
         rpc_url = self.network_config["rpc_url"]
         self.w3 = Web3(Web3.HTTPProvider(rpc_url))
 
+        # Inject POA middleware for chains like BSC that use Proof of Authority
+        # This handles the extraData field that exceeds 32 bytes in POA chains
+        from web3.middleware import ExtraDataToPOAMiddleware
+        self.w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
+
         # Get contract addresses
         contracts = self.network_config.get("contracts", {})
         identity_address = contracts.get("identity")
