@@ -1,674 +1,212 @@
-# PRD: Agent 搜索功能优化
+# PRD: Agent Search Optimization (Agent0 SDK-Aligned)
 
-> **文档版本**: v1.0
-> **创建日期**: 2025-12-05
-> **状态**: 待评审
-> **参考对标**: 淘宝、京东、支付宝等电商/支付平台
-
----
-
-## 一、背景与目标
-
-### 1.1 项目背景
-
-8004scan 是一个 ERC-8004 AI 代理浏览器，类似于区块链浏览器，用于展示和追踪基于 ERC-8004 协议的 AI 代理信息。随着平台上 Agent 数量的增长（目前已有 1700+ 个），用户需要更高效的方式来发现和筛选符合需求的 AI Agent。
-
-### 1.2 现状分析
-
-**当前搜索功能：**
-- ✅ 基础文本搜索（name/address/description）
-- ✅ Tab 过滤（All/Active/New/Top）
-- ✅ 网络过滤（Sepolia/Base Sepolia 等）
-- ✅ 声誉分数范围过滤
-- ✅ OASF 分类标签展示（136 skills + 204 domains）
-
-**存在的问题：**
-- ❌ 无搜索历史记录
-- ❌ 无热门搜索推荐
-- ❌ 无搜索自动补全/建议
-- ❌ OASF 分类未用于搜索筛选
-- ❌ 无智能推荐机制
-- ❌ 搜索结果无关键词高亮
-- ❌ 缺乏电商级的分类导航体验
-
-### 1.3 优化目标
-
-参考淘宝、京东等电商平台的搜索体验，将 Agent 搜索升级为**"AI Agent 商城"级别的发现体验**：
-
-1. **提升搜索效率**：用户能在 3 秒内找到目标 Agent
-2. **增强发现能力**：帮助用户发现潜在感兴趣的 Agent
-3. **降低学习成本**：新用户也能快速上手筛选
-4. **提高转化率**：从浏览到深入了解 Agent 的转化率提升 30%
+> **Doc version**: v1.1 (rewrite)  
+> **Date**: 2025-12-05  
+> **Status**: Draft for review  
+> **Benchmarks**: Taobao/JD search UX, OpenSea discovery, Hugging Face tag search
 
 ---
 
-## 二、用户画像与场景
+## 1. Context & Goals
 
-### 2.1 目标用户
+### 1.1 Background
+Agentscan is an ERC-8004 agent explorer. With 5000+ agents registered, users need faster, more guided discovery across identities, MCP tools, A2A skills, OASF taxonomies, and on-chain reputation. Agent0 SDK v0.31 already provides:
+- `searchAgents` with name/attribute filters and multi-chain support (Sepolia, Base Sepolia, Polygon Amoy, or `chains: all`)
+- Reputation-aware discovery via `searchAgentsByReputation` and `getReputationSummary`
+- OASF skill/domain taxonomies packaged in `src/taxonomies/all_skills.json` and `all_domains.json`
+- Capability extraction from MCP/A2A endpoints for tooling and skill signals
+- Chain-agnostic IDs (`chainId:agentId`) and x402 awareness for payments
 
-| 用户类型 | 特征 | 核心需求 |
-|---------|------|---------|
-| **开发者** | 寻找特定功能的 AI Agent 集成到项目 | 按技能/领域精准搜索 |
-| **投资者** | 评估 Agent 项目价值 | 按声誉、活跃度排序 |
-| **普通用户** | 体验各类 AI 服务 | 热门推荐、分类浏览 |
-| **研究者** | 分析 AI Agent 生态 | 多维度数据筛选 |
+### 1.2 Current Search (baseline)
+- Basic text search: name/address/description
+- Tabs: All/Active/New/Top
+- Network filters (Sepolia, Base Sepolia, etc.)
+- Reputation score range filter
+- OASF labels displayed (skills/domains)
 
-### 2.2 核心使用场景
+### 1.3 Pain Points
+- No search history or hot terms
+- No autocomplete or suggestions
+- OASF taxonomy not usable as filters
+- No multi-dimensional recommendations
+- No keyword highlighting
+- Navigation feels unlike “e-commerce grade” category browsing
 
-**场景 1：精准搜索**
-> "我需要一个能做 DeFi 交易的 AI Agent"
->
-> 用户期望：输入 "DeFi" 后，看到相关建议，筛选 domains=finance 的结果
-
-**场景 2：分类浏览**
-> "我想看看有哪些做自然语言处理的 Agent"
->
-> 用户期望：通过分类导航直接进入 NLP 类目
-
-**场景 3：发现探索**
-> "最近有什么新上线的热门 Agent？"
->
-> 用户期望：首页展示热门推荐、新品上架、趋势榜单
-
-**场景 4：对比筛选**
-> "我想对比几个 Trading Bot 的声誉和功能"
->
-> 用户期望：多选 Agent 进行横向对比
-
----
-
-## 三、功能需求详述
-
-### 3.1 搜索框增强
-
-#### 3.1.1 智能搜索建议（Autocomplete）
-
-**功能描述：**
-用户输入时，实时展示搜索建议，包括：
-- Agent 名称匹配
-- Skill 标签匹配
-- Domain 标签匹配
-- 历史搜索记录
-
-**交互设计：**
-```
-┌─────────────────────────────────────────────────────┐
-│ 🔍  trad                                        ✕   │
-├─────────────────────────────────────────────────────┤
-│ 📜 历史搜索                                          │
-│    trading bot  •  defi agent  •  nft trader        │
-├─────────────────────────────────────────────────────┤
-│ 🤖 Agent 推荐                                       │
-│    TradeBot Pro          ⭐ 92  Sepolia             │
-│    Trading Assistant     ⭐ 87  Base Sepolia        │
-├─────────────────────────────────────────────────────┤
-│ 🏷️ 相关标签                                         │
-│    ⚡ trading_execution   ⚡ portfolio_management    │
-│    🏢 finance/trading    🏢 finance/dexswap         │
-└─────────────────────────────────────────────────────┘
-```
-
-**技术要求：**
-- 输入防抖：150ms（比当前 500ms 更快响应）
-- 最多显示：5 个 Agent + 4 个标签 + 3 个历史
-- 支持键盘导航（↑↓ 选择，Enter 确认，Esc 关闭）
-
-#### 3.1.2 热门搜索（Hot Search）
-
-**功能描述：**
-搜索框获得焦点但未输入时，展示热门搜索词。
-
-**数据来源：**
-- 近 7 天搜索频次 Top 10
-- 平台运营推荐词（可配置）
-
-**展示形式：**
-```
-┌─────────────────────────────────────────────────────┐
-│ 🔍  Search agents by name, skill, domain...      │
-├─────────────────────────────────────────────────────┤
-│ 🔥 热门搜索                                         │
-│    DeFi  •  Trading Bot  •  NFT  •  ChatGPT        │
-│    Code Assistant  •  Data Analysis  •  Gaming      │
-├─────────────────────────────────────────────────────┤
-│ 📈 热门技能                                         │
-│    ⚡ text_generation   ⚡ smart_contract_interaction │
-│    ⚡ trading_execution ⚡ image_generation          │
-└─────────────────────────────────────────────────────┘
-```
-
-#### 3.1.3 搜索历史管理
-
-**功能描述：**
-- 自动保存最近 20 条搜索记录（localStorage）
-- 支持删除单条 / 清空全部
-- 跨设备同步（可选，需登录）
-
-**存储结构：**
-```typescript
-interface SearchHistory {
-  query: string;
-  timestamp: number;
-  resultCount: number;  // 可选，展示"约 X 个结果"
-}
-```
+### 1.4 Objectives
+Upgrade discovery to an “AI Agent marketplace”:
+1. Find the right agent within 3 seconds of typing (measured from first keystroke to suggestion click/load).
+2. Increase discovery: higher engagement with taxonomy filters and recommendations.
+3. Lower onboarding cost: first-time users can filter without learning ERC-8004 jargon.
+4. Conversion: +30% uplift from search results to agent detail views.
 
 ---
 
-### 3.2 分类导航系统
+## 2. Users & Scenarios
 
-#### 3.2.1 一级分类导航栏
+### 2.1 Personas
+| Type | Traits | Core needs |
+| --- | --- | --- |
+| Developer | Integrates agents into products | Precise skill/domain and chain filters; MCP tool awareness |
+| Investor | Evaluates value/risk | Sort by reputation, activity, on-chain history |
+| End-user | Tries AI services | Hot trends, quick category browse |
+| Researcher | Ecosystem insights | Multi-chain stats, taxonomy slices |
 
-**功能描述：**
-参考京东首页的品类导航，在页面顶部或侧边展示 OASF 的主要分类。
-
-**Skills 主分类（15 类）：**
-```
-┌───────────────────────────────────────────────────────────────┐
-│  All  │  NLP  │  Vision  │  Agent  │  Data  │  Blockchain  │  │
-│       │  Code │  Media   │  Memory │  RAG   │  Tools       │ ▸│
-└───────────────────────────────────────────────────────────────┘
-```
-
-**Domains 主分类（25 类，按热度排序前 10）：**
-```
-┌───────────────────────────────────────────────────────────────┐
-│  All  │ Finance │ Technology │ Gaming │ Social │ Healthcare │  │
-│       │ Art/NFT │ Education  │ Legal  │ Travel │ More...    │ ▸│
-└───────────────────────────────────────────────────────────────┘
-```
-
-#### 3.2.2 二级分类面板
-
-**交互设计：**
-Hover 一级分类时，展开二级分类面板（参考淘宝的类目悬浮面板）。
-
-```
-┌──────────────┬─────────────────────────────────────────────────┐
-│              │  Finance 领域                                    │
-│   Finance    │  ─────────────────────────────────────────────   │
-│   ────────   │  💰 Trading      🏦 DeFi      📊 Analytics       │
-│   23 Agents  │  💳 Payment      🔐 Security  📈 Portfolio       │
-│              │  🏠 RealEstate   💎 NFT       🌐 Cross-chain     │
-│              │                                                  │
-│              │  🔥 热门 Agent                                    │
-│              │  TradeBot Pro (⭐92) • DeFi Helper (⭐88)         │
-└──────────────┴─────────────────────────────────────────────────┘
-```
-
-#### 3.2.3 筛选标签栏
-
-**功能描述：**
-在搜索结果上方展示当前筛选条件，支持快速移除。
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 当前筛选:  [Finance ✕] [trading_execution ✕] [Sepolia ✕]        │
-│           [声誉 ≥ 80 ✕]                          [清空全部]      │
-└─────────────────────────────────────────────────────────────────┘
-```
+### 2.2 Scenarios
+- Precision search: “DeFi trading agent” → suggestions → finance domain prefilter → multi-chain results.
+- Category browse: land on “NLP” or “Blockchain” skill clusters directly.
+- Trend discovery: “What’s new and hot this week?” → hot searches + recently registered + top reputation.
+- Side-by-side comparison: compare 2–4 trading bots on chain, reputation, skills, MCP tools, and domains.
 
 ---
 
-### 3.3 高级筛选面板
+## 3. Feature Requirements
 
-#### 3.3.1 筛选器重构
+### 3.1 Search Box Enhancements
+#### 3.1.1 Smart Suggestions (Autocomplete)
+- Suggest agents (by name/description), OASF skills, domains, and recent history while typing.
+- Debounce 150 ms; max: 5 agents + 4 tags + 3 history; keyboard navigation.
+- Source: `searchAgents` (with `highlight=true`), taxonomy files, local history.
 
-**参考京东的筛选器设计：**
+#### 3.1.2 Hot Search
+- On focus with empty input, surface hot queries and hot skills/domains.
+- Data: last 7-day top queries + operator-curated seeds; fallback to `searchAgents` top results by reputation/activity.
 
+#### 3.1.3 Search History
+- Store last 20 queries in `localStorage`; per-entry `query`, `timestamp`, `resultCount`.
+- Optional signed-in sync to backend; allow delete single/clear all.
+
+### 3.2 Taxonomy Navigation
+#### 3.2.1 Primary Nav (skills/domains)
+- Map OASF skills (15 clusters) and domains (top 10 by usage) into a horizontal or left rail nav.
+- Uses SDK taxonomy files for labels; counts from `taxonomy/stats` (see API).
+
+#### 3.2.2 Secondary Panel
+- Hover/expand shows subcategories with counts and hot agents (from `searchAgents` filtered by skill/domain, sorted by reputation + recency).
+
+#### 3.2.3 Active Filter Chips
+- Chips show applied filters (network, skills, domains, reputation, status, chain scope); one-click removal; “Clear all”.
+
+### 3.3 Advanced Filters
+#### 3.3.1 Filter Panel
+- Network: All / Sepolia / Base Sepolia / Polygon Amoy / custom chain list.
+- Skills & Domains: multi-select (OR logic), searchable; show counts.
+- Reputation slider: min/max (integrates with `searchAgentsByReputation` for high-accuracy sorting).
+- Created time: presets (24h/7d/30d/custom).
+- Status: Active / Inactive / Validating.
+- Actions: Reset / Apply; URL-synced.
+
+#### 3.3.2 Tag Selector Modal
+- Searchable tree for skills/domains; shows per-tag agent counts; confirm to apply.
+
+### 3.4 Results Experience
+#### 3.4.1 Sorting
+- Options: Comprehensive (default), Hot, Newest, Highest Reputation, Name A–Z.
+- Comprehensive formula:
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ 🔧 筛选                                              [收起 ▲]   │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│ 📡 Network                                                      │
-│ ○ All Networks  ● Sepolia  ○ Base Sepolia  ○ Linea  ○ BSC      │
-│                                                                 │
-│ ⚡ Skills                                              [更多 ▸]  │
-│ □ text_generation  □ code_generation  □ trading_execution       │
-│ □ image_generation □ data_analysis    □ smart_contract          │
-│                                                                 │
-│ 🏢 Domains                                             [更多 ▸]  │
-│ □ Finance  □ Technology  □ Gaming  □ Healthcare  □ Education    │
-│                                                                 │
-│ ⭐ Reputation Score                                              │
-│ ├──────────●──────────────────────────────●──────────┤          │
-│ 0          40                              90        100         │
-│                                                                 │
-│ 📅 Registration Time                                             │
-│ ○ All  ○ Last 24h  ○ Last 7 days  ○ Last 30 days  ○ Custom     │
-│                                                                 │
-│ 🔄 Status                                                        │
-│ ☑ Active  □ Inactive  □ Validating                              │
-│                                                                 │
-│                              [重置] [应用筛选]                    │
-└─────────────────────────────────────────────────────────────────┘
+score = 0.35 * reputation_normalized
+      + 0.25 * activity_recency
+      + 0.25 * text_relevance
+      + 0.15 * taxonomy_coverage
 ```
+- `reputation_normalized` from SDK reputation endpoints; `taxonomy_coverage` from MCP/A2A-extracted skills/tools presence.
 
-#### 3.3.2 多选标签筛选
+#### 3.4.2 Keyword Highlight
+- Return highlight snippets for name/description/skills; show matched MCP tools and OASF tags.
 
-**功能描述：**
-- Skills 和 Domains 支持多选（OR 逻辑）
-- 显示每个标签下的 Agent 数量
-- 支持搜索标签（136 个 skills 太多，需要搜索）
+#### 3.4.3 View Modes
+- Card view (current) and list view (compact, selectable rows).
+- Bulk actions: compare selected (2–4), export CSV of current result slice.
 
-**交互设计（点击"更多"展开）：**
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ ⚡ 选择 Skills                                         [确定]   │
-├─────────────────────────────────────────────────────────────────┤
-│ 🔍 搜索 skill...                                                │
-├─────────────────────────────────────────────────────────────────┤
-│ NLP (23)                                                        │
-│   ☑ text_generation (15)    □ summarization (8)                 │
-│   □ translation (5)         □ sentiment_analysis (3)            │
-│                                                                 │
-│ Code (18)                                                       │
-│   □ code_generation (12)    □ code_review (4)                   │
-│   □ debugging (2)                                               │
-│                                                                 │
-│ Agent (15)                                                      │
-│   □ task_planning (8)       □ tool_use (5)                      │
-│   □ multi_agent (2)                                             │
-└─────────────────────────────────────────────────────────────────┘
-```
+#### 3.4.4 Agent Comparison
+- Columns: network(s), reputation (score + count), status, created time, MCP tools, A2A skills, OASF domains, owner.
+- Support mixed chains via `chainId:agentId`.
+
+### 3.5 Homepage Entry
+- Hero search with hot terms; quick-launch tiles for top categories (e.g., NLP, DeFi, Gaming, Code, Vision, Tools, RAG, NFT).
+- Mobile: carousel for categories; desktop: grid tiles.
+
+### 3.6 Recommendations
+#### 3.6.1 “For You”
+- Lightweight collaborative filtering using viewed agents and search history:
+  - Extract preferred skills/domains/tools from history.
+  - Query `searchAgents` with overlaps, exclude viewed; sort by reputation + recency.
+
+#### 3.6.2 “Similar Agents”
+- On detail page, list agents sharing skills/domains/MCP tools via `searchAgents` filters.
 
 ---
 
-### 3.4 搜索结果优化
+## 4. API & Data Requirements
 
-#### 3.4.1 结果排序增强
+### 4.1 New/Extended Endpoints
+- `GET /api/search/suggestions?q={query}&limit=10`  
+  - Returns agents (with highlights), skills, domains, history hints.
+- `GET /api/search/hot?limit=10`  
+  - Returns hot queries/skills/domains; merges 7d stats + curated seeds.
+- `GET /api/taxonomy/stats`  
+  - Returns skill/domain counts (by category) sourced from OASF taxonomies + agent counts.
+- `GET /api/agents/recommendations?based_on={agent_id}&limit=10`  
+  - For “similar agents” (shared skills/domains/tools).
+- `GET /api/agents` (enhanced)  
+  - New params: `skills`, `domains`, `created_after`, `created_before`, `sort=comprehensive|hot|newest|reputation|name`, `highlight=true`, `chains` (array or `all`), `status`, `limit`, `cursor`.
+- `GET /api/agents/reputation`  
+  - Wrapper around SDK `searchAgentsByReputation` for server-side scoring.
 
-**排序选项：**
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 排序:  [综合排序 ▼]  热门优先  最新上线  声誉最高  名称 A-Z    │
-└─────────────────────────────────────────────────────────────────┘
-```
+### 4.2 Data Models
+- `SearchLog`: query, user/session, result_count, clicked_agent_id, created_at (drives hot search and cold-start fallback).
+- `UserPreference` (optional): user_id, preferred_skills/domains, viewed_agent_ids, updated_at (for “For You”).
 
-**综合排序算法（默认）：**
-```
-score = 0.4 × reputation_normalized
-      + 0.3 × activity_recency
-      + 0.2 × search_relevance
-      + 0.1 × classification_completeness
-```
-
-#### 3.4.2 关键词高亮
-
-**功能描述：**
-搜索结果中，匹配的关键词进行高亮显示。
-
-**示例：**
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 🤖 [Trade]Bot Pro                                    ⭐ 92      │
-│ Sepolia • 0x1234...5678                                         │
-│ Advanced AI [trading] assistant for DeFi protocols...           │
-│ ⚡ [trading]_execution  🏢 finance/[trading]                     │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-#### 3.4.3 结果视图切换
-
-**功能描述：**
-支持卡片视图（当前）和列表视图两种展示方式。
-
-**列表视图（参考京东商品列表）：**
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ ☐ │ 🤖 TradeBot Pro │ Sepolia │ ⭐92 (234) │ ⚡trading │ Active │
-├───┼─────────────────┼─────────┼────────────┼───────────┼────────┤
-│ ☐ │ 🤖 DeFi Helper  │ Base    │ ⭐88 (156) │ ⚡defi    │ Active │
-├───┼─────────────────┼─────────┼────────────┼───────────┼────────┤
-│ ☐ │ 🤖 NFT Trader   │ Sepolia │ ⭐85 (98)  │ ⚡nft     │ Active │
-└───┴─────────────────┴─────────┴────────────┴───────────┴────────┘
-│                                    [对比所选 (2)]  [导出列表]    │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-#### 3.4.4 Agent 对比功能
-
-**功能描述：**
-选中多个 Agent 后，打开对比面板。
-
-**对比面板设计：**
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ Agent 对比                                            [关闭 ✕]  │
-├─────────────────┬─────────────────┬─────────────────────────────┤
-│                 │ TradeBot Pro    │ DeFi Helper                 │
-├─────────────────┼─────────────────┼─────────────────────────────┤
-│ Network         │ Sepolia         │ Base Sepolia                │
-│ Reputation      │ ⭐ 92 (234)     │ ⭐ 88 (156)                 │
-│ Status          │ 🟢 Active       │ 🟢 Active                   │
-│ Created         │ 2025-10-15      │ 2025-11-02                  │
-│ Skills          │ trading, defi   │ defi, analytics             │
-│ Domains         │ Finance         │ Finance, Technology         │
-│ Owner           │ 0x1234...       │ 0x5678...                   │
-└─────────────────┴─────────────────┴─────────────────────────────┘
-```
+### 4.3 SDK Alignment
+- Use SDK taxonomy JSON for skills/domains to avoid drift.
+- Use `searchAgents` for suggestions, listings, multi-chain queries, and `searchAgentsByReputation` for high-trust ordering.
+- Store and display chain scope: show successful/failed chains from SDK meta to explain partial results.
+- Respect chain-agnostic IDs and x402 capability flags in result cards and filters.
 
 ---
 
-### 3.5 首页搜索入口优化
-
-#### 3.5.1 搜索区域升级
-
-**参考淘宝首页搜索区域设计：**
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│              🤖 Discover AI Agents on ERC-8004                  │
-│                                                                 │
-│   ┌─────────────────────────────────────────────────────────┐   │
-│   │ 🔍  Search agents, skills, domains...           [Search]│   │
-│   └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│   🔥 Hot:  DeFi Trading  •  Code Assistant  •  NFT  •  Gaming   │
-│                                                                 │
-│   ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐          │
-│   │  🧠 NLP  │ │ 💰 DeFi │ │ 🎮 Gaming│ │ 🖼️ NFT  │          │
-│   │  45 bots │ │  32 bots │ │  28 bots │ │  21 bots │          │
-│   └──────────┘ └──────────┘ └──────────┘ └──────────┘          │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-#### 3.5.2 快捷分类入口
-
-**功能描述：**
-首页展示 8 个热门分类快捷入口，点击直接进入筛选结果页。
+## 5. UX Principles
+- Keep monochrome tech aesthetic; add highlight color `#fef08a` for matches, `#fecaca` for hot tags, and `#0a0a0a` for selected states.
+- Responsive:
+  - Mobile: horizontal nav for categories, full-screen suggestions, bottom drawer filters, 2-column comparison max.
+  - Desktop: full nav rail, inline suggestions, side filter panel, up to 4-way comparison.
+- Motion: suggestion dropdown fade + slide (150 ms), filter panel slide (200 ms), highlight pulse (300 ms), skeleton shimmer for loading.
 
 ---
 
-### 3.6 智能推荐模块
-
-#### 3.6.1 "猜你喜欢"推荐
-
-**功能描述：**
-基于用户浏览历史和搜索记录，推荐相关 Agent。
-
-**推荐算法（简化版）：**
-```python
-def recommend_agents(user_history):
-    # 1. 提取用户偏好标签
-    preferred_skills = extract_skills(user_history)
-    preferred_domains = extract_domains(user_history)
-
-    # 2. 查找相似 Agent（排除已浏览）
-    candidates = Agent.filter(
-        skills__overlap=preferred_skills,
-        domains__overlap=preferred_domains
-    ).exclude(id__in=user_history.viewed_ids)
-
-    # 3. 按声誉和新鲜度排序
-    return candidates.order_by('-reputation_score', '-created_at')[:10]
-```
-
-#### 3.6.2 "同类 Agent"推荐
-
-**功能描述：**
-在 Agent 详情页底部，展示相同 skill/domain 的其他 Agent。
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 🔗 Similar Agents                                    [View All] │
-├─────────────────────────────────────────────────────────────────┤
-│ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐    │
-│ │ DeFi Bot 2 │ │ Trade Pro  │ │ Swap Agent │ │ Yield Farm │    │
-│ │ ⭐ 85      │ │ ⭐ 82      │ │ ⭐ 79      │ │ ⭐ 76      │    │
-│ └────────────┘ └────────────┘ └────────────┘ └────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 四、API 扩展需求
-
-### 4.1 新增 API 端点
-
-#### 4.1.1 搜索建议 API
-```
-GET /api/search/suggestions?q={query}&limit=10
-
-Response:
-{
-  "agents": [
-    { "id": "...", "name": "TradeBot", "reputation": 92 }
-  ],
-  "skills": [
-    { "slug": "trading_execution", "count": 15 }
-  ],
-  "domains": [
-    { "slug": "finance/trading", "count": 23 }
-  ]
-}
-```
-
-#### 4.1.2 热门搜索 API
-```
-GET /api/search/hot?limit=10
-
-Response:
-{
-  "hot_queries": ["DeFi", "Trading Bot", "NFT"],
-  "hot_skills": ["text_generation", "trading_execution"],
-  "hot_domains": ["finance", "technology"]
-}
-```
-
-#### 4.1.3 分类统计 API
-```
-GET /api/taxonomy/stats
-
-Response:
-{
-  "skills": [
-    { "category": "NLP", "count": 45, "items": [...] }
-  ],
-  "domains": [
-    { "category": "Finance", "count": 32, "items": [...] }
-  ]
-}
-```
-
-#### 4.1.4 推荐 API
-```
-GET /api/agents/recommendations?based_on={agent_id}&limit=10
-GET /api/agents/similar/{agent_id}?limit=10
-```
-
-### 4.2 现有 API 扩展
-
-#### 4.2.1 Agent 列表 API 增强
-```
-GET /api/agents?
-  ...existing params...
-  &skills=trading_execution,code_generation    # 多选 Skills
-  &domains=finance,technology                  # 多选 Domains
-  &created_after=2025-11-01                    # 时间范围
-  &created_before=2025-12-01
-  &sort=comprehensive|hot|newest|reputation    # 新排序选项
-  &highlight=true                              # 返回高亮片段
-```
-
----
-
-## 五、数据模型扩展
-
-### 5.1 搜索统计表（新增）
-
-```python
-class SearchLog(Base):
-    """搜索日志，用于热门搜索和推荐"""
-    __tablename__ = "search_logs"
-
-    id = Column(UUID, primary_key=True)
-    query = Column(String(255), index=True)
-    user_id = Column(String(64), nullable=True)  # 匿名用户为 session_id
-    result_count = Column(Integer)
-    clicked_agent_id = Column(UUID, ForeignKey("agents.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-```
-
-### 5.2 用户偏好表（新增，可选）
-
-```python
-class UserPreference(Base):
-    """用户偏好，用于个性化推荐"""
-    __tablename__ = "user_preferences"
-
-    id = Column(UUID, primary_key=True)
-    user_id = Column(String(64), unique=True, index=True)
-    preferred_skills = Column(JSON)  # ["trading_execution", "code_generation"]
-    preferred_domains = Column(JSON)  # ["finance", "technology"]
-    viewed_agents = Column(JSON)      # ["agent_id_1", "agent_id_2"]
-    updated_at = Column(DateTime)
-```
-
----
-
-## 六、UI/UX 设计规范
-
-### 6.1 配色延续
-
-保持现有黑白灰科技风格，新增功能色：
-
-| 用途 | 颜色代码 | 示例 |
-|-----|---------|------|
-| 搜索高亮 | `#fef08a` (yellow-200) | 关键词高亮背景 |
-| 热门标签 | `#fecaca` (red-200) | 🔥 Hot 标签背景 |
-| 选中状态 | `#0a0a0a` | 筛选项选中 |
-
-### 6.2 响应式设计
-
-| 组件 | 移动端 | 桌面端 |
-|-----|--------|-------|
-| 分类导航 | 横向滚动 | 完整展示 |
-| 筛选面板 | 底部抽屉 | 侧边栏 |
-| 搜索建议 | 全屏覆盖 | 下拉面板 |
-| 对比功能 | 最多 2 个 | 最多 4 个 |
-
-### 6.3 动效设计
-
-- 搜索建议面板：fade + slide-down (150ms)
-- 筛选面板展开：slide-left (200ms)
-- 高亮效果：pulse 动画 (300ms)
-- 加载状态：skeleton + shimmer
-
----
-
-## 七、技术实现方案
-
-### 7.1 前端技术选型
-
-| 功能 | 技术方案 | 说明 |
-|-----|---------|------|
-| 搜索建议 | React Query + Debounce | 缓存 + 防抖 |
-| 历史记录 | localStorage + Zustand | 本地存储 + 状态管理 |
-| URL 同步 | nuqs 或 next/navigation | 筛选条件同步到 URL |
-| 虚拟滚动 | @tanstack/react-virtual | 大列表性能优化 |
-
-### 7.2 后端技术选型
-
-| 功能 | 技术方案 | 说明 |
-|-----|---------|------|
-| 全文搜索 | SQLite FTS5 或 PostgreSQL | 后期可迁移 Elasticsearch |
-| 热门统计 | Redis 计数器 | 滑动窗口统计 |
-| 推荐算法 | 基于标签的协同过滤 | 简单有效 |
-
-### 7.3 性能要求
-
-| 指标 | 目标值 |
-|-----|--------|
-| 搜索建议响应 | < 100ms |
-| 搜索结果响应 | < 300ms |
-| 首屏加载时间 | < 2s |
-| 筛选切换响应 | < 200ms |
-
----
-
-## 八、实施计划
-
-### Phase 1: 基础增强（2 周）
-
-- [ ] 搜索框智能建议（Autocomplete）
-- [ ] 搜索历史记录（localStorage）
-- [ ] 热门搜索展示
-- [ ] Skills/Domains 多选筛选 API
-
-### Phase 2: 分类导航（2 周）
-
-- [ ] 一级分类导航栏
-- [ ] 二级分类面板
-- [ ] 筛选标签栏
-- [ ] 分类统计 API
-
-### Phase 3: 结果优化（1.5 周）
-
-- [ ] 关键词高亮
-- [ ] 综合排序算法
-- [ ] 列表视图模式
-- [ ] URL 参数同步
-
-### Phase 4: 高级功能（1.5 周）
-
-- [ ] Agent 对比功能
-- [ ] 相似 Agent 推荐
-- [ ] 首页搜索区域升级
-- [ ] 移动端适配优化
-
----
-
-## 九、成功指标
-
-| 指标 | 当前值 | 目标值 | 测量方式 |
-|-----|--------|--------|---------|
-| 搜索使用率 | ~30% | > 60% | 搜索 PV / 总 PV |
-| 平均搜索耗时 | ~15s | < 5s | 用户行为埋点 |
-| 筛选使用率 | ~10% | > 40% | 筛选 API 调用量 |
-| Agent 详情转化 | ~20% | > 35% | 点击率 |
-| 用户留存 | - | +20% | 7 日回访率 |
-
----
-
-## 十、风险与对策
-
-| 风险 | 影响 | 对策 |
-|-----|------|------|
-| 搜索性能瓶颈 | Agent 增长后搜索变慢 | 预留 Elasticsearch 迁移方案 |
-| 推荐算法冷启动 | 新用户无推荐数据 | 使用热门/随机填充 |
-| 移动端体验复杂 | 筛选项过多难以操作 | 简化移动端筛选，保留核心功能 |
-
----
-
-## 附录
-
-### A. 竞品参考
-
-- **淘宝**：搜索建议、分类导航、筛选面板
-- **京东**：商品列表、对比功能、排序选项
-- **OpenSea**：NFT 市场筛选、Collection 导航
-- **Hugging Face**：模型搜索、标签系统
-
-### B. OASF 分类统计
-
-- Skills: 136 个，分布在 15 个大类
-- Domains: 204 个，分布在 25 个大类
-- 详细列表见 `backend/src/taxonomies/`
-
-### C. 相关文档
-
-- OASF 分类文档：`docs/oasf-classification.md`
-- API 文档：`http://localhost:8000/docs`
-- 设计系统：Tailwind CSS v4 黑白灰配色
-
----
-
-**文档更新记录：**
-
-| 版本 | 日期 | 更新内容 | 作者 |
-|-----|------|---------|------|
-| v1.0 | 2025-12-05 | 初稿完成 | Claude |
+## 6. Technical Approach
+
+### 6.1 Frontend
+- Framework: existing stack (Next/React); React Query for data + caching.
+- Debounce 150 ms on typeahead; keep last query cache for back/forward nav.
+- State: Zustand for search/filter state; URL sync via `next/navigation` or `nuqs`.
+- Virtualization: `@tanstack/react-virtual` for large result sets.
+- Highlight rendering from `highlight=true` payload; fallback client-side substring match.
+
+### 6.2 Backend
+- Search: current DB with FTS (SQLite FTS5 or PostgreSQL). Keep ES migration path.
+- Hot terms: Redis sliding window counters fed by `SearchLog`.
+- Recommendations: tag-overlap collaborative filtering; exclude viewed agents.
+- Multi-chain: proxy SDK `searchAgents`/`searchAgentsByReputation` with `chains` support; surface meta for partial successes.
+- Taxonomy: load OASF JSON once; cache counts; expose via `taxonomy/stats`.
+
+### 6.3 Performance Targets
+| Metric | Target |
+| --- | --- |
+| Suggestions API | < 100 ms |
+| Results API | < 300 ms |
+| First contentful render | < 2 s |
+| Filter apply latency | < 200 ms |
+
+### 6.4 Subgraph vs. Local Database
+- Subgraph strengths: ready multi-chain indexing, fast reads, consistent on-chain truth, no local ETL; ideal for chain metadata, registrations, ownership, status, and reputation summaries when indexed; exposes meta for successful/failed chains.
+- Subgraph limits: basic text relevance and highlighting; autocomplete/hot search/recommendations not on-chain; taxonomy coverage requires explicit indexing; complex joins can be slower.
+- Local DB strengths: flexible FTS/highlight, custom scoring (comprehensive score), easy joins with MCP tools/A2A skills/taxonomy stats and user signals (history, clicks, preferences); better for hot terms, suggestions, and recommendations.
+- Local DB limits: sync/ingestion overhead; freshness depends on cadence; ops to maintain.
+- Recommended hybrid: treat subgraph as source of truth and multi-chain fetch layer; ingest into local search index (SQLite FTS5/Postgres) via schedule or events; use local index for relevance, highlights, taxonomy counts, hot terms, and recs; surface subgraph meta to explain partial-chain results.
+
+
+## 7. Phased Delivery
+- **Phase 1 (2 wks)**: Autocomplete, history, hot search, multi-select skills/domains API, highlight support.
+- **Phase 2 (2 wks)**: Category nav + secondary panels, filter chips, taxonomy stats API.
+- **Phase 3 (1.5 wks)**: Sorting revamp, list view, URL sync, comparison baseline.
+- **Phase 4 (1.5 wks)**: Similar/for-you recommendations, homepage hero tiles, mobile polish.
