@@ -132,3 +132,18 @@ export interface RegistrationTrendData {
 export interface RegistrationTrendResponse {
   data: RegistrationTrendData[];
 }
+
+// Category Distribution (OASF Taxonomy)
+export interface CategoryItem {
+  category: string;
+  slug: string;
+  count: number;
+  percentage: number;
+}
+
+export interface CategoryDistributionData {
+  skills: CategoryItem[];
+  domains: CategoryItem[];
+  total_classified: number;
+  total_agents: number;
+}

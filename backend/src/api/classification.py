@@ -120,6 +120,166 @@ async def classify_all_agents(
     }
 
 
+@router.get("/taxonomy/distribution")
+async def get_taxonomy_distribution(db: Session = Depends(get_db)):
+    """获取分类分布统计，用于首页展示热门分类
+
+    返回 Skills 和 Domains 的分布情况，聚合到一级分类
+    """
+    from collections import defaultdict
+
+    # 获取所有有分类的 agents
+    agents = db.query(Agent).filter(
+        (Agent.skills != None) & (Agent.skills != "[]")
+    ).all()
+
+    total_agents = db.query(Agent).count()
+    total_classified = len(agents)
+
+    # 统计 skills 分布（聚合到一级分类）
+    skill_counts = defaultdict(int)
+    for agent in agents:
+        if agent.skills:
+            for skill in agent.skills:
+                # 提取一级分类（如 "nlp/text_generation" -> "NLP"）
+                category = _get_skill_category(skill)
+                skill_counts[category] += 1
+
+    # 统计 domains 分布（聚合到一级分类）
+    domain_counts = defaultdict(int)
+    for agent in agents:
+        if agent.domains:
+            for domain in agent.domains:
+                # 提取一级分类（如 "finance/trading" -> "Finance"）
+                category = _get_domain_category(domain)
+                domain_counts[category] += 1
+
+    # 转换为列表并排序
+    skills_total = sum(skill_counts.values()) or 1
+    skills_list = [
+        {
+            "category": cat,
+            "slug": cat.lower().replace(" ", "_"),
+            "count": count,
+            "percentage": round(count / skills_total * 100, 1)
+        }
+        for cat, count in skill_counts.items()
+    ]
+    skills_list.sort(key=lambda x: x["count"], reverse=True)
+
+    domains_total = sum(domain_counts.values()) or 1
+    domains_list = [
+        {
+            "category": cat,
+            "slug": cat.lower().replace(" ", "_"),
+            "count": count,
+            "percentage": round(count / domains_total * 100, 1)
+        }
+        for cat, count in domain_counts.items()
+    ]
+    domains_list.sort(key=lambda x: x["count"], reverse=True)
+
+    # 只返回 Top 4，其余聚合为 Others
+    def aggregate_others(items, top_n=4):
+        if len(items) <= top_n:
+            return items
+
+        top_items = items[:top_n]
+        others_count = sum(item["count"] for item in items[top_n:])
+        others_percentage = sum(item["percentage"] for item in items[top_n:])
+
+        if others_count > 0:
+            top_items.append({
+                "category": "Others",
+                "slug": "others",
+                "count": others_count,
+                "percentage": round(others_percentage, 1)
+            })
+
+        return top_items
+
+    return {
+        "skills": aggregate_others(skills_list),
+        "domains": aggregate_others(domains_list),
+        "total_classified": total_classified,
+        "total_agents": total_agents,
+    }
+
+
+def _get_skill_category(skill_slug: str) -> str:
+    """从 skill slug 提取一级分类名称"""
+    # skill slug 格式: "category/subcategory" 或 "category"
+    category_map = {
+        "nlp": "NLP",
+        "vision": "Vision",
+        "analytical": "Analytics",
+        "multi_modal": "Multi-modal",
+        "rag": "RAG",
+        "agent": "Agent",
+        "data": "Data",
+        "devops": "DevOps",
+        "evaluation": "Evaluation",
+        "reasoning": "Reasoning",
+        "governance": "Governance",
+        "security": "Security",
+        "tool": "Tools",
+        "audio": "Audio",
+        "tabular": "Tabular",
+    }
+
+    # 尝试匹配前缀
+    skill_lower = skill_slug.lower()
+    for prefix, name in category_map.items():
+        if skill_lower.startswith(prefix):
+            return name
+
+    # 默认返回首字母大写
+    parts = skill_slug.split("/")
+    return parts[0].replace("_", " ").title()
+
+
+def _get_domain_category(domain_slug: str) -> str:
+    """从 domain slug 提取一级分类名称"""
+    # domain slug 格式: "category/subcategory" 或 "category"
+    category_map = {
+        "technology": "Technology",
+        "finance": "Finance",
+        "gaming": "Gaming",
+        "healthcare": "Healthcare",
+        "education": "Education",
+        "media": "Media",
+        "retail": "Retail",
+        "legal": "Legal",
+        "real_estate": "Real Estate",
+        "energy": "Energy",
+        "agriculture": "Agriculture",
+        "transportation": "Transport",
+        "hospitality": "Hospitality",
+        "insurance": "Insurance",
+        "government": "Government",
+        "social": "Social",
+        "sports": "Sports",
+        "life_science": "Life Science",
+        "industrial": "Industrial",
+        "hr": "HR",
+        "marketing": "Marketing",
+        "telecom": "Telecom",
+        "research": "Research",
+        "trust": "Trust",
+        "environmental": "Environment",
+    }
+
+    # 尝试匹配前缀
+    domain_lower = domain_slug.lower()
+    for prefix, name in category_map.items():
+        if domain_lower.startswith(prefix):
+            return name
+
+    # 默认返回首字母大写
+    parts = domain_slug.split("/")
+    return parts[0].replace("_", " ").title()
+
+
 @router.get("/taxonomy/skills")
 async def get_skills():
     """获取所有可用的 OASF skills"""
