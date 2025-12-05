@@ -16,15 +16,19 @@ export const NETWORK_CONFIG_BY_NAME: Record<string, NetworkConfig> = {
   },
   'Base Sepolia': {
     explorerUrl: 'https://sepolia.basescan.org',
-    contractAddress: '0x8004a6090Cd10A7288092483047B097295Fb8847',
+    contractAddress: '0x8004AA63c570c570eBF15376c0dB199918BFe9Fb',
+  },
+  'BSC Testnet': {
+    explorerUrl: 'https://testnet.bscscan.com',
+    contractAddress: '0x4f8c8694eAB93bbF7616EDD522503544E61E7dB7',
   },
   'Linea Sepolia': {
     explorerUrl: 'https://sepolia.lineascan.build',
-    contractAddress: '0x8004a6090Cd10A7288092483047B097295Fb8847',
+    contractAddress: '0x8004aa7C931bCE1233973a0C6A667f73F66282e7',
   },
   'Hedera Testnet': {
     explorerUrl: 'https://hashscan.io/testnet',
-    contractAddress: '0x8004a6090Cd10A7288092483047B097295Fb8847',
+    contractAddress: '0x0dDaa2de07deb24D5F0288ee29c3c57c4159DcC7',
   },
 };
 
