@@ -30,8 +30,8 @@ frontend/.env.production.local
 logs/
 backend/logs/
 
-# 数据
-data/
+# 数据（只忽略根目录的 data/）
+/data/
 *.sqlite
 *.sqlite3
 
