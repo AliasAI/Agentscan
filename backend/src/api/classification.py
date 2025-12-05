@@ -136,23 +136,25 @@ async def get_taxonomy_distribution(db: Session = Depends(get_db)):
     total_agents = db.query(Agent).count()
     total_classified = len(agents)
 
-    # 统计 skills 分布（聚合到一级分类）
-    skill_counts = defaultdict(int)
+    # 统计 skills 分布（聚合到一级分类，每个 agent 只计入一次）
+    skill_agent_sets = defaultdict(set)  # 用 set 存 agent_id，确保去重
     for agent in agents:
         if agent.skills:
             for skill in agent.skills:
                 # 提取一级分类（如 "nlp/text_generation" -> "NLP"）
                 category = _get_skill_category(skill)
-                skill_counts[category] += 1
+                skill_agent_sets[category].add(agent.id)
+    skill_counts = {cat: len(ids) for cat, ids in skill_agent_sets.items()}
 
-    # 统计 domains 分布（聚合到一级分类）
-    domain_counts = defaultdict(int)
+    # 统计 domains 分布（聚合到一级分类，每个 agent 只计入一次）
+    domain_agent_sets = defaultdict(set)  # 用 set 存 agent_id，确保去重
     for agent in agents:
         if agent.domains:
             for domain in agent.domains:
                 # 提取一级分类（如 "finance/trading" -> "Finance"）
                 category = _get_domain_category(domain)
-                domain_counts[category] += 1
+                domain_agent_sets[category].add(agent.id)
+    domain_counts = {cat: len(ids) for cat, ids in domain_agent_sets.items()}
 
     # 转换为列表并排序
     skills_total = sum(skill_counts.values()) or 1
