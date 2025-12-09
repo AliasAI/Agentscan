@@ -373,8 +373,9 @@ export function FeedbackList({ agentId, onCountChange }: FeedbackListProps) {
     )
   }
 
-  // Check if subgraph is not available for this network
-  if (data && data.subgraph_available === false) {
+  // Check if subgraph is not available AND no on-chain data either
+  // If data_source is 'on-chain', we have fallback data to show
+  if (data && data.subgraph_available === false && data.data_source !== 'on-chain') {
     return <NetworkNotSupportedState />
   }
 

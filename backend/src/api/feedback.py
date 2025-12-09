@@ -19,6 +19,7 @@ from src.schemas.feedback import (
 )
 from src.services.subgraph_service import get_subgraph_service
 from src.services.onchain_feedback_service import get_onchain_feedback_service
+from src.services.onchain_validation_service import get_onchain_validation_service
 
 router = APIRouter()
 logger = structlog.get_logger(__name__)
@@ -75,16 +76,31 @@ async def get_agent_feedbacks(
 
     subgraph = get_subgraph_service()
 
-    # Check if network has subgraph support
+    # Check if network has subgraph support - if not, use on-chain fallback
     if not subgraph.is_network_supported(network_key):
-        return FeedbackListResponse(
-            items=[],
-            total=0,
+        logger.info(
+            "network_no_subgraph_using_onchain",
+            agent_id=agent_id,
+            token_id=token_id,
+            network_key=network_key,
+        )
+
+        onchain_service = get_onchain_feedback_service()
+        result = await onchain_service.get_agent_feedbacks(
+            token_id=token_id,
+            network_key=network_key,
             page=page,
             page_size=page_size,
-            total_pages=0,
+        )
+
+        return FeedbackListResponse(
+            items=[FeedbackResponse(**item) for item in result["items"]],
+            total=result["total"],
+            page=result["page"],
+            page_size=result["page_size"],
+            total_pages=result["total_pages"],
             subgraph_available=False,
-            data_source="none",
+            data_source="on-chain",
         )
 
     # Try Subgraph first
@@ -155,15 +171,31 @@ async def get_agent_validations(
 
     subgraph = get_subgraph_service()
 
-    # Check if network has subgraph support
+    # Check if network has subgraph support - if not, use on-chain fallback
     if not subgraph.is_network_supported(network_key):
-        return ValidationListResponse(
-            items=[],
-            total=0,
+        logger.info(
+            "validation_network_no_subgraph_using_onchain",
+            agent_id=agent_id,
+            token_id=token_id,
+            network_key=network_key,
+        )
+
+        onchain_service = get_onchain_validation_service()
+        result = await onchain_service.get_agent_validations(
+            token_id=token_id,
+            network_key=network_key,
             page=page,
             page_size=page_size,
-            total_pages=0,
+        )
+
+        return ValidationListResponse(
+            items=[ValidationResponse(**item) for item in result["items"]],
+            total=result["total"],
+            page=result["page"],
+            page_size=result["page_size"],
+            total_pages=result["total_pages"],
             subgraph_available=False,
+            data_source="on-chain",
         )
 
     result = await subgraph.get_agent_validations(
@@ -180,6 +212,7 @@ async def get_agent_validations(
         page_size=result["page_size"],
         total_pages=result["total_pages"],
         subgraph_available=True,
+        data_source="subgraph",
     )
 
 

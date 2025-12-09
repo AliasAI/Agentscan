@@ -58,6 +58,7 @@ class ValidationListResponse(BaseModel):
     page_size: int
     total_pages: int
     subgraph_available: bool = True  # False if network doesn't have subgraph support
+    data_source: str = "subgraph"  # "subgraph" or "on-chain"
 
 
 class ReputationSummaryResponse(BaseModel):

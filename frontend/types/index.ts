@@ -202,6 +202,7 @@ export interface ValidationListResponse {
   page_size: number;
   total_pages: number;
   subgraph_available?: boolean; // False if network doesn't have subgraph support
+  data_source?: 'subgraph' | 'on-chain' | 'none'; // Data source indicator
 }
 
 // Reputation Summary from Subgraph
