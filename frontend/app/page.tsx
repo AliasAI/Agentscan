@@ -93,7 +93,6 @@ export default function HomePage() {
   const tabs = [
     { id: 'all', label: 'All Agents', count: stats?.total_agents },
     { id: 'active', label: 'Active', count: stats?.active_agents },
-    { id: 'new', label: 'New', count: undefined },
     { id: 'top', label: 'Top Rated', count: undefined },
   ]
 
@@ -186,15 +185,63 @@ export default function HomePage() {
               </div>
 
               {/* Active Agents Card */}
-              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040] hover:shadow-lg transition-all duration-200">
+              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#22c55e]/40 dark:hover:border-[#4ade80]/40 hover:shadow-lg hover:shadow-[#22c55e]/5 transition-all duration-300">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#f0fdf4] dark:bg-[#14532d]/30 rounded-lg">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#22c55e] dark:text-[#4ade80]">
+                  <div className="p-2 bg-[#f0fdf4] dark:bg-[#14532d]/30 rounded-lg relative">
+                    {/* Subtle pulse animation */}
+                    <div className="absolute inset-0 bg-[#22c55e]/20 dark:bg-[#4ade80]/20 rounded-lg animate-ping opacity-0 group-hover:opacity-75" style={{ animationDuration: '2s' }} />
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#22c55e] dark:text-[#4ade80] relative z-10">
                       <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                  <div>
-                    <div className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Active (7d)</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Active (7d)</span>
+                      {/* Info icon with tooltip trigger */}
+                      <div className="relative">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          className="text-[#a3a3a3] dark:text-[#525252] cursor-help hover:text-[#22c55e] dark:hover:text-[#4ade80] transition-colors"
+                        >
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        {/* Tooltip */}
+                        <div className="
+                          absolute left-1/2 -translate-x-1/2 bottom-full mb-2
+                          opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                          transition-all duration-200 ease-out
+                          translate-y-1 group-hover:translate-y-0
+                          z-50 pointer-events-none
+                        ">
+                          <div className="
+                            relative bg-[#0a0a0a] dark:bg-[#fafafa]
+                            text-white dark:text-[#0a0a0a]
+                            text-[10px] leading-relaxed
+                            px-3 py-2 rounded-lg
+                            shadow-xl shadow-black/10 dark:shadow-black/20
+                            whitespace-nowrap
+                            border border-[#262626] dark:border-[#e5e5e5]
+                          ">
+                            <div className="font-medium mb-0.5">Recently active agents</div>
+                            <div className="text-[#a3a3a3] dark:text-[#737373]">
+                              Reviewed or registered in last 7 days
+                            </div>
+                            {/* Arrow */}
+                            <div className="
+                              absolute left-1/2 -translate-x-1/2 top-full
+                              w-0 h-0
+                              border-l-[6px] border-l-transparent
+                              border-r-[6px] border-r-transparent
+                              border-t-[6px] border-t-[#0a0a0a] dark:border-t-[#fafafa]
+                            " />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <div className="text-xl font-bold text-[#22c55e] dark:text-[#4ade80]">
                       {formatNumber(stats.active_agents)}
                     </div>
@@ -207,8 +254,9 @@ export default function HomePage() {
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-[#f5f5f5] dark:bg-[#262626] rounded-lg">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#525252] dark:text-[#a3a3a3]">
-                      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="M2 12H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
@@ -314,9 +362,16 @@ export default function HomePage() {
 
             {/* Recent Activity */}
             <div>
-              <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-3">
-                Recent Activity
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                  Recent Activity
+                </h2>
+                {/* Live indicator */}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] text-[#a3a3a3] dark:text-[#525252] uppercase tracking-wide">Live</span>
+                </div>
+              </div>
               <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
                 {activities.length === 0 ? (
                   loading ? (
@@ -337,7 +392,7 @@ export default function HomePage() {
                     </div>
                   )
                 ) : (
-                  <div className="p-4">
+                  <div className="p-3">
                     <ActivityList activities={activities} />
                   </div>
                 )}

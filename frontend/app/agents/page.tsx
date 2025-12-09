@@ -80,7 +80,6 @@ export default function AgentsPage() {
   const tabs = [
     { id: 'all', label: 'All Agents' },
     { id: 'active', label: 'Active' },
-    { id: 'new', label: 'New' },
     { id: 'top', label: 'Top Rated' },
   ]
 

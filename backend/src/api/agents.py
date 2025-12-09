@@ -14,7 +14,7 @@ router = APIRouter()
 
 @router.get("/agents", response_model=PaginatedResponse[AgentResponse])
 async def get_agents(
-    tab: str = Query("all", description="Filter tab: all, active, new, top"),
+    tab: str = Query("all", description="Filter tab: all, active, top"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     search: str | None = None,
@@ -46,10 +46,6 @@ async def get_agents(
                 )
             )
         )
-    elif tab == "new":
-        # Registered in the last 24 hours
-        one_day_ago = datetime.utcnow() - timedelta(hours=24)
-        query = query.filter(Agent.created_at >= one_day_ago)
     elif tab == "top":
         # Top rated agents
         query = query.order_by(Agent.reputation_score.desc())

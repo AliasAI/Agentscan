@@ -18,7 +18,7 @@ export function Header() {
     }
   }, []);
 
-  // SVG 图标组件
+  // SVG 图标组件 - 统一使用简洁线条风格
   const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' }) => {
     const icons = {
       overview: (
@@ -31,26 +31,15 @@ export function Header() {
       ),
       agents: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          {/* 机器人头部 */}
-          <rect x="4" y="6" width="16" height="12" rx="2" />
-          {/* 天线 */}
-          <path d="M12 6V3" />
-          <circle cx="12" cy="2" r="1" />
-          {/* 眼睛 */}
-          <circle cx="9" cy="11" r="1.5" />
-          <circle cx="15" cy="11" r="1.5" />
-          {/* 嘴巴 */}
-          <path d="M9 15h6" />
+          <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" />
+          <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" />
         </svg>
       ),
       networks: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="3" />
-          <circle cx="4" cy="6" r="2" />
-          <circle cx="20" cy="6" r="2" />
-          <circle cx="4" cy="18" r="2" />
-          <circle cx="20" cy="18" r="2" />
-          <path d="M9.5 10.5L5.5 7.5M14.5 10.5L18.5 7.5M9.5 13.5L5.5 16.5M14.5 13.5L18.5 16.5" />
+          <circle cx="12" cy="12" r="10" />
+          <path d="M2 12H22" />
+          <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" />
         </svg>
       ),
     };

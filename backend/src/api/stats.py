@@ -77,8 +77,20 @@ async def get_stats(db: Session = Depends(get_db)):
     """获取整体统计数据"""
 
     total_agents = db.query(Agent).count()
+
+    # Active: has reputation activity in the last 7 days OR created recently (matching agents API logic)
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
     active_agents = (
-        db.query(Agent).filter(Agent.status == AgentStatus.ACTIVE).count()
+        db.query(Agent).filter(
+            Agent.status == AgentStatus.ACTIVE,
+            (
+                (Agent.reputation_last_updated >= seven_days_ago) |
+                (
+                    (Agent.reputation_last_updated.is_(None)) &
+                    (Agent.created_at >= seven_days_ago)
+                )
+            )
+        ).count()
     )
     total_networks = db.query(Network).count()
     total_activities = db.query(Activity).count()
