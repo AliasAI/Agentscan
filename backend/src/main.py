@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.db.database import engine, Base
-from src.api import stats, agents, sync, networks, activities, classification
+from src.api import stats, agents, sync, networks, activities, classification, feedback
 from src.services.scheduler import start_scheduler, shutdown_scheduler
 from src.db.migrate_add_contracts import migrate as migrate_contracts
 from src.db.migrate_add_oasf_fields import migrate as migrate_oasf
@@ -53,6 +53,7 @@ app.include_router(activities.router, prefix="/api", tags=["activities"])
 app.include_router(sync.router, prefix="/api", tags=["sync"])
 app.include_router(networks.router, prefix="/api", tags=["networks"])
 app.include_router(classification.router, prefix="/api", tags=["classification"])
+app.include_router(feedback.router, prefix="/api", tags=["feedback"])
 
 
 @app.on_event("startup")

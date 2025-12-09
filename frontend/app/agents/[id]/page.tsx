@@ -11,6 +11,7 @@ import { formatAddress, formatDate } from '@/lib/utils/format'
 import { getNftExplorerUrl } from '@/lib/utils/network'
 import { NetworkIcon } from '@/components/common/NetworkIcons'
 import { OASFDetailTags } from '@/components/agent/OASFTags'
+import { TrustTabs } from '@/components/agent/TrustTabs'
 import type { Agent } from '@/types'
 
 // Info row component for consistent styling
@@ -424,6 +425,12 @@ export default function AgentDetailPage() {
                 </pre>
               </div>
             )}
+
+            {/* Trust & Reputation - Reviews and Validations */}
+            <TrustTabs
+              agentId={agent.id}
+              initialFeedbackCount={agent.reputation_count || 0}
+            />
           </div>
 
           {/* Right column - Sidebar */}

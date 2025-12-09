@@ -1,0 +1,1487 @@
+[
+  {
+    "date": "2025-12-09 00:58:58+00:00",
+    "sender": "Ryan",
+    "text": "Hey all. I'm interested in helping out where I can. I'll be here catching up and following along. Also, I started building out a Go implementation of the Agent0 SDK as a side project. Let me know if any of you are interested in exploring this with me."
+  },
+  {
+    "date": "2025-12-08 09:13:45+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "1) I'll work this today/tomorrow\n2) Which optimisation are you referring to? \n3) Yes as I understand it @itsjerryokolo deployed the subgraph and it's working\n\nCan chat about these on Friday too"
+  },
+  {
+    "date": "2025-12-07 19:47:30+00:00",
+    "sender": "🍍",
+    "text": "Like Mafia game win rate"
+  },
+  {
+    "date": "2025-12-07 19:40:50+00:00",
+    "sender": "🍍",
+    "text": "https://github.com/TextArena/textarenablog"
+  },
+  {
+    "date": "2025-12-07 19:26:12+00:00",
+    "sender": "🍍",
+    "text": "Or some games for agents, like TextArena, that capture interactive capabilities"
+  },
+  {
+    "date": "2025-12-07 19:21:06+00:00",
+    "sender": "🍍",
+    "text": "CyBench, or WebArena or some other from this Agentic Benchmark Checklist NeurIPS paper\n\nuiuc-kang-lab.github.io/agentic-benchmarks"
+  },
+  {
+    "date": "2025-12-07 13:14:02+00:00",
+    "sender": "Marco",
+    "text": "The agent card is expandable as you want, so yes, it's possible. Said that the third-party observer would need to trust the benchmark self-declared by the agent itself, so... Which benchmarks do you have in mind?"
+  },
+  {
+    "date": "2025-12-07 05:26:33+00:00",
+    "sender": "🍍",
+    "text": "Hi guys, is credibility of an ai agent defined by social feedback, or can we add public agentic performance benchmarks score to agent card?"
+  },
+  {
+    "date": "2025-12-06 17:57:07+00:00",
+    "sender": "Kantorcodes",
+    "text": "@rickydata Thanks for reviewing our PR, we've made some updates and should be good to review again\n\nhttps://github.com/agent0lab/agent0-ts/pull/13/files"
+  },
+  {
+    "date": "2025-12-05 15:32:00+00:00",
+    "sender": "Marco",
+    "text": "1) Comments in the Notion page https://www.notion.so/AG0-Semantic-Search-Standard-2bc47a22ae4680789ce4fc4a306bc9c8?source=copy_link\n2) Done!"
+  },
+  {
+    "date": "2025-12-05 01:41:42+00:00",
+    "sender": "Tsunami",
+    "text": "sure, go ahead!"
+  },
+  {
+    "date": "2025-12-05 01:26:50+00:00",
+    "sender": "Marco",
+    "text": "😍😍\n\n1) I'll directly comment the Notion doc tmr\n2) Cool, I've tested it and it seems working pretty well! 👏 Can I (or feel free to directly do that by yourself) share it on 8004 Builders as a teaser?\n\nbtw, for everybody, you can find the source code of the backend service in this new repo https://github.com/agent0lab/search-service"
+  },
+  {
+    "date": "2025-12-05 01:08:15+00:00",
+    "sender": "Tsunami",
+    "text": "I dont need any, just want to integrate semantic search with as many as possible! Currently support all chains that are natively supported by ag0"
+  },
+  {
+    "date": "2025-12-05 01:06:28+00:00",
+    "sender": "Sawyer",
+    "text": "Let’s add SKALE!"
+  },
+  {
+    "date": "2025-12-05 01:06:02+00:00",
+    "sender": "Marco",
+    "text": "Which chains do you need?"
+  },
+  {
+    "date": "2025-12-05 01:05:36+00:00",
+    "sender": "Marco",
+    "text": "Ehi 🙂\n1) Yes, I would use the same pattern as IPFS: no boolean flag, just \"arweavePrivateKey\".\n2) You mean the dependencies of the Arweave SDK, correct? Let’s wait for the optimization results before deciding. Keeping Agent0’s deps minimal and the package lightweight is very important imho\n4) You tested the new Subgraph repo with @itsjerryokolo, and both IPFS and Arweave are working using \"File Datasources\", correct?\n\n🙏"
+  },
+  {
+    "date": "2025-12-05 00:53:25+00:00",
+    "sender": "Marco",
+    "text": "Cool. Who is creating/running these extra subgraphs?"
+  },
+  {
+    "date": "2025-12-04 19:09:44+00:00",
+    "sender": "Tsunami",
+    "text": "Nice, cant wait to index it"
+  },
+  {
+    "date": "2025-12-04 18:09:08+00:00",
+    "sender": "Kantorcodes",
+    "text": "Yup, the PR we're working on will enable support for BSC, Linea and so forth"
+  },
+  {
+    "date": "2025-12-04 17:41:35+00:00",
+    "sender": "Tsunami",
+    "text": "Hey guys, am I correct in saying that agent0 currently only has subgraph support for sepolia, base sepolia, and polygon amoy? And is anyone working on adding more chains"
+  },
+  {
+    "date": "2025-12-04 16:47:28+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "ok I snuck in a test seems to be returning ar:// links ok"
+  },
+  {
+    "date": "2025-12-04 16:45:48+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "I'm bouncing between meetings but can test myself a little later"
+  },
+  {
+    "date": "2025-12-04 16:45:30+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "amazing thanks Jerry, have you seen it successfully return results with Arweave links it?"
+  },
+  {
+    "date": "2025-12-04 16:39:09+00:00",
+    "sender": "Jerry | The Graph | Edge & Node |",
+    "text": "https://api.studio.thegraph.com/query/36314/arweave/version/latest\nI deployed it here. I'm getting response"
+  },
+  {
+    "date": "2025-12-04 14:04:06+00:00",
+    "sender": "Jerry | The Graph | Edge & Node |",
+    "text": "Okay, will try to deploy it now"
+  },
+  {
+    "date": "2025-12-04 10:40:12+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "Thanks Jerry - that's all I was trying to add so this should work - https://github.com/kempsterrrr/subgraph/blob/1d31269e0d73468c026160bf82469cb7a1ef23f2/subgraph.yaml#L133-L162\n\nI'll take another look and see if I can update and successfully deploy"
+  },
+  {
+    "date": "2025-12-04 10:24:21+00:00",
+    "sender": "Jerry | The Graph | Edge & Node |",
+    "text": "Arweave is no longer supported. Only File Datasources (IPFS/Arweave) is supported"
+  },
+  {
+    "date": "2025-12-03 18:15:59+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "> 2) package growth is from the SDK and it's deps, could make it an optional peer dep but that would add steps and compliexity in the codebase.\n\nFollowing up on this... team acknowledge package is a pretty heavy, we're removing a chunky dep v soon and looking at making it smaller/more modular but it's not an overnight fix. It has good tree-shaking support though so final bundles should be ok"
+  },
+  {
+    "date": "2025-12-03 13:37:25+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "no stress, I was OOO for a bit too, really appreicate the help"
+  },
+  {
+    "date": "2025-12-03 13:34:49+00:00",
+    "sender": "Jerry | The Graph | Edge & Node |",
+    "text": "I'll revert tomorrow. Sorry was OOO."
+  },
+  {
+    "date": "2025-12-03 00:48:21+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "Sorry again about the delay, arms haealing up now. Thanls for the review, thoughts below:\n\n1) added the `boolean` as there's only one Arweave option vs multiple for IPFS, also I figured the pk could be optional if the user wanted to use the signers private key instead but happy to revert to follow the IPFS pattern exactly wdyt? there are other arweave clients that could be added so makes sense.\n\n2) package growth is from the SDK and it's deps, could make it an optional peer dep but that would add steps and compliexity in the codebase.\n\n3) We have explicit methods for registering with IPFS/Arweave which we don't for feedback so made a choice on the ordering of the if/else, free felt like a good trade off given free. Happy change the order or we could add explicit functions for each storage type e.g. `giveFeedbackIPFS` & `giveFeedbackArweave`\n\nAs for the subgraph, I think the graph has decent support for Arweave given it's use in NFTs etc. but I've never created one before myself. I can take another look tomorrow but if @itsjerryokolo could take a look or confirm it should work that would be really helpful"
+  },
+  {
+    "date": "2025-12-01 23:11:47+00:00",
+    "sender": "Tsunami",
+    "text": "Hey all, some updates on agent0 semantic search re the call on friday.\n1. Made some progress on a standard for search providers at https://www.notion.so/AG0-Semantic-Search-Standard-2bc47a22ae4680789ce4fc4a306bc9c8?source=copy_link, please comment and suggest improvements (intentionally left out stuff like x402 and other access control for simplicity for now). I will be following this for now when implementing the standard into the Agent0 sdk and into my own search provider, but please give suggestions for improvement!\n2. Built a demo erc8004 explorer (https://agent0search.dawidpisarczyk.com/) using my semantic search api if anyone wants to check it out, also has docs on how to use the api, please let me know if theres any problems with it! Indexing occurs on 15 minute intervals currently. The site and the api will be open sourced soon under agent0"
+  },
+  {
+    "date": "2025-12-01 10:30:15+00:00",
+    "sender": "MonteCrypto",
+    "text": "You can also check this if you wanna cover a feature."
+  },
+  {
+    "date": "2025-12-01 10:29:09+00:00",
+    "sender": "MonteCrypto",
+    "text": "This is the latest spec @guillaumeclaret so yes erc8004 spec.md can be a bit behind. One of the most important change is feedbackauth removal."
+  },
+  {
+    "date": "2025-12-01 10:25:58+00:00",
+    "sender": "Guillaume",
+    "text": "Hello!"
+  },
+  {
+    "date": "2025-12-01 10:25:44+00:00",
+    "sender": "MonteCrypto",
+    "text": "And he also has started to give some cool feedback around the eth version. @marcoderossi"
+  },
+  {
+    "date": "2025-12-01 10:25:13+00:00",
+    "sender": "MonteCrypto",
+    "text": "Hey @guillaumeclaret. He is helping on solana program security."
+  },
+  {
+    "date": "2025-12-01 09:00:05+00:00",
+    "sender": "MonteCrypto",
+    "text": "About to drop a gasless tool creation this week with plan to multiple chain support."
+  },
+  {
+    "date": "2025-12-01 08:46:33+00:00",
+    "sender": "Ash Eth",
+    "text": "New month \nIs this the month 8004 happens finally?👀"
+  },
+  {
+    "date": "2025-11-30 18:12:08+00:00",
+    "sender": "Kantorcodes",
+    "text": "These look great! I do think its good to figure out an adapter / plugin pattern to enable multiple provders storage, messaging, etc."
+  },
+  {
+    "date": "2025-11-30 18:10:58+00:00",
+    "sender": "Marco",
+    "text": "Let's continue the conversation in the comments of the different cards"
+  },
+  {
+    "date": "2025-11-30 17:46:36+00:00",
+    "sender": "Marco",
+    "text": "The last one is just sketched, it's not actually scoped"
+  },
+  {
+    "date": "2025-11-30 17:46:19+00:00",
+    "sender": "Marco",
+    "text": "https://github.com/agent0lab/agent0-ts/issues/27"
+  },
+  {
+    "date": "2025-11-30 17:46:09+00:00",
+    "sender": "Marco",
+    "text": "https://github.com/agent0lab/agent0-ts/issues/26#issue-3677890383"
+  },
+  {
+    "date": "2025-11-30 17:45:57+00:00",
+    "sender": "Marco",
+    "text": "https://github.com/agent0lab/agent0-ts/issues/30#issue-3677891780"
+  },
+  {
+    "date": "2025-11-30 17:45:46+00:00",
+    "sender": "Marco",
+    "text": "https://github.com/agent0lab/agent0-ts/issues/28#issue-3677891048"
+  },
+  {
+    "date": "2025-11-30 17:45:21+00:00",
+    "sender": "Marco",
+    "text": "As you suggested, I've migrated the roadmap on a Github project and I've started scoping 4 cards: https://github.com/orgs/agent0lab/projects/1/"
+  },
+  {
+    "date": "2025-11-30 17:44:39+00:00",
+    "sender": "Marco",
+    "text": "from our call on Friday"
+  },
+  {
+    "date": "2025-11-30 17:44:27+00:00",
+    "sender": "Marco",
+    "text": "It's pretty impactful. It should be handled carefully. Let's see what the Solana Foundation suggests this week."
+  },
+  {
+    "date": "2025-11-28 18:38:24+00:00",
+    "sender": "MonteCrypto",
+    "text": "Did the agent0 implementation for Solana, but had to switch from a PR approach to an agent0 build focused only on Solana because of a lot of design considerations around wallets. It’s working now on devnet, but I’m looking for your thoughts on the cleanest way to integrate non-EVM chains into agent0. https://github.com/QuantuLabs/8004-solana-ts"
+  },
+  {
+    "date": "2025-11-28 17:33:43+00:00",
+    "sender": "MonteCrypto",
+    "text": "Yep, just thinking about a2a"
+  },
+  {
+    "date": "2025-11-28 17:33:03+00:00",
+    "sender": "Tsunami",
+    "text": "There needs to be stuff like task management as well, other than that I'm unsure"
+  },
+  {
+    "date": "2025-11-28 17:32:18+00:00",
+    "sender": "MonteCrypto",
+    "text": "why isn't the a2a as simple as POST / to talk to the other agent with body being the message you want to send?"
+  },
+  {
+    "date": "2025-11-28 17:32:18+00:00",
+    "sender": "MonteCrypto",
+    "text": "Imo an interesting approach for a2a messaging from 8004 builders group. If we can do it as simple as x402 that's a big win for 8004."
+  },
+  {
+    "date": "2025-11-27 14:52:17+00:00",
+    "sender": "MonteCrypto",
+    "text": "I need to optimize the Solana instruction so the cost stays fair for regular users, but becomes expensive enough to discourage spammers, without making sponsored feedback too costly. Also interesting to see how GraphQL performs with thousands of feedback entries, to check whether it impacts query performance."
+  },
+  {
+    "date": "2025-11-27 14:48:34+00:00",
+    "sender": "Marco",
+    "text": "Exactly"
+  },
+  {
+    "date": "2025-11-27 14:46:48+00:00",
+    "sender": "MonteCrypto",
+    "text": "So if I understand well it's now permission-less feedback and then we can filter by address what feedback we want."
+  },
+  {
+    "date": "2025-11-27 14:39:00+00:00",
+    "sender": "MonteCrypto",
+    "text": "Okay will check in the sdk how it works."
+  },
+  {
+    "date": "2025-11-27 14:38:18+00:00",
+    "sender": "Marco",
+    "text": "If you are using Agent0 SDK and/or the subgraph, that's just done in the query as a param. If you are running a smart contract, same, clientAddress filtering is supported by the function signatures of the reputation registry"
+  },
+  {
+    "date": "2025-11-27 14:37:20+00:00",
+    "sender": "Marco",
+    "text": "\"I was thinking about creating a small middleware for devs that they can simply add to their endpoint to allow client addresses once call finished.\" Shouldn't be needed anymore"
+  },
+  {
+    "date": "2025-11-27 14:37:02+00:00",
+    "sender": "MonteCrypto",
+    "text": "But how is done the filtering? on the client side? That's the part I don't understand."
+  },
+  {
+    "date": "2025-11-27 14:36:17+00:00",
+    "sender": "Marco",
+    "text": "Yes + general dev experience friction"
+  },
+  {
+    "date": "2025-11-27 14:36:16+00:00",
+    "sender": "MonteCrypto",
+    "text": "With dev friction too, this is one is the most important part to do trustless agent. Agent shouldn't be able to \"allow\" feedback done."
+  },
+  {
+    "date": "2025-11-27 14:15:27+00:00",
+    "sender": "Tsunami",
+    "text": "Issue with feedbackauth is that if the owner of an agent is acting maliciously or just doesnt reply, theres no way to do feedback for it since you arent authorized as i understand it"
+  },
+  {
+    "date": "2025-11-27 13:49:41+00:00",
+    "sender": "MonteCrypto",
+    "text": "Trying to wrap my head around it.\nSo the addresses are sent from the agent owner to the smart contract and stored on-chain?\nBecause the nice thing we had with feedback auth was the off-chain signing part, which removed fees for the agent owner.\nI was thinking about creating a small middleware for devs that they can simply add to their endpoint to allow client addresses once call finished."
+  },
+  {
+    "date": "2025-11-27 10:32:22+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "Thanks for feedback! Sorry I haven't replied sooner. @rickydata and I had a call to look at this today but I broke my arm yesterday 😭 so I'm out of action for a few days. Will get back to this as priority on Monday"
+  },
+  {
+    "date": "2025-11-25 17:01:25+00:00",
+    "sender": "Tsunami",
+    "text": "Sounds good!"
+  },
+  {
+    "date": "2025-11-25 16:37:02+00:00",
+    "sender": "Marco",
+    "text": "Sorry, my bad, the SDK runs both on clients and servers. I'm just saying that the SDK repo should be imho separated from the vector indexer backend service repo. They are logically two different softwares.\n\n\"would we actually have to implement the server as well, and if we do what technologies would we use for this (server framework, hosting, etc)\" -> No problem in choosing a dev framework and an hosting provider, as far as everything is MIT licenced and on popular tech stacks. We should also sponsor the usage and make sure money/costs are not a friction for devs at this early stage. I'll take care about this making sure we find money from myself, grants or VCs to cover the running costs. In the future, we could also decide to enrich the backend with a developers dashboard, let's see.\n\nWdyt?"
+  },
+  {
+    "date": "2025-11-25 16:30:16+00:00",
+    "sender": "Tsunami",
+    "text": "So, agent0ts is intended to be purely client side? I guess, the issue with making it a fully setup repo is that, would we actually have to implement the server as well, and if we do what technologies would we use for this (server framework, hosting, etc). but i agree that we need to add support for using an erc8004 search provider as well for those who dont want to self host"
+  },
+  {
+    "date": "2025-11-25 16:05:08+00:00",
+    "sender": "Marco",
+    "text": "Mmm, I thought Arweave was well supported by The Graph"
+  },
+  {
+    "date": "2025-11-25 16:04:22+00:00",
+    "sender": "Marco",
+    "text": "Not yet"
+  },
+  {
+    "date": "2025-11-25 16:00:56+00:00",
+    "sender": "Marco",
+    "text": "Yes, agree on the fact that we can start with \"free\" and add x402-gating later.\n\nSo:\n- (client) Agent0 SDK only exposes a wrapper which takes a string as an input, plus extra params in case\n- (server) The Agent0 Vector Backend is a different repo which anybody can install. We also provide a free running version which is defaulted in the SDK. The backend indexes all 8004 data across chains, create embeddings, save them in a vector db and when the query arrives, transforms the string in an embedding and runs the vector search with multifiltering\n- Yeah, the client could potentially use other backends, as far as they have the same APIs interface\n\nDo we have a plan?"
+  },
+  {
+    "date": "2025-11-25 15:43:04+00:00",
+    "sender": "Marco",
+    "text": "Agent0 SDK Cooking Call #1 scheduled for this Friday at 8AM PT / 1PM Eastern Time / 4PM London time / 5PM CET"
+  },
+  {
+    "date": "2025-11-25 13:45:38+00:00",
+    "sender": "Jerry | The Graph | Edge & Node |",
+    "text": "I'll take a look"
+  },
+  {
+    "date": "2025-11-25 13:12:02+00:00",
+    "sender": "Ash Eth",
+    "text": "@marcoderossi is there exact date in Dec for 8004 mainnet?"
+  },
+  {
+    "date": "2025-11-25 11:16:22+00:00",
+    "sender": "Ricky",
+    "text": "I tried @Dawe00's PR for semantic/vector search. Aside from one small change for Weaviate side that I left a comment for, everything worked great from my end, results here: https://github.com/agent0lab/agent0-ts/pull/8#issuecomment-3575080554"
+  },
+  {
+    "date": "2025-11-25 11:14:26+00:00",
+    "sender": "Ricky",
+    "text": "@marcoderossi for Arweave support from my side I was able to use the ts library changes correctly, but on the subgraph side I tried a number of things deploying new versions of the subgraph to studio, but I was not able to get the arweave data to be indexed. Maybe @itsjerryokolo could take a look, my point of view on that one is that the subgraph might not actually support that usage of Arweave, which would be a shame if that is still the case today. I know Arweave support on subgraph has been very weak unfortunately, so from my point of view that one is currently blocked by The Graph's support of Arweave functionality, but perhaps I am wrong"
+  },
+  {
+    "date": "2025-11-24 16:09:15+00:00",
+    "sender": "Tsunami",
+    "text": "i would defo want to work on this, but i want my initial semantic search pr to be closed first so i know what in working with"
+  },
+  {
+    "date": "2025-11-24 15:58:45+00:00",
+    "sender": "MonteCrypto",
+    "text": "That's a good start then we can adjust if needed."
+  },
+  {
+    "date": "2025-11-24 15:57:10+00:00",
+    "sender": "Tsunami",
+    "text": "we need to standardise ig. search definitely needs to take the search query, number of results, what else? chainid, minscore, output formats, etc. what other filters and params could be useful?"
+  },
+  {
+    "date": "2025-11-24 15:54:44+00:00",
+    "sender": "Tsunami",
+    "text": "Checkout my semantic search pr, how the client setup looks. You need to pass an optional “semantic search” object to the client in order to setup the semantic search, this has an interface that users can use to make their own providers. Perhaps, we can change this to take a provider URL as well, and providers wld implement an interface when making their servers?"
+  },
+  {
+    "date": "2025-11-24 15:54:43+00:00",
+    "sender": "MonteCrypto",
+    "text": "The usb-c for agents."
+  },
+  {
+    "date": "2025-11-24 15:53:35+00:00",
+    "sender": "MonteCrypto",
+    "text": "Same, it should be bigger than blockchain competition. Blockchain should be just seen as provider."
+  },
+  {
+    "date": "2025-11-24 15:51:45+00:00",
+    "sender": "Kantorcodes",
+    "text": "I can take a stab at that in my current PR if that seems like an interesting pathway"
+  },
+  {
+    "date": "2025-11-24 15:51:27+00:00",
+    "sender": "Kantorcodes",
+    "text": "And just just have a shared interface for utilizing a provider so its more or less the same"
+  },
+  {
+    "date": "2025-11-24 15:50:55+00:00",
+    "sender": "Kantorcodes",
+    "text": "What we could do with agent0 is have multiple providers for semantic / vector search of agents"
+  },
+  {
+    "date": "2025-11-24 15:48:54+00:00",
+    "sender": "Marco",
+    "text": "😍 My long term dream is to completely hide from developers that we are using *any* blockchain/what a blockchain is"
+  },
+  {
+    "date": "2025-11-24 15:46:44+00:00",
+    "sender": "MonteCrypto",
+    "text": "Imagine we build an agent reader blockchain agnostic 💣"
+  },
+  {
+    "date": "2025-11-24 15:40:05+00:00",
+    "sender": "MonteCrypto",
+    "text": "Also regarding the feedback process I don't understand why agent needs to validate it or maybe that's just to test."
+  },
+  {
+    "date": "2025-11-24 15:37:15+00:00",
+    "sender": "Tsunami",
+    "text": "can do another pr for that later, i do think that we are quite reliant on the subhraph and it wld be nice to have other options"
+  },
+  {
+    "date": "2025-11-24 15:36:29+00:00",
+    "sender": "MonteCrypto",
+    "text": "That's what we need too because if graphql do us a cloudfare moment we are all rekt."
+  },
+  {
+    "date": "2025-11-24 15:35:50+00:00",
+    "sender": "Tsunami",
+    "text": "ive written code to populate the vector db directly from the registry using an rpc for another project, not as fast but works"
+  },
+  {
+    "date": "2025-11-24 15:35:34+00:00",
+    "sender": "MonteCrypto",
+    "text": "Can't join so, haven't pushed a pr yet still on the implementation of erc8004 on solana.."
+  },
+  {
+    "date": "2025-11-24 15:34:25+00:00",
+    "sender": "MonteCrypto",
+    "text": "yeah I think we can do gated like rpc do so each provider can provide rate limit and premium feature. But imo the agent reader can become a big package because we can't only count on graphql as source of truth for example so we need some other classic way to avoid centralization of provider."
+  },
+  {
+    "date": "2025-11-24 15:31:01+00:00",
+    "sender": "MonteCrypto",
+    "text": "That's better yes, okay I will update the solana programs too."
+  },
+  {
+    "date": "2025-11-24 14:25:46+00:00",
+    "sender": "Tsunami",
+    "text": "And in regards to making it x402 gated, I initially thought this would be a good idea, but lots of people are currently providing a free one, just something to think about"
+  },
+  {
+    "date": "2025-11-24 14:24:11+00:00",
+    "sender": "Tsunami",
+    "text": "What do you mean by reader in this case? Currently, you need access to an embedding model to query the db anyway, I i guess I dont know how much this would reduce complexity. However, I do think that we need some sort of access to semantic search without needing to do all the setup yourself to be included in the SDK, possibly by having an endpoint to our own backend built into the sdk (with overrides possible if people want to use other providers, as I know others have also made semantic search engines for ERC8004). I don't mind whether the self hosted semantic search stuff is built into the main agent0-ts sdk, or if this would be done by another sdk, although I dont see an issue with keeping it where it is for now"
+  },
+  {
+    "date": "2025-11-24 13:44:29+00:00",
+    "sender": "Marco",
+    "text": "It's great to see so many of you so active in writing PRs and adding features. We definitely need a call to meet each other synchronously! I've met some of you on Zoom and in Buenos Aires, but it would be great if you could all meet each other. So let's have an\n\n☎️Agent0 Cooking Call #1\nThis is not a \"community call\". It's an operational, small call (very few participants) among active contributors who have submitted at least one PR.\nThe goal is to meet each other and discuss how to merge vector search, agent-to-agent messaging, how to build reputation watch towers, x402 support, etc.\n\nIf you are interested, please DM me your email address and timezone, so I can find a good time for everybody 🙏"
+  },
+  {
+    "date": "2025-11-24 13:31:27+00:00",
+    "sender": "Sudeep",
+    "text": "Thanks for sharing, I missed this call, will go through the recording"
+  },
+  {
+    "date": "2025-11-24 13:30:33+00:00",
+    "sender": "Marco",
+    "text": "Just filtering by clientAddresses"
+  },
+  {
+    "date": "2025-11-24 13:30:05+00:00",
+    "sender": "Marco",
+    "text": "Yes during the last community call: https://docs.google.com/presentation/d/1a9FiG4pE3doNd9SElrayYqha3XOA_ypD95LoyML-FWg/edit?slide=id.g3a2b221d4d6_1_8#slide=id.g3a2b221d4d6_1_8"
+  },
+  {
+    "date": "2025-11-24 13:28:20+00:00",
+    "sender": "Kantorcodes",
+    "text": "Thanks again for reviewing the PR. I totally appreciate the thoughtful questions. We anchored the work on Registry Broker because it’s the discovery + messaging layer we’ve been building at HOL for the past year for agents (hol.org/registry). Every agent that registers or gets indexed via adapters like ERC‑8004 ends up with a canonical UAID, searchable profile, encryption metadata, broker‑managed chat sessions, and, when needed, x402 hooks.\n  \nThe SDK helpers simply surface that so a developer can search, verify, negotiate encryption, settle x402 if required, and start chatting without standing up extra infrastructure.\n\n  Here’s why we leaned into the broker path:\n\n  1. Reachability: Most ERC‑8004 agents live behind tunnels, mobile devices, or scheduled jobs. The broker gives them a rendezvous point with presence tracking and retries, which means callers don’t need bespoke NAT workarounds.\n  2. Stateful conversations: As soon as chats span more than one request, teams ask for resumable sessions, transcripts, encrypted payloads, TTL enforcement, and occasionally x402 payments. The broker already supplies those behaviors; rebuilding them inside each SDK would be fragile and adds lots of surface area to maintain.\n  3. Shared registry data: The same service that powers vector search, trust signals, UAID validation, and payment policies also knows how to route messages and settle x402. Leaning on that keeps the SDK thin while still meeting enterprise expectations.\n  4. Ready today: hol.org’s cluster represents a year of monitoring, scaling, adapter work, encryption, and x402 support. Decentralized nodes are coming, but the hosted broker is available right now, so teams can build on it immediately.\n\n  Nothing prevents you from resolving a UAID and hitting a public HTTPS endpoint directly if that suits your deployment. Our experience, though, is that most teams don’t want to expose raw endpoints or re‑implement stateful messaging and payments. The broker gives us one well‑documented path to discover agents, negotiate encryption, initiate chat, and settle (including x402) when needed. That’s the adoption story we’re championing, and the Agent0 SDK now plugs straight into it."
+  },
+  {
+    "date": "2025-11-24 13:27:17+00:00",
+    "sender": "Marco",
+    "text": "VECTORIAL/SEMANTIC SEARCH\n\n1) Did anybody try/install @Dawe00's server? Yeah, you need a vector db, re-index, run embeddings, not straightforward...\n2) @MonteCrypto0 suggests to only include the reader in the SDK (zero complexity), and create a separate repo for the backend (that we could also run as a SaaS x402-gated). In this way we don't add in the client/SDK repo the complexity of the server, which is relevant only for a very minor fraction of developers. Wdyt? Pros/cons? @Dawe00 Wdyt?"
+  },
+  {
+    "date": "2025-11-24 13:24:47+00:00",
+    "sender": "Sudeep",
+    "text": "was this announced officially?"
+  },
+  {
+    "date": "2025-11-24 13:14:34+00:00",
+    "sender": "Marco",
+    "text": "😍 DIRECT AGENT-TO-AGENT MESSAGING from Agent0SDK 😍\n\nInteresting 👏 FYI this is in the same space of this very simple PR @rickydata did (https://github.com/agent0lab/agent0-py/pull/3/ , which is imho a bit too much disconnected from the rest of the codebase) and what @Dawe00 (see his message here: https://t.me/agent0kitchen/248) is working on. What's a RegistryBroker? A messaging server? It seems to me a pretty opinionated approach. General question, do we need a messaging server? What if we assume the receiver of the message always has a public IP reachable from the A2A endpoint? And we don't provide any message history retrieval (stateless) or maybe just a copy locally where the SDK is running. In this way we just do peer to peer messaging without persistent sessions. And we don't need to depedent on any backend. Wdyt? Cons of this approach?"
+  },
+  {
+    "date": "2025-11-24 12:36:38+00:00",
+    "sender": "YQ",
+    "text": "Looks cool."
+  },
+  {
+    "date": "2025-11-24 12:35:11+00:00",
+    "sender": "Marco",
+    "text": "ARWEAVE SUPPORT\nHey, sorry for not managing to meet in person at Devconnect:) Thanks for your work on the PRs! Pretty impactful, I see. I haven't tested them yet, but looking at the code:\n\n- Subgraph PR (https://github.com/agent0lab/subgraph/pull/5/files) I see it requires re-indexing. It seems good to me. @itsjerryokolo or  @rickydata wdyt? Could one of you please skim the Files changed?\n- TS PR (https://github.com/agent0lab/agent0-ts/pull/12/files). I have a few doubts. 1) Why add the boolean \"arweave\" instead of just using arweavePrivateKey set / not set as we do for ipfs and filecoin? 2) Why so many added packages? Package-lock gets to 13k lines of code 3) Minor: I'm not sure we should prioritize Arweave over IPFS when both are set\n\nWdyt? Thanks @kempsterrrr"
+  },
+  {
+    "date": "2025-11-24 12:33:23+00:00",
+    "sender": "MonteCrypto",
+    "text": "Hi, what will be the alternative for FeedbackAuth?"
+  },
+  {
+    "date": "2025-11-24 11:49:28+00:00",
+    "sender": "Marco",
+    "text": "Thanks!\nagent0-ts/pull/11 MERGED and agent0-py/pull/8 MERGED. Keep into consideration that FeedbackAuth is about to be removed, so the latter shouldn't be needed anymore"
+  },
+  {
+    "date": "2025-11-23 22:50:25+00:00",
+    "sender": "Kantorcodes",
+    "text": "Good evening. I added a PR that enables agent to agent chat + session management. \n\nhttps://github.com/agent0lab/agent0-ts/pull/13"
+  },
+  {
+    "date": "2025-11-21 17:56:26+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "ty sir! hopefully the subgraph work should allow you to get that data back, all seemed to be ok for me locally but I am pretty new to subgraphs tbh"
+  },
+  {
+    "date": "2025-11-21 17:31:40+00:00",
+    "sender": "Ricky",
+    "text": "@kempsterrrr left a comment on the PR, worked great for me, will take a look at the subgraph data PR side soon to fully confirm, but I didn't run into any issues/difficulties"
+  },
+  {
+    "date": "2025-11-21 14:51:18+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "DM 🙂"
+  },
+  {
+    "date": "2025-11-21 13:42:44+00:00",
+    "sender": "Ricky",
+    "text": "This looks awesome, will try this out in the next few days"
+  },
+  {
+    "date": "2025-11-21 08:42:31+00:00",
+    "sender": "MonteCrypto",
+    "text": "Alright, let's continue in dm."
+  },
+  {
+    "date": "2025-11-20 19:36:02+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "thanks for your work marco!!"
+  },
+  {
+    "date": "2025-11-20 19:35:32+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "☝️"
+  },
+  {
+    "date": "2025-11-20 19:30:15+00:00",
+    "sender": "Zadok",
+    "text": "Do your thing fren! Sending love and good vibes!"
+  },
+  {
+    "date": "2025-11-20 19:29:20+00:00",
+    "sender": "Marco",
+    "text": "(Sorry guys if I'm not responsive. Devconnect is crazy. I will catch up with all the messages and pull requests in the weekend/soon 🫶)"
+  },
+  {
+    "date": "2025-11-20 19:23:29+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "also at devconnect working space if you want to hang out"
+  },
+  {
+    "date": "2025-11-20 19:23:22+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "Happy to DM 🙂"
+  },
+  {
+    "date": "2025-11-20 19:22:51+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "ArNS fee's are used to fund the protocol balance in AR.IO network which then funds 100s of independant gateways that index and make data available"
+  },
+  {
+    "date": "2025-11-20 19:21:57+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "dope - I am looking at doing this with ElizaOS. Persist agent memory etc. to Arweave and would love to collaborate and maybe support ideas"
+  },
+  {
+    "date": "2025-11-20 19:15:04+00:00",
+    "sender": "MonteCrypto",
+    "text": "The only pb I see is that ans isn't free compared to ipns."
+  },
+  {
+    "date": "2025-11-20 19:07:21+00:00",
+    "sender": "MonteCrypto",
+    "text": "Interesting.. want to drop my decentralized agent memory system on arweave but need more research."
+  },
+  {
+    "date": "2025-11-20 18:26:31+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "I can add support for on demand funding from the associated private key and x402 for uploads will land in the turbo SDK in the next few days too so can add this also"
+  },
+  {
+    "date": "2025-11-20 18:25:32+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "Yep, that’s subsidised with no rate limit. If files are over the size limit now it will error and tell you to get credits from turbo.ar.io"
+  },
+  {
+    "date": "2025-11-20 17:14:16+00:00",
+    "sender": "MonteCrypto",
+    "text": "Everything free below 100kb per file? What's the rate limit."
+  },
+  {
+    "date": "2025-11-20 16:49:55+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "These PRs are now ready for review, sorry about the delay everything got a big chaotic in the lead up to travelling:\n\n- TS SDK: https://github.com/agent0lab/agent0-ts/pull/12\n- Subgraph: https://github.com/agent0lab/subgraph/pull/5\n\nExcited for trustless agents day tomorrow Id' love to catch up there. I am at the main event space working this afternoon too"
+  },
+  {
+    "date": "2025-11-19 17:46:01+00:00",
+    "sender": "Grant",
+    "text": "Hey @marcoderossi, have you given any thoughts on making an Agent0 token? I feel like your guy's project would benefit a lot from a similar structure that Shaw had taken with ai16z and now ElizaOS. Just saw you were going to present Babylon with Shaw on Friday, super exciting and made me think of the possibilities."
+  },
+  {
+    "date": "2025-11-19 15:41:32+00:00",
+    "sender": "General John Stark",
+    "text": "thanks for the invite @Dawe00"
+  },
+  {
+    "date": "2025-11-19 15:17:14+00:00",
+    "sender": "Kantorcodes",
+    "text": "That is essentially Registry Brokers"
+  },
+  {
+    "date": "2025-11-19 10:41:20+00:00",
+    "sender": "MonteCrypto",
+    "text": "Like rpc but for 8004 agents"
+  },
+  {
+    "date": "2025-11-19 10:39:26+00:00",
+    "sender": "MonteCrypto",
+    "text": "The cool thing we can do is to have a kind of multiple node around a single repo. Then devs can call a searchAgentsWithEmbed kind of function inside the sdk. This function fetch from a public list api by default and can also target specific url like localhost."
+  },
+  {
+    "date": "2025-11-19 00:57:39+00:00",
+    "sender": "Kantorcodes",
+    "text": "Will work on making a PR to the agent0 if that feels like it could be useful"
+  },
+  {
+    "date": "2025-11-19 00:57:15+00:00",
+    "sender": "Kantorcodes",
+    "text": "We actually have a free API for semantic + vector search of agents"
+  },
+  {
+    "date": "2025-11-18 22:55:48+00:00",
+    "sender": "Tsunami",
+    "text": "we will be working on an x402 gated api for the semantic search for those who dont want to self host as well, maybe would be good to implement this in sumn like 8004scan as well"
+  },
+  {
+    "date": "2025-11-18 22:54:51+00:00",
+    "sender": "Tsunami",
+    "text": "alr built sumn like that at an encode hack a few weeks ago, check out my compassdao repo"
+  },
+  {
+    "date": "2025-11-18 16:07:02+00:00",
+    "sender": "MonteCrypto",
+    "text": "you can do a lot with that including a simple front end. Can help on that."
+  },
+  {
+    "date": "2025-11-18 16:05:07+00:00",
+    "sender": "MonteCrypto",
+    "text": "would see it more like another package imo, like a separate reader + backend."
+  },
+  {
+    "date": "2025-11-18 16:00:50+00:00",
+    "sender": "MonteCrypto",
+    "text": "Thx"
+  },
+  {
+    "date": "2025-11-18 16:00:34+00:00",
+    "sender": "Tsunami",
+    "text": "https://github.com/agent0lab/agent0-ts/pull/8"
+  },
+  {
+    "date": "2025-11-18 16:00:09+00:00",
+    "sender": "MonteCrypto",
+    "text": "What's the pr link of it?"
+  },
+  {
+    "date": "2025-11-18 15:58:48+00:00",
+    "sender": "Tsunami",
+    "text": "yah, this one works with local weaviate support baked in and supports local embeddings models, i can look at adding it out of the box after this gets merged tho"
+  },
+  {
+    "date": "2025-11-18 15:57:44+00:00",
+    "sender": "MonteCrypto",
+    "text": "Will check it once I'm ready to dive in"
+  },
+  {
+    "date": "2025-11-18 15:57:10+00:00",
+    "sender": "MonteCrypto",
+    "text": "And small model can run on almost every machine now."
+  },
+  {
+    "date": "2025-11-18 15:56:50+00:00",
+    "sender": "MonteCrypto",
+    "text": "All good, multiple way to do it, it's just local embed remove embeding cost that can grow easily."
+  },
+  {
+    "date": "2025-11-18 15:55:55+00:00",
+    "sender": "Tsunami",
+    "text": "has built in sync function as well which pages the subgraph, its also pluggable with any vector db and embedding model"
+  },
+  {
+    "date": "2025-11-18 15:55:15+00:00",
+    "sender": "Tsunami",
+    "text": "^"
+  },
+  {
+    "date": "2025-11-18 15:54:35+00:00",
+    "sender": "Tsunami",
+    "text": "made a pr for it in agent0ts if u wanna check it out"
+  },
+  {
+    "date": "2025-11-18 15:53:00+00:00",
+    "sender": "MonteCrypto",
+    "text": "Have done it locally for the x402 services. Agents are next. It just loads everything with the subgraph and then embeds using MiniLM L6 v2 384d + SQL.\nhttps://github.com/QuantumAgentic/Synthex"
+  },
+  {
+    "date": "2025-11-18 15:31:43+00:00",
+    "sender": "MonteCrypto",
+    "text": "Gm"
+  },
+  {
+    "date": "2025-11-15 03:34:42+00:00",
+    "sender": "Ricky",
+    "text": "Hey @marcoderossi sorry for the delay on this PR which is the ts implementation of a change merged on python one: https://github.com/agent0lab/agent0-ts/pull/11\n\nAlso lmk if you had any feedback on this one line change which seemed to be a bug to me when using the library's feedback functionality: https://github.com/agent0lab/agent0-py/pull/8"
+  },
+  {
+    "date": "2025-11-14 12:52:36+00:00",
+    "sender": "Tsunami",
+    "text": "https://github.com/agent0lab/agent0-ts/pull/8\nalso, wld be good if some people reviewed this pr"
+  },
+  {
+    "date": "2025-11-14 12:51:45+00:00",
+    "sender": "Tsunami",
+    "text": "Hey all, I'm gonna start work on built in a2a messaging in the agent0 ts sdk. To start with, I'm gonna create a function taking an agentid, a message, and an optional skillid, and itll handle the rest. Anyone have any thoughts or input into how they want this implemented? Not gonna touch auth or x402 for now"
+  },
+  {
+    "date": "2025-11-14 02:03:11+00:00",
+    "sender": "Ada",
+    "text": "Is there a demo of using the agent0 SDK to communicate with the a2a agent"
+  },
+  {
+    "date": "2025-11-14 02:03:10+00:00",
+    "sender": "Ada",
+    "text": "Hello"
+  },
+  {
+    "date": "2025-11-12 17:24:41+00:00",
+    "sender": "Angelica Clark",
+    "text": "Actually, Referred by that, using the latest update @ghostxdev 😊"
+  },
+  {
+    "date": "2025-11-12 17:19:49+00:00",
+    "sender": "Ghostx",
+    "text": "this"
+  },
+  {
+    "date": "2025-11-12 17:19:27+00:00",
+    "sender": "Ghostx",
+    "text": "Have you already used the updated signer wallet from the recent update?"
+  },
+  {
+    "date": "2025-11-12 17:09:20+00:00",
+    "sender": "Kantorcodes",
+    "text": "Hi1"
+  },
+  {
+    "date": "2025-11-12 17:09:06+00:00",
+    "sender": "jenniekusu",
+    "text": "gm!"
+  },
+  {
+    "date": "2025-11-12 17:09:02+00:00",
+    "sender": "Niels",
+    "text": "gm!"
+  },
+  {
+    "date": "2025-11-12 17:08:53+00:00",
+    "sender": "MKUltra | Intuition",
+    "text": "gm!"
+  },
+  {
+    "date": "2025-11-12 16:38:00+00:00",
+    "sender": "Angelica Clark",
+    "text": "I’ve put together a simple video guide, step-by-step guide for creating an ERC-8004 Agent on our platform, starting from connecting a MetaMask wallet, creating the agent, adding metadata (IPFS, A2A), and finalizing the Agent. I also show how the minted Agent (as ERC-721) appears in the owner’s wallet in MetaMask, including how its metadata is displayed.\n\nWould it be alright for me to share this video guide here? @marcoderossi @davidecrapis"
+  },
+  {
+    "date": "2025-11-12 16:14:21+00:00",
+    "sender": "Marco",
+    "text": "FYI - I will pitch the docs and the SDK in general in the 8004 community call starting in 15 minutes"
+  },
+  {
+    "date": "2025-11-12 16:13:48+00:00",
+    "sender": "Marco",
+    "text": "And thanks to all the PRs contributors who made this possible!"
+  },
+  {
+    "date": "2025-11-12 16:13:28+00:00",
+    "sender": "Marco",
+    "text": "New Docs is live! Covering all the updates of the last 12 days. Please let me know if there are errors:\n\nhttps://sdk.ag0.xyz/"
+  },
+  {
+    "date": "2025-11-12 14:54:10+00:00",
+    "sender": "Marco",
+    "text": "Moving to Docs right now, since in the last 12 days we improved a lot of stuff!"
+  },
+  {
+    "date": "2025-11-12 14:50:40+00:00",
+    "sender": "Marco",
+    "text": "0.31 is out, it includes:\n- Multichain, pre-released on Monday as 0.3rc1\n- Taxonomies, to facilitate discovery in explorers. We will discuss this during the Community call later today\n\nhttps://www.npmjs.com/package/agent0-sdk/v/0.31.0\nhttps://pypi.org/project/agent0-sdk/0.31/\n\nSee release notes:\nhttps://github.com/agent0lab/agent0-ts/blob/main/RELEASE_NOTES_0.31.md\nhttps://github.com/agent0lab/agent0-py/blob/main/RELEASE_NOTES_0.31.md"
+  },
+  {
+    "date": "2025-11-12 13:31:22+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "looks mostly done pending merge conflicts with recent updates to ts sdk and subpgraph, added @Vilenarios from our team who is going to take a look at finalising this for us"
+  },
+  {
+    "date": "2025-11-12 12:02:32+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "Sorry man, I got ill over the weekend when I was planning to knock this out, playing catch-up today and will let give you an update later 🙂"
+  },
+  {
+    "date": "2025-11-11 17:31:03+00:00",
+    "sender": "cipher9",
+    "text": "gm"
+  },
+  {
+    "date": "2025-11-11 08:01:01+00:00",
+    "sender": "Vladi",
+    "text": "Gm"
+  },
+  {
+    "date": "2025-11-11 07:45:24+00:00",
+    "sender": "Ash Eth",
+    "text": "GM"
+  },
+  {
+    "date": "2025-11-10 19:41:49+00:00",
+    "sender": "Tsunami",
+    "text": "i have made interfaces for it, but wldnt hurt to have some built in support for common ones to make the experience smoother imo"
+  },
+  {
+    "date": "2025-11-10 19:17:54+00:00",
+    "sender": "Marco",
+    "text": "Shouldn't we abstract this to devs?"
+  },
+  {
+    "date": "2025-11-10 19:16:33+00:00",
+    "sender": "Marco",
+    "text": "😎"
+  },
+  {
+    "date": "2025-11-10 19:15:51+00:00",
+    "sender": "Marco",
+    "text": "It's a pre-release. Multichain requires testing. So:\n\nnpm install agent0-sdk@0.3.0-rc.1"
+  },
+  {
+    "date": "2025-11-10 19:15:02+00:00",
+    "sender": "Marco",
+    "text": "Agent0-ts v0.3rc1 is out! Here you find how it works: https://github.com/agent0lab/agent0-ts/blob/main/RELEASE_NOTES_0.3rc1.md"
+  },
+  {
+    "date": "2025-11-10 19:14:46+00:00",
+    "sender": "Marco",
+    "text": "We have TS parity for multichain!"
+  },
+  {
+    "date": "2025-11-10 18:31:28+00:00",
+    "sender": "Angelica Clark",
+    "text": "I’ve tried, and it works. Thank's guys 😊"
+  },
+  {
+    "date": "2025-11-10 18:12:27+00:00",
+    "sender": "Ghostx",
+    "text": "Glad to contribute on this amazing move @marcoderossi , bight future for the ecosystem. More than happy to do more on it"
+  },
+  {
+    "date": "2025-11-10 16:41:58+00:00",
+    "sender": "Tsunami",
+    "text": "https://github.com/agent0lab/agent0-ts/pull/8\nMade a draft pr for semantic/vector search, my first time contributing to open source so I would love some feedback :)"
+  },
+  {
+    "date": "2025-11-10 14:15:51+00:00",
+    "sender": "Angelica Clark",
+    "text": "Great mate @ghostxdev"
+  },
+  {
+    "date": "2025-11-10 14:01:08+00:00",
+    "sender": "Marco",
+    "text": "[TS] Live :)) Now you can use a signer/already existing Ethers.js session, instead of just the private key\n\nhttps://github.com/agent0lab/agent0-ts/blob/main/RELEASE_NOTES_0.2.4.md\n\n0.2.4 live on npm https://www.npmjs.com/package/agent0-sdk"
+  },
+  {
+    "date": "2025-11-10 12:53:06+00:00",
+    "sender": "Tsunami",
+    "text": "+ interfaces for anyone to add their own custom providers ofc"
+  },
+  {
+    "date": "2025-11-10 12:48:21+00:00",
+    "sender": "Tsunami",
+    "text": "For those who want to semantically search through the identity registry, what vector db and embedding providers would you like to see supported out of the box? Currently supporting pinecone and venice ai only, since thats what i use"
+  },
+  {
+    "date": "2025-11-10 06:37:56+00:00",
+    "sender": "Ghostx",
+    "text": "Hello @angelicaclarkk , I tried forking and modifying the signer so it can accept a private key or a wallet object (for wallet-connection use cases). \nHere’s the commit if you want to take a look:\nhttps://github.com/agent0lab/agent0-ts/commit/66f3e3e96198f2c8659a99261b516e2e3dc3a48a\n\nIt’s currently on the dev branch of my forked repo. This might be useful for you, and it could also help @marcoderossi ."
+  },
+  {
+    "date": "2025-11-09 22:39:45+00:00",
+    "sender": "Marco",
+    "text": "(Docs are not updated yet)"
+  },
+  {
+    "date": "2025-11-09 22:37:16+00:00",
+    "sender": "Marco",
+    "text": "🎉Multichain🎉\n\nAgent0-py 0.3rc1 is out now. It supports querying agents across multiple chains in a single operation. This enables:\n- Cross-chain agent discovery: find agents deployed on different networks.\n- Unified search interface: search across all supported chains with one call.\n- Chain-agnostic agent IDs: use the chainId:agentId format to specify which chain an agent is on.\n\nPlease help us test it. This is a pre-release, so you’ll need to update manually:\n\npip install agent0-sdk==0.3rc1\n\nIt currently supports Ethereum Sepolia, Base Sepolia, and Polygon Amoy.\n\nFull guide: https://github.com/agent0lab/agent0-py/blob/main/RELEASE_NOTES_0.3rc1.md\n\nTests: https://github.com/agent0lab/agent0-py/blob/main/tests/test_multi_chain.py\n\nAgent0-py 0.3rc1 was developed by @rickydata (https://github.com/agent0lab/agent0-py/pull/7) and me (https://github.com/agent0lab/agent0-py/commit/701f5e767071fa78fc824b507bfff838c5599b27).\n\nIf you want to help🙏 with the TypeScript version, let me know💙. Ideally, we’ll release 0.3 for both Python and TypeScript at the same time."
+  },
+  {
+    "date": "2025-11-09 15:58:59+00:00",
+    "sender": "Marco",
+    "text": "Agent0 *Subgraph repo* is now multichain (thanks @rickydata 👏)🎉:\n\n- File changes here: https://github.com/agent0lab/subgraph/commit/e1ceb1c8644e3bf10cb7eacc89e72885b0ae3118\n\n- I've just deployed Base Sepolia and Polygon Amoy. Public endpoints here: https://github.com/agent0lab/subgraph/blob/main/README.md\n\n- More chains coming soon!"
+  },
+  {
+    "date": "2025-11-09 15:04:17+00:00",
+    "sender": "Angelica Clark",
+    "text": "In your SDK, i found signer as “private key” (config), while I want to use it on Front-end, to make Signer as Connect Wallet, Is that possible that signer to using wallet Object that exist on Ether.js or another library?"
+  },
+  {
+    "date": "2025-11-09 15:03:33+00:00",
+    "sender": "Angelica Clark",
+    "text": "I can found a Subgraph uri that can override, can assumption if that Subgraph Override possibly could find my own data customize, (Sepolia Agent) will appear, but i’m not sure on it, because we’re working based on your SDK, and nice to hear that you’re working on it. That’s brilian @marcoderossi 😊"
+  },
+  {
+    "date": "2025-11-09 14:44:15+00:00",
+    "sender": "Marco",
+    "text": "@angelicaclarkk The current version of the SDK is single-chain. So if you set a subgraph uri, it's used for everything, including Search Agents. And you shouldn't be able to find Sepolia agents. If it's not the case, let me know because it means that the Override doesn't work. Said that we are working on multi-chain (SearchAgents which aggregate multiple subgraphs)"
+  },
+  {
+    "date": "2025-11-09 14:13:42+00:00",
+    "sender": "Marco",
+    "text": "@kempsterrrr Please ping me when the arweave PRs are ready for review 🙏"
+  },
+  {
+    "date": "2025-11-09 09:49:51+00:00",
+    "sender": "Angelica Clark",
+    "text": "Config Added  \"registryOverrides\": {\n    \"11155111\": {\n      \"IDENTITY\": \"0xe6F7b5631488eFF9F231317D13667Df50F56Db60\",\n      \"REPUTATION\": \"0xEC23c89a658E2137bfD3A736E0bb36205599F83B\",\n      \"VALIDATION\": \"0x464c514dFA020B340a6320C417c75A923319C0e8\"\n    }\n  } into sdk before search. However, the result still into that Agent registered in the contract sepolia Agent0."
+  },
+  {
+    "date": "2025-11-09 09:49:36+00:00",
+    "sender": "Angelica Clark",
+    "text": "Hello @marcoderossi , If I using Registry Overrides with my own contract (self deployed). Then if I searching with sdk.searchAgents, can i get any agent align/fit with the contract to register? \n\nAnd about SDK Config, is that still registryOverrides if used for searchAgents?"
+  },
+  {
+    "date": "2025-11-08 06:47:35+00:00",
+    "sender": "Leonard",
+    "text": "I mean you should just generate a new private key for the agent just for the purposes of interacting with 8004 (it's probably a good idea to use a separate private key for all of these anyway)\n\nit's low friction, and also the agent is likely already set up with some kind of API key management solution (e.g. API keys for openai or anthropic) so devs would prefer to use that for managing secrets. it's also a separate type of risk from managing crypto assets, so it makes more sense for it to be a separate private key.\n\nalso, ElizaOS does it this way (https://docs.elizaos.ai/plugin-registry/defi/evm/complete-documentation#actions), they just use a normal private key and it's stored as a protected env secret"
+  },
+  {
+    "date": "2025-11-08 06:41:50+00:00",
+    "sender": "Jay",
+    "text": "Yes I suppose. In my head I wrapped API keys and tokens as keys that you would generate after OAuth via UI. I guess you could have a CLI to generate them"
+  },
+  {
+    "date": "2025-11-08 06:40:01+00:00",
+    "sender": "Jay",
+    "text": "Wow, this is terrifying"
+  },
+  {
+    "date": "2025-11-08 01:42:00+00:00",
+    "sender": "Jay Prakash | Silence Laboratories",
+    "text": "https://www.kiln.fi/post/re-enablement-of-kiln-services-and-security-incident-information\n\n irrespective of web2/web3."
+  },
+  {
+    "date": "2025-11-08 01:40:43+00:00",
+    "sender": "Jay Prakash | Silence Laboratories",
+    "text": "See the Kiln attack, classic case."
+  },
+  {
+    "date": "2025-11-08 01:39:49+00:00",
+    "sender": "Jay Prakash | Silence Laboratories",
+    "text": "Api keys, tokens, mTLS keys"
+  },
+  {
+    "date": "2025-11-08 01:36:23+00:00",
+    "sender": "Jay",
+    "text": "Which people, who are not in Web3, have a self custodied private key at hand?"
+  },
+  {
+    "date": "2025-11-07 23:17:11+00:00",
+    "sender": "Leonard",
+    "text": "Just a standard private key is probably the easiest way"
+  },
+  {
+    "date": "2025-11-07 23:14:49+00:00",
+    "sender": "Marco",
+    "text": "@lentan What's the easiest non-Web3 \"factor\" we can use programmatically, without using the UI (e.g. Google OAuth flows, etc) in your opinion? Assume we can sponsor txs, so it's just a matter of self-custodial non Web3 factors"
+  },
+  {
+    "date": "2025-11-07 23:03:19+00:00",
+    "sender": "Sawyer",
+    "text": "Idea from Discussion @marcoderossi -> How to enable SDK to allow agent registration in 8004 and/or x402 without blockchain. Will put a proposal and some ideas together."
+  },
+  {
+    "date": "2025-11-07 18:33:44+00:00",
+    "sender": "Marco",
+    "text": "I’m writing this to keep myself on track with a goal LOL"
+  },
+  {
+    "date": "2025-11-07 18:32:43+00:00",
+    "sender": "Marco",
+    "text": "My personal goal for the weekend is shipping multi-chain (based on your PR) 🤞🤞🤞"
+  },
+  {
+    "date": "2025-11-07 14:59:04+00:00",
+    "sender": "Ricky",
+    "text": "Yes it's on my list to take a look at this in next few days 👍 might need help on the multi-chain PR for ts, but can give a first stab at that one as well. Also if helpful for review I deployed the base sepolia version of the subgraph https://thegraph.com/explorer/subgraphs/5TmNKyQ2KXTu1Xb9giWwJQZvuUsHkBSiDsp3Me19GE9r?view=Query&chain=arbitrum-one since I had it in studio from subgraph multi-chain PR and was helpful for testing this addition before the official subgraphs go live"
+  },
+  {
+    "date": "2025-11-07 14:14:09+00:00",
+    "sender": "Marco",
+    "text": "Can somebody help with making sure that TS SDK is aligned with this PY merged PR? https://github.com/agent0lab/agent0-py/pull/4 🙏"
+  },
+  {
+    "date": "2025-11-07 11:55:39+00:00",
+    "sender": "Marco",
+    "text": "[MULTI-CHAIN SEARCH] Wow, that's a huge one. I will study it later today. Ideally, I'd like to release it 1) when we also have the typescript version 2) when we have the subgraph default addresses deployed."
+  },
+  {
+    "date": "2025-11-07 11:53:45+00:00",
+    "sender": "Marco",
+    "text": "Support on testing is appreciated 🙂"
+  },
+  {
+    "date": "2025-11-07 11:38:55+00:00",
+    "sender": "Marco",
+    "text": "Migrated to ESM! agent0-ts v0.2.3 released https://github.com/agent0lab/agent0-ts/blob/main/RELEASE_NOTES_0.2.3.md"
+  },
+  {
+    "date": "2025-11-07 10:58:59+00:00",
+    "sender": "Marco",
+    "text": "agent0-py v0.2.2 released! https://github.com/agent0lab/agent0-py/blob/main/RELEASE_NOTES_0.2.2.md"
+  },
+  {
+    "date": "2025-11-07 03:07:08+00:00",
+    "sender": "Ricky",
+    "text": "Also made a PR that adds multi subgraph/chain support for the python library: https://github.com/agent0lab/agent0-py/pull/7"
+  },
+  {
+    "date": "2025-11-07 02:42:54+00:00",
+    "sender": "Ricky",
+    "text": "@marcoderossi I finished researching the topic for this PR and made a final update and left a comment, lmk if you have any questions/feedback: https://github.com/agent0lab/agent0-py/pull/4"
+  },
+  {
+    "date": "2025-11-06 17:20:26+00:00",
+    "sender": "Pablo",
+    "text": "+1 to just using ESM"
+  },
+  {
+    "date": "2025-11-06 17:12:17+00:00",
+    "sender": "Sawyer",
+    "text": "Hey @marcoderossi \n\nI think ESM only as its where the majority of packages seem to be going.\n\nIf anyone is using CJS curious what the reasoning is."
+  },
+  {
+    "date": "2025-11-06 16:32:17+00:00",
+    "sender": "Marco",
+    "text": "1) In the \"continuing with current pattern and extending if/else statements\" scenario the if/else statements would be based on the SDK is initialized, correct?\n\n2) No, the agent shouldn't care about where the feedback is saved."
+  },
+  {
+    "date": "2025-11-06 16:29:02+00:00",
+    "sender": "Marco",
+    "text": "Dear all, now the TS SDK is CommonJS (no ESM). We want to deliver an ESM package. Do we want to support both (ESM and CommonJS), or ESM alone is fine? (require() won't work)"
+  },
+  {
+    "date": "2025-11-06 13:34:04+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "hope that makes sense happy to sidebar the convo if easier 🙂"
+  },
+  {
+    "date": "2025-11-06 13:19:23+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "Re sdk storage patterns.\n\nThe design for registrartion data is explicit ( e.g `registerIPFS` |  I'm adding `registerArweave` ), is decided by and paid for by the agent. The currrent implementation for feedback is generic ( `giveFeedback` ), assumes IPFS/pinata and is paid for by the client.\n\nI think the client paying for stoage is required as otherwise it would be a security vulnerability (??) however a few questions re best approach:\n\n1. Should we update feedback method to more explicitly specify storage provider inline with registration? (e.g. `giveFeedbackIPFS` | `giveFeedbackArweave` ) alternative is continuing with current pattern and extending if/else statements\n\n2. Should the agent be able to require a specific storage provide for feedback or leave this up to the client?"
+  },
+  {
+    "date": "2025-11-06 06:23:58+00:00",
+    "sender": "Akshat | Polygon Labs",
+    "text": "gm I can help with he wallet integration part aldready did something similar to this - \nnew link - https://agentic-docs.polygon.technology/general/agent-integration/llm-wallet/intro/"
+  },
+  {
+    "date": "2025-11-06 02:24:19+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "Subgraph PR up - https://github.com/agent0lab/subgraph/pull/5\n\nJust realised I missed something on the sdk PR and it's super late so will fix and open in the morning"
+  },
+  {
+    "date": "2025-11-05 21:56:12+00:00",
+    "sender": "Marco",
+    "text": "What's the use case for real time data for 8004? I don't see it as super useful. Maybe for vendors when they receive feedback, yes. I think it's a good idea, but I wouldn't label it as high or medium priority"
+  },
+  {
+    "date": "2025-11-05 21:44:14+00:00",
+    "sender": "Matteo",
+    "text": "Could we do something like hosting a subgraph (or similar index) to list 8004-related on-chain activity and expose a simple feed/webhook others can consume?\nThe use case could be: a third-party service subscribes and gets notified whenever a new agent appears, so they can automatically add it to their directory or kick off onboarding flows.\nWhat do you think?"
+  },
+  {
+    "date": "2025-11-05 21:42:40+00:00",
+    "sender": "Marco",
+    "text": "Actually I was thinking more about importing them in the 8004 registries so everybody / other SDKs could discover them with 8004, and they can receive reputation signals. But yes, what you describe is a great plan B if plan A is not possible"
+  },
+  {
+    "date": "2025-11-05 21:36:34+00:00",
+    "sender": "Matteo",
+    "text": "Quick confirmation: by “Import from centralized MCP catalogs,” do you mean having Agent0 periodically sync from one or more MCP registry endpoints that enumerate agents -> normalize & dedupe them into Agent0’s registry -> index them for search?"
+  },
+  {
+    "date": "2025-11-05 20:48:53+00:00",
+    "sender": "Marco",
+    "text": "Also... anything missing? 🙂"
+  },
+  {
+    "date": "2025-11-05 20:48:23+00:00",
+    "sender": "Marco",
+    "text": "🫶🔥 Agent0 SDK Roadmap 🫶🔥\n\nMore chains\n- I’m discussing with Edge & Node about helping with subgraph maintenance.\n- We’ll refactor the search function to aggregate data from multiple subgraphs.\n\nSemantic search across agents\n- Implement via an Agent0 MCP server that re-indexes all subgraphs into a vector database. I’m discussing this with @Dawe00 .\n\nImport from centralized MCP catalogs\n- Is anyone interested in collaborating on this?\n\nBetter x402 support\n- There’s a lot we can do this year—for example, give Agent0 a spending wallet so it can pay any x402 service. The product direction is still open; if someone wants to help, let me know.\n\nAgent communications (A2A)\n- Product direction is still open. The idea is to provide Agent0 endpoints to send and receive agent-to-agent (A2A) messages.\n\nReachability watchtower\n- A major issue in the industry is that agents’ endpoints aren’t reliably reachable. Proposal: a watchtower that pings each endpoint weekly, checks for HTTP 200, and uses 8004 feedback to update a binary status: “Reachable” / “Not reachable”."
+  },
+  {
+    "date": "2025-11-05 20:44:57+00:00",
+    "sender": "Pablo",
+    "text": "Rickyyyy so good to see you 🙂\nthanks for the invite Marco"
+  },
+  {
+    "date": "2025-11-05 20:43:13+00:00",
+    "sender": "Ricky",
+    "text": "oh hey @pcarranzav_ar 👋 good to see you 😁"
+  },
+  {
+    "date": "2025-11-05 20:36:42+00:00",
+    "sender": "Marco",
+    "text": "Wow! 😍😍😍 That's more for @pcarranzav_ar, who is exploring if (it's still in the air, nothing confirmed yet) Edge & Node can directly help us maintaing that repo + subgraphs' deployments. But the approach of your PR is anyway the one we will take, imho."
+  },
+  {
+    "date": "2025-11-05 20:32:23+00:00",
+    "sender": "Titan - AgentSPE.ai",
+    "text": "I havent spent any time on the python SDK but I can load it up and doing some cross testing if you want"
+  },
+  {
+    "date": "2025-11-05 20:30:27+00:00",
+    "sender": "Marco",
+    "text": "Makes sense. @rickydata Do you think we need them also in the Python SDK? All of them? I would say yes https://github.com/agent0lab/agent0-ts/pull/2/files"
+  },
+  {
+    "date": "2025-11-05 20:26:09+00:00",
+    "sender": "Marco",
+    "text": "Totally agree. Let's do that in this way. Would you be able to create the PR for both SDKs?"
+  },
+  {
+    "date": "2025-11-05 19:54:58+00:00",
+    "sender": "Titan - AgentSPE.ai",
+    "text": "Hey yes I've made some changes, sorry I smashed 3 different bugs into one PR.\nLet me know if you want me to clean it up into separate PRs or do some digging into better fixes."
+  },
+  {
+    "date": "2025-11-05 17:17:09+00:00",
+    "sender": "Ricky",
+    "text": "@marcoderossi in case this is helpful I made a PR to make it easier to deploy the subgraph to different networks: https://github.com/agent0lab/subgraph/pull/4 even if you choose not to merge it, might still be helpful to make the process a bit easier. I tested deploying in studio for base sepolia and ethereum sepolia and all seems to be working well. I could also publish them to explorer directly, but wanted to leave you ownership. But if you don't have the bandwidth to look into the multi-chain subgraph deployments I'm pretty sure I can transfer ownership to the subgraph onchain (but would need to confirm). Unfortunately can't compose different chains in a single subgraph, I have one idea I'm looking into for unifying the endpoints and will share any potential solutions to that problem"
+  },
+  {
+    "date": "2025-11-05 16:37:42+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "ok dug into the code a little more... I think it's ok the continue with CID and update how the function below is determing values like the `agentURIType` and `feedbackURIType`\n\n```\nexport function determineUriType(uri: string): string {\n  if (uri.startsWith(\"ipfs://\")) {\n    return \"ipfs\"\n  } else if (isIpfsGatewayUrl(uri)) {\n    return \"ipfs\"  // Gateway URLs are still IPFS\n  } else if (isIpfsCid(uri)) {\n    return \"ipfs\"\n  } else if (uri.startsWith(\"https://\")) {\n    return \"https\"\n  } else if (uri.startsWith(\"http://\")) {\n    return \"http\"\n  } else {\n    return \"unknown\"\n  }\n}\n```\n\nyou could add a URIType enum to make that explicit but also I don't think it's necissarily needed \n\nLooking at the examples queries here - https://sdk.ag0.xyz/4-subgraph/4-3-example-queries/ - I am not seeing a query pattern folks will need that is something like \"fetch me on all the agents with arweave data\"  which might be more tricky with this approach\n\nThe alternative would probably be something like a storageType enum and that is added to the schema but this would require a migration and reindexinig of the data.\n\nTLDR I think it's ok to ship as is with updates to that function to ensure the type is set correctly so I'll work on that and share it back. I don't think it would be a big lift to change it, the lift would be on the migration and reindexing"
+  },
+  {
+    "date": "2025-11-05 16:17:33+00:00",
+    "sender": "Akshat | Polygon Labs",
+    "text": "gm gm"
+  },
+  {
+    "date": "2025-11-05 13:41:50+00:00",
+    "sender": "Marco",
+    "text": "Hey, thanks for the PR. I have this very small question for you before merging: https://github.com/agent0lab/agent0-ts/pull/2/files#r2489915266"
+  },
+  {
+    "date": "2025-11-05 13:40:47+00:00",
+    "sender": "Marco",
+    "text": "Thanks! DM me or write here if I can help/if you have questions, etc"
+  },
+  {
+    "date": "2025-11-05 13:40:04+00:00",
+    "sender": "Marco",
+    "text": "I would just put the Arweave TxID there without changing the field name that could remain \"cid\". We can maybe just change the comment after the # to make it more generic. Wdyt? Any downside?"
+  },
+  {
+    "date": "2025-11-05 13:36:10+00:00",
+    "sender": "Marco",
+    "text": "Agent0-ts v0.2.2 is out now. This problem should be fixed. Complete changelog here: https://github.com/agent0lab/agent0-ts/blob/main/RELEASE_NOTES_0.2.2.md"
+  },
+  {
+    "date": "2025-11-05 13:15:48+00:00",
+    "sender": "Marco",
+    "text": "agent0-ts: merged same owner/operator fix with fixed in the python SDK https://github.com/agent0lab/agent0-ts/pull/4"
+  },
+  {
+    "date": "2025-11-05 12:43:17+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "looking at the subgraph code, it explicitly uses a CID type in a few places which makes sense as this was built for IPFS support \n\n`cid: String! # IPFS CID (for querying by content)`\n\nI could either just continue using this and put in the Arweave TxID or make a change to naming of this to something more generic? I assuming this would have some downstream impact on folks using the subgraph so wanted to check in on the trade-offs before making any changes"
+  },
+  {
+    "date": "2025-11-05 12:01:50+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "I am taking another look at this today and will try to get a working version with subgraph edits for Arweave support up for review"
+  },
+  {
+    "date": "2025-11-05 10:41:40+00:00",
+    "sender": "Jay",
+    "text": "got this same error"
+  },
+  {
+    "date": "2025-11-05 10:41:37+00:00",
+    "sender": "Jay",
+    "text": "Just tried building repo locally"
+  },
+  {
+    "date": "2025-11-05 10:41:26+00:00",
+    "sender": "Jay",
+    "text": "https://github.com/agent0lab/agent0-ts/issues/1"
+  },
+  {
+    "date": "2025-11-05 10:28:43+00:00",
+    "sender": "Marco",
+    "text": "If it's a single oracle connector, why should the smart contract trust it?"
+  },
+  {
+    "date": "2025-11-05 04:45:19+00:00",
+    "sender": "Joe",
+    "text": "gm"
+  },
+  {
+    "date": "2025-11-04 17:57:40+00:00",
+    "sender": "Titan - AgentSPE.ai",
+    "text": "Gm"
+  },
+  {
+    "date": "2025-11-04 15:08:31+00:00",
+    "sender": "Ricky",
+    "text": "I'm really interested in this topic but mostly as a user of it. I have another call during that time, but please keep us posted on anything we can test or any helpful feedback/contributions that might help"
+  },
+  {
+    "date": "2025-11-04 14:28:57+00:00",
+    "sender": "Marco",
+    "text": "@Dawe00 and I will meet on a Zoom tmr at 3PM CEST / 2PM London time / 9AM ET to discuss how to bring vectorial search on Agent0 SDK (@Dawe00 wants to help. He's thinking about a MCP service indexing and supporting semantic queries, since subgraphs don't support semantic search). If anybody is interested, just texted me privately your email address and I will add you to the Zoom cal"
+  },
+  {
+    "date": "2025-11-04 13:02:03+00:00",
+    "sender": "mankind",
+    "text": "I could proceed to add ZK 🤔"
+  },
+  {
+    "date": "2025-11-04 13:00:21+00:00",
+    "sender": "mankind",
+    "text": "The reputation oracle uses an aggregator model that queries multiple data sources and combines their results. It does not use zero-knowledge proofs.\n\n> BlockchainDataSource(transactions, wallet age, contract interactions)\n>ENS Registry\n>Lens API (Similar social graph data)"
+  },
+  {
+    "date": "2025-11-04 12:52:53+00:00",
+    "sender": "Ricky",
+    "text": "Hey @marcoderossi first of all I wanted to thank you for the remarkably fast follow-ups on the PRs and issues across all the repos you are managing. Could you please take a look at this new PR fixing a somewhat more urgent bug at the registration level? https://github.com/agent0lab/agent0-py/pull/4 - basically I am not seeing any agents in the subgraph showing the expected `a2aSkills` values. Provided GraphQL query to show the newly registered agent with the fixes from the PR appearing with the correct a2aSkills values. Let me know if you have any questions or see anything different\n\nI also want to limit the work on your end to implement changes to the `ts` library, so I am looking at making the fix for owner/operator search there like the merged one on py library, but I think it would be great if you could take a look at this new one on your end as it's a more important one 🙏"
+  },
+  {
+    "date": "2025-11-04 12:26:11+00:00",
+    "sender": "Fabien",
+    "text": "They way the subgraph is designed assume there is an optional but unique endpoint for MCP and or A2A, is this how it's supposed to be? Can't an agent have multiple MCPs or should that come with multiple agent registration?"
+  },
+  {
+    "date": "2025-11-04 11:12:26+00:00",
+    "sender": "Gita Alekhya",
+    "text": "definitely would suggest going as an abstract interface with some kind of DI for dynamic injection of adapters"
+  },
+  {
+    "date": "2025-11-04 11:12:20+00:00",
+    "sender": "Marco",
+    "text": "😍😍😍"
+  },
+  {
+    "date": "2025-11-04 11:11:38+00:00",
+    "sender": "Marco",
+    "text": "This makes a ton of sense of course. But what's the direction that we want to take? Adding capabilities one by one, or create an abstraction layer (plugins) as @gitaalekhyapaul is suggesting? There are pros and cons. Maybe keeping it simple for now is the best way to go. Which storage solutions will be used by the community other then Arweave and IPFS?"
+  },
+  {
+    "date": "2025-11-04 11:09:30+00:00",
+    "sender": "Marco",
+    "text": "Merged 🙂"
+  },
+  {
+    "date": "2025-11-04 11:08:44+00:00",
+    "sender": "Marco",
+    "text": "Cool. I didn't get how the verification happens. It's more like an oracle connectors model with multiple oracles, or are you using ZK-ish stuff?"
+  },
+  {
+    "date": "2025-11-04 10:58:28+00:00",
+    "sender": "Gita Alekhya",
+    "text": "@marcoderossi GM\nJust curious if IPFS is the only mode of metadata storage you are planning to support\nI was hacking for one hackathon, and we used HCS (Hedera Consensus Service) for the agent metadata storage, and I've been also looking at Arkiv Network for the same\n\nIs it possible to switch the SDK arch to a plugin/adapter based system? Would love to contribute if that's something you're looking at"
+  },
+  {
+    "date": "2025-11-04 10:52:52+00:00",
+    "sender": "Marco",
+    "text": "@jaycool3 I've seen your PR to support Hedera. Question: why not setting a default Subgraph and asking user to set their own? Doesn't it add friction?"
+  },
+  {
+    "date": "2025-11-04 10:51:30+00:00",
+    "sender": "Marco",
+    "text": "Yes, before releasing I will cross check each PR on the other SDK and cross-apply changes"
+  },
+  {
+    "date": "2025-11-04 10:49:28+00:00",
+    "sender": "Matteo",
+    "text": "Are you porting this PR to TS as well?"
+  },
+  {
+    "date": "2025-11-04 10:47:51+00:00",
+    "sender": "Marco",
+    "text": "[agent0-ts] TitanNode is proposing dotenv improvements for examples (fine). and more validation on chainId:tokenid. I'm not sure he's already in this group, invited! I've left a comment: https://github.com/agent0lab/agent0-ts/pull/2/files"
+  },
+  {
+    "date": "2025-11-04 10:33:02+00:00",
+    "sender": "Marco",
+    "text": "\"Call an agent directly from Agent0\". Omg this is super cool! https://github.com/agent0lab/agent0-py/pull/3 But it's a pretty big one, @rickydata I think we should double check that from a product perspective we are covering all the relevant use cases. And we should probably update the docs. Let's start asking here. @All: what do you think about this commit? Anything missing/could be done differently?"
+  },
+  {
+    "date": "2025-11-04 10:19:08+00:00",
+    "sender": "Marco",
+    "text": "[agent0-py] Merged. Bug fix (owners and operators filtering in Search wasn't correctly implemented). Thanks @rickydata ! Only thing, you added 5 tests. I will maybe remove a couple, doing some tests now. https://github.com/agent0lab/agent0-py/pull/2"
+  },
+  {
+    "date": "2025-11-04 10:13:19+00:00",
+    "sender": "Marco",
+    "text": "[agent0-py] Merged. Microfix re: Filecoin Cli link to README. https://github.com/agent0lab/agent0-py/pull/1"
+  },
+  {
+    "date": "2025-11-04 10:05:22+00:00",
+    "sender": "Marco",
+    "text": "[Subgraph] Merged! Thanks TheGreatAxios https://github.com/agent0lab/subgraph/pull/3"
+  },
+  {
+    "date": "2025-11-04 03:36:29+00:00",
+    "sender": "hirugohan",
+    "text": "gm"
+  },
+  {
+    "date": "2025-11-04 03:36:23+00:00",
+    "sender": "Bruce",
+    "text": "gm"
+  },
+  {
+    "date": "2025-11-04 02:26:04+00:00",
+    "sender": "Sawyer",
+    "text": "Hey @marcoderossi \n\nWould be great to chat about maintainers and plans around Agent0. Couldn’t shoot you a DM but would be great to connect.\n\nThanks"
+  },
+  {
+    "date": "2025-11-04 02:22:46+00:00",
+    "sender": "Jay",
+    "text": "👋"
+  },
+  {
+    "date": "2025-11-03 23:53:40+00:00",
+    "sender": "mankind",
+    "text": "finally deployed it to railway : https://a-new-system-production.up.railway.app/\n\nThis endpoint is now available on base\n\ngithub : https://github.com/MakindeAhmed2110/a-new-system"
+  },
+  {
+    "date": "2025-11-03 14:57:25+00:00",
+    "sender": "mankind",
+    "text": "still working on it , I need help on deploying it as an x402 agent other agents will be able to call"
+  },
+  {
+    "date": "2025-11-03 13:55:18+00:00",
+    "sender": "Ricky",
+    "text": "Hey all, have been migrating my team's ERC-8004 agent implementation to use agent0-py and kudos on the fantastic work @marcoderossi, works great. I made two PRs on the python library:\n1. https://github.com/agent0lab/agent0-py/pull/2 - this adds search capability by owner and operator. Fully tested and functional, added test coverage in test_search.py\n2. https://github.com/agent0lab/agent0-py/pull/3 - this adds functionality to call on agents. I added this to support my use case and also fully tested and with added tests for the new client scripts, but recommend a deeper dive/review\n\n#1 imo is a good and safe change to include, while #2 is more of a first attempt and sharing what's working well for me, but would need additional review/collaboration. Our team is giving a talk at Devconnect on our ERC-8004 agent implementation so doing a lot of continued experimentation on the agent deployment side. Thanks to all for driving this forward, really awesome stuff 🙏 also +1 to arweave support I think that would be a great addition"
+  },
+  {
+    "date": "2025-11-03 12:54:39+00:00",
+    "sender": "Christopher",
+    "text": "Good morning everyone!"
+  },
+  {
+    "date": "2025-11-03 10:45:55+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "I shipped an integration over the weekend to add Arweave as a storage option for agent data - https://github.com/kempsterrrr/agent0-ts/tree/feat-add-ario-client\n\nnotes on this here - https://github.com/kempsterrrr/agent0-ts/blob/feat-add-ario-client/ARWEAVE_INTEGRATION_PLAN.md\n\nthe last piece to complete this work is updating the subgraph to add Arweave as a file source, this is already supported by the graph so __should__ be relatively straight forward - atm the subgraph functionality is commented out of the implementation to avoid breaking builds but if any wants to test this as is should just be able to build and then pack the SDK to test locally"
+  },
+  {
+    "date": "2025-11-03 10:44:14+00:00",
+    "sender": "Kemp | PDS.inc | AR.IO Network",
+    "text": "morning all - thanks for the invite @marcoderossi and great work 🙏"
+  },
+  {
+    "date": "2025-11-03 06:37:45+00:00",
+    "sender": "hirugohan",
+    "text": "nice, I used that workaround as well"
+  },
+  {
+    "date": "2025-11-03 06:31:19+00:00",
+    "sender": "Sawyer",
+    "text": "Hey @marcoderossi \n\nI have the registry contracts deployed on a new chain, but when going to test locally had a big struggle with the current process (missing/incorrect commands, outdated tools, etc).\n\nOpened a couple of issues and resolved them here: https://github.com/agent0lab/subgraph/pull/3\nTesting now but this should extend a lot easier to new chains and make running a graph node + ipfs locally for most much easier."
+  },
+  {
+    "date": "2025-11-03 00:07:23+00:00",
+    "sender": "hirugohan",
+    "text": "thanks Marco also gn!\n\nI'll explore around"
+  },
+  {
+    "date": "2025-11-03 00:05:52+00:00",
+    "sender": "Marco",
+    "text": "Cool! It's late now In Europe, but tmr I'll have a look at the repo!"
+  },
+  {
+    "date": "2025-11-03 00:04:45+00:00",
+    "sender": "Marco",
+    "text": "My fault. My bad. I fixed that error, released the new code, but I forgot to point to the latest version. Published now. You should see 1.2.11"
+  },
+  {
+    "date": "2025-11-03 00:01:37+00:00",
+    "sender": "hirugohan",
+    "text": "the graph explorer shows that its failed with such details\n\nProgress 99%\nCurrent Block#9519134\nFinal Block#9547833 \n\nI haven't tried spinning up from the repo yet"
+  },
+  {
+    "date": "2025-11-03 00:00:23+00:00",
+    "sender": "mankind",
+    "text": "AGENT A can call this \"new system\" to fetch some info about  AGENT B before proceeding with a txn"
+  },
+  {
+    "date": "2025-11-02 23:59:18+00:00",
+    "sender": "mankind",
+    "text": "I'm building an x402 api for onchain reputation score based on @marcoderossi Agent0 \n\nI am new to this but I think I can make it happen \n\n\nhttps://github.com/MakindeAhmed2110/a-new-system"
+  },
+  {
+    "date": "2025-11-02 23:45:11+00:00",
+    "sender": "Marco",
+    "text": "BTW, thanks for helping debudding"
+  },
+  {
+    "date": "2025-11-02 23:44:47+00:00",
+    "sender": "Marco",
+    "text": "On Sepolia, right?"
+  },
+  {
+    "date": "2025-11-02 23:44:45+00:00",
+    "sender": "Marco",
+    "text": "Hey, do you know what's the blocknumber and or txhash of the agent you don't see?"
+  },
+  {
+    "date": "2025-11-02 23:44:20+00:00",
+    "sender": "Sean Brennan",
+    "text": "Hi, interested in the topic"
+  }
+]

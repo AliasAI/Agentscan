@@ -147,3 +147,64 @@ export interface CategoryDistributionData {
   total_classified: number;
   total_agents: number;
 }
+
+// Feedback (Review) from Subgraph
+export interface Feedback {
+  id: string;
+  score: number; // 0-100
+  client_address: string;
+  tag1?: string | null;
+  tag2?: string | null;
+  feedback_uri?: string | null;
+  feedback_hash?: string | null;
+  is_revoked: boolean;
+  timestamp?: string | null;
+  block_number?: number | null;
+  transaction_hash?: string | null;
+}
+
+export interface FeedbackListResponse {
+  items: Feedback[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  subgraph_available?: boolean; // False if network doesn't have subgraph support
+}
+
+// Validation from Subgraph
+export enum ValidationStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  EXPIRED = 'EXPIRED',
+}
+
+export interface Validation {
+  id: string;
+  request_hash?: string | null;
+  request_uri?: string | null;
+  validator_address: string;
+  response?: number | null; // 0-100 score
+  response_uri?: string | null;
+  response_hash?: string | null;
+  tag?: string | null;
+  status: ValidationStatus | string;
+  requested_at?: string | null;  // createdAt from subgraph
+  completed_at?: string | null;  // updatedAt from subgraph
+}
+
+export interface ValidationListResponse {
+  items: Validation[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  subgraph_available?: boolean; // False if network doesn't have subgraph support
+}
+
+// Reputation Summary from Subgraph
+export interface ReputationSummary {
+  feedback_count: number;
+  average_score: number;
+  validation_count: number;
+}

@@ -10,6 +10,9 @@ import type {
   PaginatedResponse,
   RegistrationTrendResponse,
   CategoryDistributionData,
+  FeedbackListResponse,
+  ValidationListResponse,
+  ReputationSummary,
 } from '@/types';
 
 // 统计数据服务
@@ -84,4 +87,41 @@ export const taxonomyService = {
   // 获取分类分布统计
   getDistribution: () =>
     apiGet<CategoryDistributionData>('/taxonomy/distribution'),
+};
+
+// Feedback 服务 (Reviews & Validations from Subgraph)
+export const feedbackService = {
+  // 获取 Agent 的反馈历史
+  getFeedbacks: (
+    agentId: string,
+    params?: { page?: number; page_size?: number }
+  ) => {
+    const query = new URLSearchParams(
+      Object.entries(params || {})
+        .filter(([_, v]) => v !== undefined && v !== null)
+        .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {})
+    ).toString();
+    return apiGet<FeedbackListResponse>(
+      `/agents/${agentId}/feedbacks${query ? `?${query}` : ''}`
+    );
+  },
+
+  // 获取 Agent 的验证历史
+  getValidations: (
+    agentId: string,
+    params?: { page?: number; page_size?: number }
+  ) => {
+    const query = new URLSearchParams(
+      Object.entries(params || {})
+        .filter(([_, v]) => v !== undefined && v !== null)
+        .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {})
+    ).toString();
+    return apiGet<ValidationListResponse>(
+      `/agents/${agentId}/validations${query ? `?${query}` : ''}`
+    );
+  },
+
+  // 获取 Agent 的声誉摘要
+  getReputationSummary: (agentId: string) =>
+    apiGet<ReputationSummary>(`/agents/${agentId}/reputation-summary`),
 };
