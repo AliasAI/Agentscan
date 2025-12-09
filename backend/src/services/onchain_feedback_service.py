@@ -2,20 +2,17 @@
 
 Fallback service for querying feedback events directly from the blockchain
 when Subgraph data is unavailable (e.g., for agents not indexed by the Subgraph).
+
+Supports multiple networks: Sepolia, Base Sepolia, Linea Sepolia, etc.
 """
 
 import asyncio
 from typing import Optional
-from datetime import datetime
 import structlog
 from web3 import Web3
 
-from src.core.reputation_config import (
-    REPUTATION_REGISTRY_ADDRESS,
-    REPUTATION_REGISTRY_ABI,
-    REPUTATION_START_BLOCK,
-)
-from src.core.blockchain_config import SEPOLIA_RPC_URL
+from src.core.networks_config import get_network
+from src.core.reputation_config import REPUTATION_REGISTRY_ABI
 
 logger = structlog.get_logger(__name__)
 
@@ -28,16 +25,59 @@ class OnChainFeedbackService:
 
     def __init__(self):
         """Initialize the on-chain feedback service"""
-        self.w3 = Web3(Web3.HTTPProvider(SEPOLIA_RPC_URL))
-        self.contract = self.w3.eth.contract(
-            address=REPUTATION_REGISTRY_ADDRESS,
+        self._web3_clients: dict[str, Web3] = {}
+        self._contracts: dict[str, any] = {}
+        logger.info("onchain_feedback_service_initialized")
+
+    def _get_web3(self, network_key: str) -> Optional[Web3]:
+        """Get or create Web3 client for a network"""
+        if network_key in self._web3_clients:
+            return self._web3_clients[network_key]
+
+        network = get_network(network_key)
+        if not network or not network.get("rpc_url"):
+            logger.warning(
+                "network_not_configured",
+                network_key=network_key
+            )
+            return None
+
+        w3 = Web3(Web3.HTTPProvider(network["rpc_url"]))
+        self._web3_clients[network_key] = w3
+        return w3
+
+    def _get_contract(self, network_key: str):
+        """Get or create contract instance for a network"""
+        if network_key in self._contracts:
+            return self._contracts[network_key]
+
+        network = get_network(network_key)
+        if not network:
+            return None
+
+        reputation_address = network.get("contracts", {}).get("reputation")
+        if not reputation_address:
+            logger.warning(
+                "reputation_contract_not_configured",
+                network_key=network_key
+            )
+            return None
+
+        w3 = self._get_web3(network_key)
+        if not w3:
+            return None
+
+        contract = w3.eth.contract(
+            address=reputation_address,
             abi=REPUTATION_REGISTRY_ABI
         )
-        logger.info("onchain_feedback_service_initialized")
+        self._contracts[network_key] = contract
+        return contract
 
     async def get_agent_feedbacks(
         self,
         token_id: int,
+        network_key: str = "sepolia",
         page: int = 1,
         page_size: int = 10,
     ) -> dict:
@@ -46,6 +86,7 @@ class OnChainFeedbackService:
 
         Args:
             token_id: The agent's token ID
+            network_key: Network identifier (sepolia, base-sepolia, etc.)
             page: Page number (1-indexed)
             page_size: Number of items per page
 
@@ -54,7 +95,7 @@ class OnChainFeedbackService:
         """
         try:
             # Get all NewFeedback events for this agent
-            feedbacks = await self._fetch_feedback_events(token_id)
+            feedbacks = await self._fetch_feedback_events(token_id, network_key)
 
             # Sort by block number descending (newest first)
             feedbacks.sort(key=lambda x: x["block_number"], reverse=True)
@@ -80,6 +121,7 @@ class OnChainFeedbackService:
             logger.error(
                 "onchain_feedback_query_failed",
                 token_id=token_id,
+                network_key=network_key,
                 error=str(e)
             )
             return {
@@ -91,17 +133,37 @@ class OnChainFeedbackService:
                 "data_source": "on-chain",
             }
 
-    async def _fetch_feedback_events(self, token_id: int) -> list[dict]:
-        """Fetch all NewFeedback events for an agent"""
+    async def _fetch_feedback_events(
+        self,
+        token_id: int,
+        network_key: str
+    ) -> list[dict]:
+        """Fetch all NewFeedback events for an agent from specified network"""
         feedbacks = []
 
-        # Get current block (block_number is a property, not a method)
-        current_block = self.w3.eth.block_number
-        from_block = REPUTATION_START_BLOCK
+        network = get_network(network_key)
+        if not network:
+            logger.error("network_not_found", network_key=network_key)
+            return feedbacks
+
+        w3 = self._get_web3(network_key)
+        contract = self._get_contract(network_key)
+
+        if not w3 or not contract:
+            logger.error(
+                "web3_or_contract_not_available",
+                network_key=network_key
+            )
+            return feedbacks
+
+        # Get current block and start block
+        current_block = w3.eth.block_number
+        from_block = network.get("start_block", 0)
 
         logger.info(
             "onchain_feedback_scan_started",
             token_id=token_id,
+            network_key=network_key,
             from_block=from_block,
             to_block=current_block
         )
@@ -111,22 +173,22 @@ class OnChainFeedbackService:
             to_block = min(from_block + BLOCKS_PER_BATCH - 1, current_block)
 
             try:
-                # Note: Web3.py uses from_block/to_block (snake_case), not fromBlock/toBlock
                 events = await asyncio.to_thread(
-                    self.contract.events.NewFeedback.get_logs,
+                    contract.events.NewFeedback.get_logs,
                     from_block=from_block,
                     to_block=to_block,
                     argument_filters={"agentId": token_id}
                 )
 
                 for event in events:
-                    feedback = self._parse_feedback_event(event)
+                    feedback = self._parse_feedback_event(event, network_key)
                     feedbacks.append(feedback)
 
             except Exception as e:
                 logger.warning(
                     "onchain_feedback_batch_error",
                     token_id=token_id,
+                    network_key=network_key,
                     from_block=from_block,
                     to_block=to_block,
                     error=str(e)
@@ -137,12 +199,13 @@ class OnChainFeedbackService:
         logger.info(
             "onchain_feedback_scan_completed",
             token_id=token_id,
+            network_key=network_key,
             feedback_count=len(feedbacks)
         )
 
         return feedbacks
 
-    def _parse_feedback_event(self, event) -> dict:
+    def _parse_feedback_event(self, event, network_key: str) -> dict:
         """Parse a NewFeedback event into our response format"""
         args = event["args"]
         block_number = event["blockNumber"]
@@ -152,9 +215,9 @@ class OnChainFeedbackService:
         tag1 = self._bytes32_to_string(args.get("tag1"))
         tag2 = self._bytes32_to_string(args.get("tag2"))
 
-        # Create unique ID from block + log index
+        # Create unique ID from network + block + log index
         log_index = event.get("logIndex", 0)
-        feedback_id = f"{block_number}-{log_index}"
+        feedback_id = f"{network_key}-{block_number}-{log_index}"
 
         return {
             "id": feedback_id,

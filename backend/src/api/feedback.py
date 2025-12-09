@@ -101,12 +101,14 @@ async def get_agent_feedbacks(
             "subgraph_empty_fallback_onchain",
             agent_id=agent_id,
             token_id=token_id,
+            network_key=network_key,
             db_reputation_count=db_reputation_count,
         )
 
         onchain_service = get_onchain_feedback_service()
         result = await onchain_service.get_agent_feedbacks(
             token_id=token_id,
+            network_key=network_key,
             page=page,
             page_size=page_size,
         )
