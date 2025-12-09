@@ -3,6 +3,7 @@ import type { Agent } from '@/types';
 import { formatAddress } from '@/lib/utils/format';
 import { NetworkIcon } from '@/components/common/NetworkIcons';
 import { OASFTags } from './OASFTags';
+import { ScoreRing, EmptyScoreRing } from './ScoreRing';
 
 interface AgentCardProps {
   agent: Agent;
@@ -75,30 +76,44 @@ export function AgentCard({ agent }: AgentCardProps) {
             />
           </div>
 
-          {/* Reputation Footer */}
-          <div className="flex items-center justify-between text-xs pt-2 border-t border-[#e5e5e5] dark:border-[#262626] mt-auto">
-            <div className="flex items-center gap-1 text-[#737373] dark:text-[#737373]">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span>Reputation</span>
-            </div>
-            <div>
+          {/* Trust Footer - Reviews & Validations */}
+          <div className="flex items-center justify-between pt-3 border-t border-[#e5e5e5] dark:border-[#262626] mt-auto">
+            {/* Score Ring or Empty State */}
+            <div className="flex items-center gap-2">
               {agent.reputation_count && agent.reputation_count > 0 ? (
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
-                    {agent.reputation_score.toFixed(0)}
-                  </span>
+                <>
+                  <ScoreRing score={agent.reputation_score} size={36} />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-[#737373] dark:text-[#737373] uppercase tracking-wide">
+                      Trust Score
+                    </span>
+                    <span className="text-xs text-[#525252] dark:text-[#a3a3a3]">
+                      {agent.reputation_count} {agent.reputation_count === 1 ? 'review' : 'reviews'}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <EmptyScoreRing size={36} />
                   <span className="text-[10px] text-[#a3a3a3] dark:text-[#525252]">
-                    ({agent.reputation_count})
+                    No reviews yet
                   </span>
                 </div>
-              ) : (
-                <span className="text-[10px] text-[#a3a3a3] dark:text-[#525252]">
-                  No reviews yet
-                </span>
               )}
             </div>
+
+            {/* Validation Badge - Shows if agent has been validated */}
+            {agent.status === 'active' && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-[#f0fdf4] dark:bg-[#14532d]/30 rounded-md" title="Verified Agent">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-[#22c55e] dark:text-[#4ade80]">
+                  <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-[10px] font-medium text-[#22c55e] dark:text-[#4ade80]">
+                  Verified
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

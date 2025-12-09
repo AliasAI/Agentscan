@@ -191,7 +191,7 @@ export interface Validation {
   status: ValidationStatus | string;
   requested_at?: string | null;  // createdAt from subgraph
   completed_at?: string | null;  // updatedAt from subgraph
-  transaction_hash?: string | null; // on-chain transaction hash
+  transaction_hash?: string | null;  // Transaction hash from subgraph
 }
 
 export interface ValidationListResponse {

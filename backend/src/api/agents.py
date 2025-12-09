@@ -33,11 +33,18 @@ async def get_agents(
 
     # Tab filtering
     if tab == "active":
-        # Active in the last 7 days
+        # Active: has reputation activity in the last 7 days OR created recently
+        # Priority: reputation_last_updated > created_at (for new agents without reviews)
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         query = query.filter(
             Agent.status == AgentStatus.ACTIVE,
-            Agent.updated_at >= seven_days_ago
+            (
+                (Agent.reputation_last_updated >= seven_days_ago) |
+                (
+                    (Agent.reputation_last_updated.is_(None)) &
+                    (Agent.created_at >= seven_days_ago)
+                )
+            )
         )
     elif tab == "new":
         # Registered in the last 24 hours

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Card } from '@/components/common/Card'
 import { DetailPageSkeleton } from '@/components/common/Skeleton'
 import { useToast } from '@/components/common/Toast'
 import { agentService } from '@/lib/api/services'
@@ -12,66 +11,16 @@ import { getNftExplorerUrl } from '@/lib/utils/network'
 import { NetworkIcon } from '@/components/common/NetworkIcons'
 import { OASFDetailTags } from '@/components/agent/OASFTags'
 import { TrustTabs } from '@/components/agent/TrustTabs'
+import { LargeScoreRing, EmptyScoreRing } from '@/components/agent/ScoreRing'
+import {
+  InfoRow,
+  CopyButton,
+  statusConfig,
+  syncStatusConfig,
+  VerifiedBadge,
+  StatsGrid
+} from '@/components/agent/AgentDetailComponents'
 import type { Agent } from '@/types'
-
-// Info row component for consistent styling
-function InfoRow({
-  label,
-  value,
-  action,
-  isLast = false,
-}: {
-  label: string
-  value: React.ReactNode
-  action?: React.ReactNode
-  isLast?: boolean
-}) {
-  return (
-    <div className={`flex justify-between items-start py-3 ${!isLast ? 'border-b border-[#f5f5f5] dark:border-[#1f1f1f]' : ''}`}>
-      <span className="text-xs text-[#737373] dark:text-[#737373] font-medium">{label}</span>
-      <div className="flex items-center gap-2 text-right">
-        <span className="text-sm text-[#0a0a0a] dark:text-[#fafafa]">{value}</span>
-        {action}
-      </div>
-    </div>
-  )
-}
-
-// Copy button component
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const toast = useToast()
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      toast.success(`${label} copied!`)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      toast.error('Failed to copy')
-    }
-  }
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded transition-colors"
-      title={`Copy ${label}`}
-    >
-      {copied ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#22c55e]">
-          <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      ) : (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#a3a3a3] hover:text-[#525252] dark:hover:text-[#a3a3a3]">
-          <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/>
-          <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" strokeWidth="2"/>
-        </svg>
-      )}
-    </button>
-  )
-}
 
 export default function AgentDetailPage() {
   const params = useParams()
@@ -106,45 +55,6 @@ export default function AgentDetailPage() {
     } catch {
       toast.error('Failed to copy to clipboard')
     }
-  }
-
-  const statusConfig = {
-    active: {
-      bg: 'bg-[#f0fdf4] dark:bg-[#14532d]/30',
-      text: 'text-[#22c55e] dark:text-[#4ade80]',
-      dot: 'bg-[#22c55e]',
-      label: 'Active',
-    },
-    inactive: {
-      bg: 'bg-[#f5f5f5] dark:bg-[#262626]',
-      text: 'text-[#737373]',
-      dot: 'bg-[#737373]',
-      label: 'Inactive',
-    },
-    validating: {
-      bg: 'bg-[#fefce8] dark:bg-[#422006]/30',
-      text: 'text-[#eab308] dark:text-[#facc15]',
-      dot: 'bg-[#eab308]',
-      label: 'Validating',
-    },
-  }
-
-  const syncStatusConfig = {
-    syncing: {
-      bg: 'bg-[#f5f5f5] dark:bg-[#262626]',
-      text: 'text-[#525252] dark:text-[#a3a3a3]',
-      label: 'Syncing',
-    },
-    synced: {
-      bg: 'bg-[#f0fdf4] dark:bg-[#14532d]/30',
-      text: 'text-[#22c55e] dark:text-[#4ade80]',
-      label: 'Synced',
-    },
-    failed: {
-      bg: 'bg-[#fef2f2] dark:bg-[#450a0a]/30',
-      text: 'text-[#ef4444] dark:text-[#f87171]',
-      label: 'Failed',
-    },
   }
 
   if (loading) {
@@ -435,60 +345,41 @@ export default function AgentDetailPage() {
 
           {/* Right column - Sidebar */}
           <div className="space-y-6">
-            {/* Statistics */}
+            {/* Trust Score Card */}
             <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
-              <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] uppercase tracking-wider mb-4">
-                Statistics
+              <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] uppercase tracking-wider mb-6">
+                Trust Score
               </h2>
 
-              {/* Reputation score visual */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-[#737373]">Reputation Score</span>
-                  <span className="text-lg font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-                    {agent.reputation_count && agent.reputation_count > 0
-                      ? agent.reputation_score.toFixed(0)
-                      : '—'}
-                  </span>
-                </div>
-                <div className="h-2 bg-[#f5f5f5] dark:bg-[#262626] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#0a0a0a] to-[#525252] dark:from-[#fafafa] dark:to-[#a3a3a3] rounded-full transition-all duration-500"
-                    style={{
-                      width: agent.reputation_count && agent.reputation_count > 0
-                        ? `${agent.reputation_score}%`
-                        : '0%'
-                    }}
-                  />
-                </div>
+              {/* Large Score Ring */}
+              <div className="flex justify-center mb-6">
+                {agent.reputation_count && agent.reputation_count > 0 ? (
+                  <LargeScoreRing score={agent.reputation_score} size={120} />
+                ) : (
+                  <EmptyScoreRing size={120} large />
+                )}
               </div>
 
-              <div className="space-y-0">
-                <InfoRow
-                  label="Status"
-                  value={
-                    <span className={`inline-flex items-center gap-1.5 ${status.text}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                      {status.label}
-                    </span>
-                  }
-                />
-                <InfoRow
-                  label="Reviews"
-                  value={
-                    agent.reputation_count && agent.reputation_count > 0
-                      ? agent.reputation_count
-                      : <span className="text-xs text-[#a3a3a3]">0</span>
-                  }
-                />
-                {agent.token_id !== undefined && agent.token_id !== null && (
+              {/* Stats Grid */}
+              <StatsGrid
+                reviewCount={agent.reputation_count || 0}
+                statusLabel={status.label}
+                statusTextClass={status.text}
+              />
+
+              {/* Verified Badge */}
+              {agent.status === 'active' && <VerifiedBadge />}
+
+              {/* Token ID */}
+              {agent.token_id !== undefined && agent.token_id !== null && (
+                <div className="mt-4 pt-4 border-t border-[#f5f5f5] dark:border-[#1f1f1f]">
                   <InfoRow
                     label="Token ID"
                     value={<span className="font-mono">#{agent.token_id}</span>}
                     isLast
                   />
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Quick Actions */}
