@@ -18,10 +18,49 @@ export function Header() {
     }
   }, []);
 
+  // SVG 图标组件
+  const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' }) => {
+    const icons = {
+      overview: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="9" rx="1" />
+          <rect x="14" y="3" width="7" height="5" rx="1" />
+          <rect x="14" y="12" width="7" height="9" rx="1" />
+          <rect x="3" y="16" width="7" height="5" rx="1" />
+        </svg>
+      ),
+      agents: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          {/* 机器人头部 */}
+          <rect x="4" y="6" width="16" height="12" rx="2" />
+          {/* 天线 */}
+          <path d="M12 6V3" />
+          <circle cx="12" cy="2" r="1" />
+          {/* 眼睛 */}
+          <circle cx="9" cy="11" r="1.5" />
+          <circle cx="15" cy="11" r="1.5" />
+          {/* 嘴巴 */}
+          <path d="M9 15h6" />
+        </svg>
+      ),
+      networks: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <circle cx="4" cy="6" r="2" />
+          <circle cx="20" cy="6" r="2" />
+          <circle cx="4" cy="18" r="2" />
+          <circle cx="20" cy="18" r="2" />
+          <path d="M9.5 10.5L5.5 7.5M14.5 10.5L18.5 7.5M9.5 13.5L5.5 16.5M14.5 13.5L18.5 16.5" />
+        </svg>
+      ),
+    };
+    return icons[type];
+  };
+
   const navLinks = [
-    { href: '/', label: 'Overview', icon: '📊' },
-    { href: '/agents', label: 'Agents', icon: '🤖' },
-    { href: '/networks', label: 'Networks', icon: '🌐' },
+    { href: '/', label: 'Overview', iconType: 'overview' as const },
+    { href: '/agents', label: 'Agents', iconType: 'agents' as const },
+    { href: '/networks', label: 'Networks', iconType: 'networks' as const },
   ];
 
   const isActive = (href: string) => {
@@ -53,16 +92,15 @@ export function Header() {
                   </span>
                 </div>
               </Link>
-              <nav className="hidden md:flex items-center space-x-1">
+              <nav className="hidden md:flex items-center">
                 {navLinks.map((link) => (
-                  <Link
+                  <span
                     key={link.href}
-                    href={link.href}
-                    className="px-3 py-1.5 rounded-md text-sm font-medium transition-all text-[#737373] dark:text-[#737373]"
+                    className="px-4 py-1 text-[13px] font-normal text-[#6e6e73] dark:text-[#86868b] flex items-center gap-1.5"
                   >
-                    <span className="mr-1.5">{link.icon}</span>
+                    <NavIcon type={link.iconType} />
                     {link.label}
-                  </Link>
+                  </span>
                 ))}
               </nav>
             </div>
@@ -96,8 +134,8 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Navigation - 黑白配色 */}
-            <nav className="hidden md:flex items-center space-x-1">
+            {/* Navigation - Apple 风格 + 底部线条指示器 */}
+            <nav className="hidden md:flex items-center">
               {navLinks.map((link) => {
                 const active = isActive(link.href);
                 return (
@@ -105,19 +143,29 @@ export function Header() {
                     key={link.href}
                     href={link.href}
                     className={`
-                      px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 relative
-                      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]
+                      group relative px-4 py-3 text-[13px] font-normal
+                      transition-colors duration-200 flex items-center gap-1.5
+                      focus-visible:outline-none
                       ${active
-                        ? 'text-[#0a0a0a] dark:text-[#fafafa] bg-[#f5f5f5] dark:bg-[#262626]'
-                        : 'text-[#737373] dark:text-[#737373] hover:text-[#525252] dark:hover:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#262626]'
+                        ? 'text-[#0a0a0a] dark:text-[#fafafa]'
+                        : 'text-[#6e6e73] dark:text-[#86868b] hover:text-[#0a0a0a] dark:hover:text-[#fafafa]'
                       }
                     `}
                   >
-                    <span className="mr-1.5">{link.icon}</span>
-                    {link.label}
-                    {active && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-[#0a0a0a] dark:bg-[#fafafa] rounded-full"></span>
-                    )}
+                    <NavIcon type={link.iconType} />
+                    <span>{link.label}</span>
+
+                    {/* 底部线条指示器 */}
+                    <span
+                      className={`
+                        absolute bottom-0 left-4 right-4 h-[2px] rounded-full
+                        transition-opacity duration-200
+                        ${active
+                          ? 'bg-[#0a0a0a] dark:bg-[#fafafa] opacity-100'
+                          : 'bg-[#0a0a0a] dark:bg-[#fafafa] opacity-0 group-hover:opacity-30'
+                        }
+                      `}
+                    />
                   </Link>
                 );
               })}

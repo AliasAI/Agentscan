@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Activity } from '@/types';
 import { formatRelativeTime, formatAddress } from '@/lib/utils/format';
 
@@ -21,9 +22,11 @@ export function ActivityList({ activities }: ActivityListProps) {
   return (
     <div className="space-y-2">
       {activities.map((activity) => (
-        <div
+        <Link
           key={activity.id}
-          className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+          href={`/agents/${activity.agent_id}`}
+          className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors block"
+          style={{ cursor: 'pointer' }}
         >
           <div className="text-sm flex-shrink-0">
             {activityIcons[activity.activity_type]}
@@ -49,7 +52,7 @@ export function ActivityList({ activities }: ActivityListProps) {
               </p>
             )}
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
