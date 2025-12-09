@@ -113,20 +113,20 @@ export function TrustTabs({
         </div>
       </div>
 
-      {/* Tab content */}
+      {/* Tab content - use CSS display to preserve state instead of conditional rendering */}
       <div className="px-6 pb-6 pt-4">
-        {activeTab === 'reviews' && (
+        <div className={activeTab === 'reviews' ? 'block' : 'hidden'}>
           <FeedbackList
             agentId={agentId}
             onCountChange={handleFeedbackCountChange}
           />
-        )}
-        {activeTab === 'validations' && (
+        </div>
+        <div className={activeTab === 'validations' ? 'block' : 'hidden'}>
           <ValidationList
             agentId={agentId}
             onCountChange={handleValidationCountChange}
           />
-        )}
+        </div>
       </div>
     </div>
   )

@@ -170,6 +170,7 @@ export interface FeedbackListResponse {
   page_size: number;
   total_pages: number;
   subgraph_available?: boolean; // False if network doesn't have subgraph support
+  data_source?: 'subgraph' | 'on-chain' | 'none'; // Data source indicator
 }
 
 // Validation from Subgraph

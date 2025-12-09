@@ -275,6 +275,38 @@ function NetworkNotSupportedState() {
   )
 }
 
+// Data source indicator
+function DataSourceIndicator({ source }: { source: string }) {
+  const isOnChain = source === 'on-chain'
+
+  return (
+    <div className={`
+      inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium mb-3
+      ${isOnChain
+        ? 'bg-[#fef3c7] dark:bg-[#78350f]/30 text-[#b45309] dark:text-[#fbbf24]'
+        : 'bg-[#ecfdf5] dark:bg-[#064e3b]/30 text-[#059669] dark:text-[#34d399]'
+      }
+    `}>
+      {isOnChain ? (
+        <>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+            <path d="M21 12C21 16.9706 16.9706 21 12 21M21 12C21 7.02944 16.9706 3 12 3M21 12H3M12 21C7.02944 21 3 16.9706 3 12M12 21C13.6569 21 15 16.9706 15 12C15 7.02944 13.6569 3 12 3M12 21C10.3431 21 9 16.9706 9 12C9 7.02944 10.3431 3 12 3M3 12C3 7.02944 7.02944 3 12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <span>On-Chain Data</span>
+        </>
+      ) : (
+        <>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+            <path d="M3 3V21H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M18 9L13 14L9 10L4 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>Subgraph Data</span>
+        </>
+      )}
+    </div>
+  )
+}
+
 // Loading skeleton
 function LoadingSkeleton() {
   return (
@@ -350,8 +382,15 @@ export function FeedbackList({ agentId, onCountChange }: FeedbackListProps) {
     return <EmptyState />
   }
 
+  const dataSource = data.data_source || 'subgraph'
+
   return (
     <div>
+      {/* Show data source indicator for on-chain data */}
+      {dataSource === 'on-chain' && (
+        <DataSourceIndicator source={dataSource} />
+      )}
+
       <div className="divide-y divide-[#f5f5f5] dark:divide-[#1f1f1f]">
         {data.items.map((feedback) => (
           <FeedbackRow key={feedback.id} feedback={feedback} />

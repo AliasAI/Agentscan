@@ -1,10 +1,12 @@
 """Feedback and Validation API
 
-Endpoints for querying feedback (reviews) and validation history from the subgraph.
+Endpoints for querying feedback (reviews) and validation history.
+Uses Subgraph as primary source, with on-chain fallback for agents not indexed.
 """
 
 from fastapi import APIRouter, Query, HTTPException, Depends
 from sqlalchemy.orm import Session
+import structlog
 
 from src.db.database import get_db
 from src.models import Agent
@@ -16,16 +18,18 @@ from src.schemas.feedback import (
     ReputationSummaryResponse,
 )
 from src.services.subgraph_service import get_subgraph_service
+from src.services.onchain_feedback_service import get_onchain_feedback_service
 
 router = APIRouter()
+logger = structlog.get_logger(__name__)
 
 
-def _get_agent_info(agent_id: str, db: Session) -> tuple[int, str]:
+def _get_agent_info(agent_id: str, db: Session) -> tuple[int, str, int]:
     """
-    Get agent's token_id and network_key from database.
+    Get agent's token_id, network_key, and reputation_count from database.
 
     Returns:
-        Tuple of (token_id, network_key)
+        Tuple of (token_id, network_key, reputation_count)
 
     Raises:
         HTTPException if agent not found or has no token_id
@@ -46,7 +50,9 @@ def _get_agent_info(agent_id: str, db: Session) -> tuple[int, str]:
         # Use network key directly if available
         network_key = agent.network.id  # network.id is the key like 'sepolia'
 
-    return agent.token_id, network_key
+    reputation_count = agent.reputation_count or 0
+
+    return agent.token_id, network_key, reputation_count
 
 
 @router.get(
@@ -62,11 +68,10 @@ async def get_agent_feedbacks(
     """
     Get feedback history for an agent.
 
-    Returns a paginated list of feedbacks/reviews from the Agent0 subgraph.
-    If the network doesn't have subgraph support, returns empty list with
-    subgraph_available=False.
+    Returns a paginated list of feedbacks/reviews. Uses Subgraph as primary
+    data source, with on-chain fallback for agents not indexed by Subgraph.
     """
-    token_id, network_key = _get_agent_info(agent_id, db)
+    token_id, network_key, db_reputation_count = _get_agent_info(agent_id, db)
 
     subgraph = get_subgraph_service()
 
@@ -79,14 +84,42 @@ async def get_agent_feedbacks(
             page_size=page_size,
             total_pages=0,
             subgraph_available=False,
+            data_source="none",
         )
 
+    # Try Subgraph first
     result = await subgraph.get_agent_feedbacks(
         token_id=token_id,
         network=network_key,
         page=page,
         page_size=page_size,
     )
+
+    # Fallback to on-chain if Subgraph returns no data but DB has reputation
+    if result["total"] == 0 and db_reputation_count > 0:
+        logger.info(
+            "subgraph_empty_fallback_onchain",
+            agent_id=agent_id,
+            token_id=token_id,
+            db_reputation_count=db_reputation_count,
+        )
+
+        onchain_service = get_onchain_feedback_service()
+        result = await onchain_service.get_agent_feedbacks(
+            token_id=token_id,
+            page=page,
+            page_size=page_size,
+        )
+
+        return FeedbackListResponse(
+            items=[FeedbackResponse(**item) for item in result["items"]],
+            total=result["total"],
+            page=result["page"],
+            page_size=result["page_size"],
+            total_pages=result["total_pages"],
+            subgraph_available=True,
+            data_source="on-chain",
+        )
 
     return FeedbackListResponse(
         items=[FeedbackResponse(**item) for item in result["items"]],
@@ -95,6 +128,7 @@ async def get_agent_feedbacks(
         page_size=result["page_size"],
         total_pages=result["total_pages"],
         subgraph_available=True,
+        data_source="subgraph",
     )
 
 
@@ -115,7 +149,7 @@ async def get_agent_validations(
     If the network doesn't have subgraph support, returns empty list with
     subgraph_available=False.
     """
-    token_id, network_key = _get_agent_info(agent_id, db)
+    token_id, network_key, _ = _get_agent_info(agent_id, db)
 
     subgraph = get_subgraph_service()
 
@@ -160,7 +194,7 @@ async def get_agent_reputation_summary(
 
     Returns aggregated feedback count, average score, and validation count.
     """
-    token_id, network_key = _get_agent_info(agent_id, db)
+    token_id, network_key, _ = _get_agent_info(agent_id, db)
 
     subgraph = get_subgraph_service()
     result = await subgraph.get_reputation_summary(
