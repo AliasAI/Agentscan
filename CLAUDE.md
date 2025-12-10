@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-8004scan 是一个 ERC-8004 AI 代理浏览器，类似于区块链浏览器，用于展示和追踪基于 ERC-8004 协议的 AI 代理信息。项目包含前端（Next.js）和后端（FastAPI），后端通过 Web3.py 从 Sepolia 网络同步链上数据。
+Agentscan 是一个 ERC-8004 AI Agent Explorer，类似于区块链浏览器，用于展示和追踪基于 ERC-8004 协议的 AI 代理信息。项目包含前端（Next.js）和后端（FastAPI），后端通过 Web3.py 从 Sepolia 网络同步链上数据。
 
 ## Core Commands
 
@@ -553,7 +553,7 @@ load_dotenv()
 
 ### 功能概述
 
-8004scan 现已集成完整的 OASF v0.8.0 分类体系，可自动为 AI Agent 打上 skills 和 domains 标签。
+Agentscan 现已集成完整的 OASF v0.8.0 分类体系，可自动为 AI Agent 打上 skills 和 domains 标签。
 
 ### 关键特性
 

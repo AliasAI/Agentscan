@@ -1,4 +1,4 @@
-# 8004scan - ERC-8004 AI 代理浏览器
+# Agentscan - ERC-8004 AI Agent Explorer
 
 一个类似区块链浏览器的 Web 应用，用于探索和展示 ERC-8004 协议上的 AI 代理信息。
 
@@ -43,7 +43,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ## 📁 项目结构
 
 ```
-8004scan/
+agentscan/
 ├── frontend/              # Next.js 16 + React 19 + Tailwind CSS v4
 │   ├── app/              # 页面路由
 │   ├── components/       # React 组件
