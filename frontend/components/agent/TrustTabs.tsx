@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { FeedbackList } from './FeedbackList'
 import { ValidationList } from './ValidationList'
 
@@ -29,7 +29,7 @@ export function TrustTabs({
     setValidationCount(count)
   }, [])
 
-  const tabs: { id: TabType; label: string; count: number; icon: JSX.Element }[] = [
+  const tabs: { id: TabType; label: string; count: number; icon: React.ReactNode }[] = [
     {
       id: 'reviews',
       label: 'Reviews',
