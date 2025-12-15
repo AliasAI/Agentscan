@@ -6,7 +6,11 @@ Hey everyone, thanks so much for driving the ERC-8004 ecosystem forward.
 
 So, let me tell you about Agentscan. Right now, we're the browser for the 8004 protocol, and we've indexed over 5000 agents. That's pretty cool! But here's the thing - our search? It's honestly pretty basic. Users are having a hard time finding the right agent quickly. And that's kind of a problem if we want the ecosystem to actually be usable, you know?
 
-So here's what we're thinking: let's optimize the search. Our goal? Help users find what they need in under 3 seconds. Make the whole 8004 ecosystem way easier to use.
+Before we dive in, let's look at some reference examples. Think about how **Polymarket** organizes prediction markets - they have clear categories, trending topics, and you can filter by politics, crypto, sports in seconds. Or **Hugging Face** - when you're looking for AI models, you can instantly filter by task type, language, framework. And of course **Amazon or any good e-commerce site** - search suggestions pop up as you type, categories are clear, filters are powerful. These aren't just nice features - they're essential for making large catalogs actually usable.
+
+That's where we need to get with Agentscan. We have 5000+ agents now, but unlike these platforms, our discovery experience is still primitive.
+
+So here's what we're thinking: let's optimize the search. Our goal? Help users find what they need in under 3 seconds. Make the whole 8004 ecosystem way easier to use, just like these reference platforms do for their domains.
 
 ---
 
@@ -60,11 +64,6 @@ We've got some other ideas too. Agent Timeline to show on-chain history. Network
 
 ---
 
-Performance targets: autocomplete needs to be under 100 milliseconds. Search results under 300 milliseconds. First screen loads in under 2 seconds.
-
-We'll roll this out in phases, step by step.
-
----
 
 But here's where it gets interesting.
 
@@ -110,24 +109,15 @@ Now, because 8004 is on-chain, we'll focus on these things:
 
 ---
 
-Expected outcomes:
-
-**For human users:** Find the agent you need in under 3 seconds. Lower the barrier to entry and make the ecosystem more accessible.
-
-**For AI Agents:** Become their go-to interface for querying 8004 agents. Make the whole ecosystem more interoperable.
-
-This way, Agentscan isn't just a browser anymore. It becomes the **Agent Discovery Layer** for the entire 8004 ecosystem.
-
----
-
 Alright, so I'd love to hear your thoughts on a few things.
 
-**First:** Does this dual-track strategy - Human-Facing and Agent-Facing running in parallel - does that align with where you see the 8004 ecosystem going?
+1. Dual-Track Strategy Alignment: Does the parallel Human-Facing and Agent-Facing strategy align with the vision for the 8004 ecosystem?
 
-**Second:** For Agent-to-Agent discovery and verification scenarios, what other key capabilities do you think we're missing?
+2. Mainnet Launch Timeline: What is the expected timeline for the Mainnet launch (weeks, months, or quarters)?
 
-**Third:** About the Validation mechanism - what's the current progress there? From agent registration, to validation, to being discovered and actually used - do we have a complete closed loop yet, both in process and logic? And when we're designing this Agent Discovery Layer, how should we better integrate the Validation mechanism?
+3. Real-World Use Cases: Which key application scenarios are currently seeing the most traction (DeFi, Gaming, Enterprise automation, etc.)?
+4. EF Priority Status: Where does 8004 sit within the Ethereum Foundation's (EF) overall roadmap? Is it a flagship initiative or more experimental?
 
-**Fourth:** About the new version of the 8004 protocol - when do you expect it to be finalized? Will this be the final version? What's the overall progress looking like right now?
+5. Validation Mechanism Progress: Is the validation mechanism's closed loop complete? How should we integrate this into the Agent Discovery Layer?
 
-Looking forward to your feedback. Thanks!
+6. New Protocol Version Status: When is the new 8004 protocol version expected to be finalized, and is this considered the final version?
