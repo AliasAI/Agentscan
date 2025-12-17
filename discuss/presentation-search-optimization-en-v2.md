@@ -4,7 +4,7 @@
 
 Hey everyone, thanks so much for driving the ERC-8004 ecosystem forward.
 
-So, let me tell you about Agentscan. Right now, we're the browser for the 8004 protocol, and we've indexed over 5000 agents. That's pretty cool! But here's the thing - our search? It's honestly pretty basic. Users are having a hard time finding the right agent quickly. And that's kind of a problem if we want the ecosystem to actually be usable, you know?
+So, let me tell you about Agentscan. Right now, we're the browser for the 8004 protocol, and we've indexed over 6000 agents. That's pretty cool! But here's the thing - our search? It's honestly pretty basic. Users are having a hard time finding the right agent quickly. And that's kind of a problem if we want the ecosystem to actually be usable, you know?
 
 Before we dive in, let's look at some reference examples. Think about how **Polymarket** organizes prediction markets - they have clear categories, trending topics, and you can filter by politics, crypto, sports in seconds. Or **Hugging Face** - when you're looking for AI models, you can instantly filter by task type, language, framework. And of course **Amazon or any good e-commerce site** - search suggestions pop up as you type, categories are clear, filters are powerful. These aren't just nice features - they're essential for making large catalogs actually usable.
 
