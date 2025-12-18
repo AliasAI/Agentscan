@@ -18,6 +18,9 @@ def migrate():
 
     if db_url.startswith("sqlite:///"):
         db_path = db_url.replace("sqlite:///", "")
+        # Remove leading ./ if present
+        if db_path.startswith("./"):
+            db_path = db_path[2:]
         # Handle relative path
         if not db_path.startswith("/"):
             db_path = Path(__file__).parent.parent.parent / db_path
