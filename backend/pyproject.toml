@@ -10,6 +10,7 @@ dependencies = [
     "fastapi>=0.121.0",
     "httpx>=0.28.1",
     "openai>=1.59.10",
+    "playwright>=1.57.0",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.3",
     "pydantic-settings>=2.11.0",

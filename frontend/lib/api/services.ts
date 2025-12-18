@@ -13,6 +13,8 @@ import type {
   FeedbackListResponse,
   ValidationListResponse,
   ReputationSummary,
+  AgentEndpointReport,
+  EndpointHealthSummaryResponse,
 } from '@/types';
 
 // 统计数据服务
@@ -124,4 +126,44 @@ export const feedbackService = {
   // 获取 Agent 的声誉摘要
   getReputationSummary: (agentId: string) =>
     apiGet<ReputationSummary>(`/agents/${agentId}/reputation-summary`),
+};
+
+// Endpoint Health 服务
+export const endpointHealthService = {
+  // 获取单个 Agent 的 Endpoint 健康状态
+  getAgentEndpointHealth: (agentId: string, includeFeedbacks: boolean = true) =>
+    apiGet<AgentEndpointReport>(
+      `/agents/${agentId}/endpoint-health?include_feedbacks=${includeFeedbacks}`
+    ),
+
+  // 获取 Endpoint 健康状态摘要
+  getSummary: (network?: string) => {
+    const query = network ? `?network=${network}` : '';
+    return apiGet<EndpointHealthSummaryResponse>(`/endpoint-health/summary${query}`);
+  },
+
+  // 获取有工作 Endpoint 的 Agent 列表
+  getWorkingAgents: (params?: {
+    network?: string;
+    min_reputation?: number;
+    limit?: number;
+  }) => {
+    const query = new URLSearchParams(
+      Object.entries(params || {})
+        .filter(([_, v]) => v !== undefined && v !== null)
+        .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {})
+    ).toString();
+    return apiGet<{ total_working: number; agents: AgentEndpointReport[] }>(
+      `/endpoint-health/working-agents${query ? `?${query}` : ''}`
+    );
+  },
+
+  // 获取 SSE 流的 URL（用于 EventSource）
+  getStreamUrl: (network?: string, onlyWithEndpoints: boolean = false) => {
+    const params = new URLSearchParams();
+    if (network) params.set('network', network);
+    if (onlyWithEndpoints) params.set('only_with_endpoints', 'true');
+    const query = params.toString();
+    return `/api/endpoint-health/stream${query ? `?${query}` : ''}`;
+  },
 };

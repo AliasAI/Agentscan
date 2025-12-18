@@ -211,3 +211,54 @@ export interface ReputationSummary {
   average_score: number;
   validation_count: number;
 }
+
+// Endpoint Health Check Types
+export interface EndpointHealth {
+  url: string;
+  is_healthy: boolean;
+  status_code?: number | null;
+  response_time_ms?: number | null;
+  error?: string | null;
+  checked_at?: string | null;
+}
+
+export interface AgentEndpointReport {
+  agent_id: string;
+  agent_name: string;
+  token_id?: number | null;
+  network_key: string;
+  metadata_uri?: string | null;
+  has_working_endpoints: boolean;
+  total_endpoints: number;
+  healthy_endpoints: number;
+  endpoints: EndpointHealth[];
+  recent_feedbacks: Feedback[];
+  reputation_score: number;
+  reputation_count: number;
+}
+
+export interface EndpointSummary {
+  total_agents: number;
+  agents_with_endpoints: number;
+  agents_with_working_endpoints: number;
+  agents_with_feedbacks: number;
+  total_endpoints: number;
+  healthy_endpoints: number;
+  endpoint_health_rate: number;
+}
+
+export interface EndpointHealthSummaryResponse {
+  summary: EndpointSummary;
+  working_agents: AgentEndpointReport[];
+  generated_at: string;
+}
+
+// SSE Stream Event Types for real-time health check
+export interface EndpointStreamEvent {
+  type: 'start' | 'progress' | 'skip' | 'complete';
+  total?: number;
+  checked?: number;
+  working?: number;
+  agent_id?: string;
+  report?: AgentEndpointReport;
+}

@@ -5,13 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.db.database import engine, Base
-from src.api import stats, agents, sync, networks, activities, classification, feedback
+from src.api import stats, agents, sync, networks, activities, classification, feedback, endpoint_health
 from src.services.scheduler import start_scheduler, shutdown_scheduler
 from src.db.migrate_add_contracts import migrate as migrate_contracts
 from src.db.migrate_add_oasf_fields import migrate as migrate_oasf
 from src.db.migrate_add_classification_source import migrate as migrate_classification_source
 from src.db.migrate_multi_network import migrate as migrate_multi_network
 from src.db.migrate_network_ids import migrate as migrate_network_ids
+from src.db.migrate_add_endpoint_status import migrate as migrate_endpoint_status
 from src.db.init_networks import init_networks
 
 # Create database tables
@@ -24,6 +25,7 @@ try:
     migrate_classification_source()
     migrate_multi_network()
     migrate_network_ids()  # Fix orphaned network_id references
+    migrate_endpoint_status()  # Add endpoint health check fields
 except Exception as e:
     print(f"Migration warning: {e}")
 
@@ -54,6 +56,7 @@ app.include_router(sync.router, prefix="/api", tags=["sync"])
 app.include_router(networks.router, prefix="/api", tags=["networks"])
 app.include_router(classification.router, prefix="/api", tags=["classification"])
 app.include_router(feedback.router, prefix="/api", tags=["feedback"])
+app.include_router(endpoint_health.router, prefix="/api", tags=["endpoint-health"])
 
 
 @app.on_event("startup")

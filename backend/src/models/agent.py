@@ -59,6 +59,10 @@ class Agent(Base):
     domains = Column(JSON, nullable=True)  # List of domain slugs: ["domain_category/domain_name"]
     classification_source = Column(String(20), nullable=True)  # 'metadata' or 'ai' - indicates source of classification
 
+    # Endpoint health check results (stored for fast retrieval)
+    endpoint_status = Column(JSON, nullable=True)  # {endpoints: [...], has_working: bool, checked_at: str}
+    endpoint_checked_at = Column(DateTime, nullable=True)  # Last endpoint check time
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
