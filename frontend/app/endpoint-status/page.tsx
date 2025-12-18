@@ -325,6 +325,7 @@ export default function EndpointStatusPage() {
             <StatCard
               label="Total Agents"
               value={summary.total_agents}
+              tooltip="Total number of AI agents registered on-chain via ERC-8004 protocol"
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-[#737373]">
                   <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -333,8 +334,9 @@ export default function EndpointStatusPage() {
               }
             />
             <StatCard
-              label="With Endpoints"
+              label="Scanned"
               value={summary.agents_with_endpoints}
+              tooltip="Agents that have been scanned for endpoint availability"
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-blue-500">
                   <path d="M10 13C10.4295 13.5741 10.9774 14.0492 11.6066 14.3929C12.2357 14.7367 12.9315 14.9411 13.6467 14.9923C14.3618 15.0435 15.0796 14.9404 15.7513 14.6898C16.4231 14.4392 17.0331 14.0471 17.54 13.54L20.54 10.54C21.4508 9.59699 21.9548 8.33398 21.9434 7.02298C21.932 5.71198 21.4061 4.45794 20.4791 3.53094C19.5521 2.60394 18.2981 2.07802 16.9871 2.06663C15.6761 2.05523 14.4131 2.55918 13.47 3.46998L11.75 5.17998" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -345,6 +347,7 @@ export default function EndpointStatusPage() {
             <StatCard
               label="Working"
               value={summary.agents_with_working_endpoints}
+              tooltip="Agents with at least one reachable endpoint (HTTP 2xx response)"
               color="green"
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-green-500">
@@ -356,6 +359,7 @@ export default function EndpointStatusPage() {
             <StatCard
               label="With Feedbacks"
               value={summary.agents_with_feedbacks}
+              tooltip="Agents that have received at least one on-chain reputation feedback"
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-purple-500">
                   <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -365,6 +369,7 @@ export default function EndpointStatusPage() {
             <StatCard
               label="Total Endpoints"
               value={summary.total_endpoints}
+              tooltip="Sum of all endpoint URLs defined in agent metadata (from scanned agents)"
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-[#737373]">
                   <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -374,6 +379,7 @@ export default function EndpointStatusPage() {
             <StatCard
               label="Health Rate"
               value={`${summary.endpoint_health_rate}%`}
+              tooltip="Percentage of endpoints returning successful HTTP responses (healthy / total)"
               color={summary.endpoint_health_rate >= 50 ? 'green' : 'red'}
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={summary.endpoint_health_rate >= 50 ? 'text-green-500' : 'text-red-500'}>
@@ -390,6 +396,7 @@ export default function EndpointStatusPage() {
             <StatCard
               label="Total Feedbacks"
               value={summary.total_feedbacks || 0}
+              tooltip="Total number of on-chain reputation feedbacks submitted across all agents"
               color="purple"
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-purple-500">
@@ -400,6 +407,7 @@ export default function EndpointStatusPage() {
             <StatCard
               label="Avg Score"
               value={summary.avg_reputation_score || 0}
+              tooltip="Average reputation score (0-100) across agents with feedbacks"
               color={summary.avg_reputation_score && summary.avg_reputation_score >= 70 ? 'green' : 'red'}
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={summary.avg_reputation_score && summary.avg_reputation_score >= 70 ? 'text-green-500' : 'text-orange-500'}>
@@ -410,6 +418,7 @@ export default function EndpointStatusPage() {
             <StatCard
               label="Active Rate"
               value={`${summary.total_agents > 0 ? ((summary.agents_with_feedbacks / summary.total_agents) * 100).toFixed(1) : 0}%`}
+              tooltip="Percentage of agents that have received at least one feedback"
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-blue-500">
                   <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -596,23 +605,51 @@ export default function EndpointStatusPage() {
   )
 }
 
-// Stat Card Component
+// Stat Card Component with Tooltip
 function StatCard({
   label,
   value,
   icon,
   color,
+  tooltip,
 }: {
   label: string
   value: number | string
   icon: React.ReactNode
   color?: 'green' | 'red' | 'purple'
+  tooltip?: string
 }) {
+  const [showTooltip, setShowTooltip] = useState(false)
+
   return (
-    <div className="p-4 bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626]">
-      <div className="flex items-center gap-3 mb-2">
+    <div className="p-4 bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] relative">
+      <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="text-xs text-[#737373] uppercase tracking-wider">{label}</span>
+        <span className="text-xs text-[#737373] uppercase tracking-wider flex-1">{label}</span>
+        {tooltip && (
+          <div
+            className="relative"
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="text-[#a3a3a3] hover:text-[#737373] cursor-help transition-colors"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+              <path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            {showTooltip && (
+              <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] text-xs rounded-lg shadow-lg whitespace-nowrap max-w-xs">
+                <div className="text-center" style={{ whiteSpace: 'normal' }}>{tooltip}</div>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0a0a0a] dark:border-t-[#fafafa]" />
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <p className={`text-2xl font-bold ${
         color === 'green' ? 'text-green-600 dark:text-green-400' :
