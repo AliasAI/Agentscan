@@ -4,6 +4,8 @@ Stores endpoint health check results in database for fast retrieval.
 """
 
 import sqlite3
+import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,7 +13,23 @@ load_dotenv()
 
 def migrate():
     """Add endpoint_status JSON field to agents table"""
-    db_path = "./8004scan.db"
+    # Get database path from environment variable or use default
+    db_url = os.getenv("DATABASE_URL", "sqlite:///./8004scan.db")
+
+    if db_url.startswith("sqlite:///"):
+        db_path = db_url.replace("sqlite:///", "")
+        # Handle relative path
+        if not db_path.startswith("/"):
+            db_path = Path(__file__).parent.parent.parent / db_path
+    else:
+        print("❌ This migration only works with SQLite databases")
+        return
+
+    db_path = Path(db_path)
+    if not db_path.exists():
+        print(f"⚠️ Database does not exist yet: {db_path}")
+        return
+
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
