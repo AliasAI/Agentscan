@@ -245,6 +245,20 @@ export interface EndpointSummary {
   total_endpoints: number;
   healthy_endpoints: number;
   endpoint_health_rate: number;
+  // Reputation stats
+  total_feedbacks?: number;
+  avg_reputation_score?: number;
+}
+
+// Agent with reputation info (for top reputation list)
+export interface ReputationAgent {
+  agent_id: string;
+  agent_name: string;
+  token_id: number;
+  network_key: string;
+  reputation_score: number;
+  reputation_count: number;
+  has_working_endpoints: boolean;
 }
 
 export interface EndpointHealthSummaryResponse {

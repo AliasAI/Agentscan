@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { NetworkSelector } from '@/components/common/NetworkSelector'
 import { endpointHealthService } from '@/lib/api/services'
-import type { AgentEndpointReport, EndpointSummary, EndpointStreamEvent } from '@/types'
+import type { AgentEndpointReport, EndpointSummary, ReputationAgent } from '@/types'
 
 // Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -12,12 +12,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 export default function EndpointStatusPage() {
   const [summary, setSummary] = useState<EndpointSummary | null>(null)
   const [workingAgents, setWorkingAgents] = useState<AgentEndpointReport[]>([])
+  const [topReputationAgents, setTopReputationAgents] = useState<ReputationAgent[]>([])
   const [selectedNetwork, setSelectedNetwork] = useState('all')
   const [loading, setLoading] = useState(true)
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamProgress, setStreamProgress] = useState({ checked: 0, total: 0, working: 0 })
   const [liveReports, setLiveReports] = useState<AgentEndpointReport[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'endpoints' | 'reputation'>('endpoints')
 
   const eventSourceRef = useRef<EventSource | null>(null)
   const needsRefreshRef = useRef(false)
@@ -41,6 +43,8 @@ export default function EndpointStatusPage() {
         total_endpoints: data.summary.total_endpoints,
         healthy_endpoints: data.summary.healthy_endpoints,
         endpoint_health_rate: data.summary.endpoint_health_rate,
+        total_feedbacks: data.summary.total_feedbacks,
+        avg_reputation_score: data.summary.avg_reputation_score,
       })
 
       // Show working agents from database
@@ -48,6 +52,9 @@ export default function EndpointStatusPage() {
         ...a,
         recent_feedbacks: [],
       })))
+
+      // Set top reputation agents
+      setTopReputationAgents(data.top_reputation_agents || [])
     } catch (err) {
       console.error('Failed to fetch quick stats:', err)
       setError('Failed to load data')
@@ -377,6 +384,78 @@ export default function EndpointStatusPage() {
           </div>
         )}
 
+        {/* Reputation Stats Row */}
+        {summary && !isStreaming && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <StatCard
+              label="Total Feedbacks"
+              value={summary.total_feedbacks || 0}
+              color="purple"
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-purple-500">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              }
+            />
+            <StatCard
+              label="Avg Score"
+              value={summary.avg_reputation_score || 0}
+              color={summary.avg_reputation_score && summary.avg_reputation_score >= 70 ? 'green' : 'red'}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={summary.avg_reputation_score && summary.avg_reputation_score >= 70 ? 'text-green-500' : 'text-orange-500'}>
+                  <path d="M12 20V10M18 20V4M6 20V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              }
+            />
+            <StatCard
+              label="Active Rate"
+              value={`${summary.total_agents > 0 ? ((summary.agents_with_feedbacks / summary.total_agents) * 100).toFixed(1) : 0}%`}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-blue-500">
+                  <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              }
+            />
+          </div>
+        )}
+
+        {/* Tab Navigation */}
+        {!isStreaming && (
+          <div className="flex gap-2 mb-6 border-b border-[#e5e5e5] dark:border-[#262626]">
+            <button
+              onClick={() => setActiveTab('endpoints')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'endpoints'
+                  ? 'border-[#0a0a0a] dark:border-[#fafafa] text-[#0a0a0a] dark:text-[#fafafa]'
+                  : 'border-transparent text-[#737373] hover:text-[#0a0a0a] dark:hover:text-[#fafafa]'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M10 13C10.4295 13.5741 10.9774 14.0492 11.6066 14.3929C12.2357 14.7367 12.9315 14.9411 13.6467 14.9923C14.3618 15.0435 15.0796 14.9404 15.7513 14.6898C16.4231 14.4392 17.0331 14.0471 17.54 13.54L20.54 10.54C21.4508 9.59699 21.9548 8.33398 21.9434 7.02298C21.932 5.71198 21.4061 4.45794 20.4791 3.53094C19.5521 2.60394 18.2981 2.07802 16.9871 2.06663C15.6761 2.05523 14.4131 2.55918 13.47 3.46998L11.75 5.17998" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 11C13.5705 10.4259 13.0226 9.95083 12.3934 9.60707C11.7643 9.26331 11.0685 9.05889 10.3533 9.00768C9.63816 8.95648 8.92037 9.05963 8.24861 9.31023C7.57685 9.56082 6.96684 9.95294 6.45996 10.46L3.45996 13.46C2.54917 14.403 2.04522 15.666 2.05662 16.977C2.06801 18.288 2.59394 19.542 3.52094 20.469C4.44794 21.396 5.70197 21.922 7.01297 21.9334C8.32398 21.9448 9.58699 21.4408 10.53 20.53L12.24 18.82" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Working Endpoints ({workingAgents.length})
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('reputation')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'reputation'
+                  ? 'border-[#0a0a0a] dark:border-[#fafafa] text-[#0a0a0a] dark:text-[#fafafa]'
+                  : 'border-transparent text-[#737373] hover:text-[#0a0a0a] dark:hover:text-[#fafafa]'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Top Reputation ({topReputationAgents.length})
+              </span>
+            </button>
+          </div>
+        )}
+
         {/* Live Results */}
         {isStreaming && liveReports.length > 0 && (
           <div className="mb-8">
@@ -391,12 +470,9 @@ export default function EndpointStatusPage() {
           </div>
         )}
 
-        {/* Working Agents List */}
-        {!isStreaming && workingAgents.length > 0 && (
+        {/* Working Agents List (Endpoints Tab) */}
+        {!isStreaming && activeTab === 'endpoints' && workingAgents.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-4">
-              Agents with Working Endpoints ({workingAgents.length})
-            </h2>
             <div className="space-y-4">
               {workingAgents.map((report) => (
                 <AgentReportCard key={report.agent_id} report={report} formatResponseTime={formatResponseTime} />
@@ -405,8 +481,69 @@ export default function EndpointStatusPage() {
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && !isStreaming && workingAgents.length === 0 && (
+        {/* Top Reputation Agents (Reputation Tab) */}
+        {!isStreaming && activeTab === 'reputation' && topReputationAgents.length > 0 && (
+          <div>
+            <div className="space-y-3">
+              {topReputationAgents.map((agent, index) => (
+                <div
+                  key={agent.agent_id}
+                  className="flex items-center justify-between p-4 bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626]"
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Rank badge */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      index === 0 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                      index === 1 ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300' :
+                      index === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                      'bg-[#f5f5f5] dark:bg-[#262626] text-[#737373]'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <Link
+                        href={`/agents/${agent.agent_id}`}
+                        className="font-medium text-[#0a0a0a] dark:text-[#fafafa] hover:underline"
+                      >
+                        {agent.agent_name || 'Unknown Agent'}
+                      </Link>
+                      <p className="text-xs text-[#737373]">
+                        Token #{agent.token_id} on {agent.network_key}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    {/* Endpoint status */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${agent.has_working_endpoints ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      <span className="text-xs text-[#737373]">
+                        {agent.has_working_endpoints ? 'Online' : 'Offline'}
+                      </span>
+                    </div>
+                    {/* Feedback count */}
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                        {agent.reputation_count}
+                      </p>
+                      <p className="text-xs text-[#737373]">feedbacks</p>
+                    </div>
+                    {/* Score */}
+                    <div className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                      agent.reputation_score >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                      agent.reputation_score >= 50 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    }`}>
+                      {agent.reputation_score.toFixed(1)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State for Endpoints Tab */}
+        {!loading && !isStreaming && activeTab === 'endpoints' && workingAgents.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-16 h-16 bg-[#f5f5f5] dark:bg-[#171717] rounded-2xl flex items-center justify-center mb-4">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-[#a3a3a3]">
@@ -431,6 +568,23 @@ export default function EndpointStatusPage() {
           </div>
         )}
 
+        {/* Empty State for Reputation Tab */}
+        {!loading && !isStreaming && activeTab === 'reputation' && topReputationAgents.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 bg-[#f5f5f5] dark:bg-[#171717] rounded-2xl flex items-center justify-center mb-4">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-[#a3a3a3]">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-2">
+              No reputation data yet
+            </h3>
+            <p className="text-sm text-[#737373] text-center max-w-md">
+              Agents will appear here once they receive feedback from users
+            </p>
+          </div>
+        )}
+
         {/* Loading State */}
         {loading && !isStreaming && (
           <div className="flex items-center justify-center py-16">
@@ -452,7 +606,7 @@ function StatCard({
   label: string
   value: number | string
   icon: React.ReactNode
-  color?: 'green' | 'red'
+  color?: 'green' | 'red' | 'purple'
 }) {
   return (
     <div className="p-4 bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626]">
@@ -463,6 +617,7 @@ function StatCard({
       <p className={`text-2xl font-bold ${
         color === 'green' ? 'text-green-600 dark:text-green-400' :
         color === 'red' ? 'text-red-600 dark:text-red-400' :
+        color === 'purple' ? 'text-purple-600 dark:text-purple-400' :
         'text-[#0a0a0a] dark:text-[#fafafa]'
       }`}>
         {typeof value === 'number' ? value.toLocaleString() : value}

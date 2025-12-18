@@ -88,8 +88,9 @@ async def get_quick_stats(
 ):
     """
     Get statistics from database. Super fast - pure SQL queries.
+    Includes both endpoint health and reputation overview.
     """
-    from sqlalchemy import text
+    from sqlalchemy import text, func, desc
 
     # Base filter (use parameterized query for safety)
     if network:
@@ -105,6 +106,16 @@ async def get_quick_stats(
             text("SELECT COUNT(*) FROM agents WHERE network_id = :network AND reputation_count > 0"),
             {"network": network}
         ).scalar()
+        # Reputation stats
+        rep_stats = db.execute(
+            text("""
+                SELECT
+                    COALESCE(SUM(reputation_count), 0) as total_feedbacks,
+                    COALESCE(AVG(CASE WHEN reputation_count > 0 THEN reputation_score END), 0) as avg_score
+                FROM agents WHERE network_id = :network
+            """),
+            {"network": network}
+        ).fetchone()
     else:
         count_result = db.execute(text("SELECT COUNT(*) FROM agents")).scalar()
         scanned_result = db.execute(
@@ -113,10 +124,21 @@ async def get_quick_stats(
         feedback_result = db.execute(
             text("SELECT COUNT(*) FROM agents WHERE reputation_count > 0")
         ).scalar()
+        # Reputation stats
+        rep_stats = db.execute(
+            text("""
+                SELECT
+                    COALESCE(SUM(reputation_count), 0) as total_feedbacks,
+                    COALESCE(AVG(CASE WHEN reputation_count > 0 THEN reputation_score END), 0) as avg_score
+                FROM agents
+            """)
+        ).fetchone()
 
     total_agents = count_result or 0
     agents_scanned = scanned_result or 0
     agents_with_feedbacks = feedback_result or 0
+    total_feedbacks = int(rep_stats[0]) if rep_stats else 0
+    avg_reputation_score = round(float(rep_stats[1]), 1) if rep_stats and rep_stats[1] else 0
 
     # Get top 20 scanned agents quickly
     if network:
@@ -128,6 +150,17 @@ async def get_quick_stats(
         scanned_agents = db.query(Agent).filter(
             Agent.endpoint_status.isnot(None)
         ).order_by(Agent.reputation_count.desc()).limit(20).all()
+
+    # Get top agents by reputation (regardless of endpoint status)
+    if network:
+        top_reputation_agents = db.query(Agent).filter(
+            Agent.reputation_count > 0,
+            Agent.network_id == network
+        ).order_by(desc(Agent.reputation_count)).limit(10).all()
+    else:
+        top_reputation_agents = db.query(Agent).filter(
+            Agent.reputation_count > 0
+        ).order_by(desc(Agent.reputation_count)).limit(10).all()
 
     # Calculate stats
     agents_with_working = 0
@@ -157,6 +190,9 @@ async def get_quick_stats(
                 if total_endpoints > 0
                 else 0
             ),
+            # Reputation stats
+            "total_feedbacks": total_feedbacks,
+            "avg_reputation_score": avg_reputation_score,
         },
         "working_agents": [
             {
@@ -173,6 +209,22 @@ async def get_quick_stats(
                 "checked_at": a.endpoint_status.get("checked_at") if a.endpoint_status else None,
             }
             for a in working_list
+        ],
+        # Top agents by reputation count
+        "top_reputation_agents": [
+            {
+                "agent_id": a.id,
+                "agent_name": a.name,
+                "token_id": a.token_id,
+                "network_key": a.network_id,
+                "reputation_score": a.reputation_score,
+                "reputation_count": a.reputation_count,
+                "has_working_endpoints": (
+                    a.endpoint_status.get("has_working_endpoints", False)
+                    if a.endpoint_status else False
+                ),
+            }
+            for a in top_reputation_agents
         ],
         "generated_at": datetime.utcnow().isoformat(),
     }
