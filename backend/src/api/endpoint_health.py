@@ -159,16 +159,34 @@ async def get_quick_stats(
     total_feedbacks = int(rep_stats[0]) if rep_stats else 0
     avg_reputation_score = round(float(rep_stats[1]), 1) if rep_stats and rep_stats[1] else 0
 
-    # Get top 20 scanned agents quickly
+    # Get top 20 agents with WORKING endpoints (fixed: query working agents directly)
     if network:
-        scanned_agents = db.query(Agent).filter(
-            Agent.endpoint_status.isnot(None),
-            Agent.network_id == network
-        ).order_by(Agent.reputation_count.desc()).limit(20).all()
+        working_agents_query = db.execute(
+            text("""
+                SELECT id FROM agents
+                WHERE network_id = :network
+                AND endpoint_status IS NOT NULL
+                AND json_extract(endpoint_status, '$.has_working_endpoints') = 1
+                ORDER BY reputation_count DESC
+                LIMIT 20
+            """),
+            {"network": network}
+        ).fetchall()
     else:
-        scanned_agents = db.query(Agent).filter(
-            Agent.endpoint_status.isnot(None)
-        ).order_by(Agent.reputation_count.desc()).limit(20).all()
+        working_agents_query = db.execute(
+            text("""
+                SELECT id FROM agents
+                WHERE endpoint_status IS NOT NULL
+                AND json_extract(endpoint_status, '$.has_working_endpoints') = 1
+                ORDER BY reputation_count DESC
+                LIMIT 20
+            """)
+        ).fetchall()
+
+    working_agent_ids = [row[0] for row in working_agents_query]
+    working_list = db.query(Agent).filter(Agent.id.in_(working_agent_ids)).all() if working_agent_ids else []
+    # Preserve order by reputation_count
+    working_list.sort(key=lambda a: a.reputation_count or 0, reverse=True)
 
     # Get top agents by reputation (regardless of endpoint status)
     if network:
@@ -181,18 +199,30 @@ async def get_quick_stats(
             Agent.reputation_count > 0
         ).order_by(desc(Agent.reputation_count)).limit(10).all()
 
-    # Calculate endpoint stats from scanned agents (top 20 by reputation)
-    total_endpoints = 0
-    healthy_endpoints = 0
-    working_list = []
+    # Calculate total endpoint stats from all scanned agents
+    if network:
+        endpoint_stats = db.execute(
+            text("""
+                SELECT
+                    SUM(json_extract(endpoint_status, '$.total_endpoints')) as total,
+                    SUM(json_extract(endpoint_status, '$.healthy_endpoints')) as healthy
+                FROM agents
+                WHERE network_id = :network AND endpoint_status IS NOT NULL
+            """),
+            {"network": network}
+        ).fetchone()
+    else:
+        endpoint_stats = db.execute(
+            text("""
+                SELECT
+                    SUM(json_extract(endpoint_status, '$.total_endpoints')) as total,
+                    SUM(json_extract(endpoint_status, '$.healthy_endpoints')) as healthy
+                FROM agents WHERE endpoint_status IS NOT NULL
+            """)
+        ).fetchone()
 
-    for agent in scanned_agents:
-        if agent.endpoint_status:
-            status = agent.endpoint_status
-            total_endpoints += status.get("total_endpoints", 0)
-            healthy_endpoints += status.get("healthy_endpoints", 0)
-            if status.get("has_working_endpoints"):
-                working_list.append(agent)
+    total_endpoints = int(endpoint_stats[0] or 0) if endpoint_stats else 0
+    healthy_endpoints = int(endpoint_stats[1] or 0) if endpoint_stats else 0
 
     return {
         "summary": {
