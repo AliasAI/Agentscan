@@ -40,14 +40,24 @@ def migrate():
     cursor = conn.cursor()
 
     try:
-        # Check if unique constraint already exists
+        # Check if composite unique constraint already exists
+        # SQLite creates auto-indexes for UNIQUE constraints named "sqlite_autoindex_<table>_<n>"
         cursor.execute("PRAGMA index_list(agents)")
         indexes = cursor.fetchall()
-        index_names = [idx[1] for idx in indexes]
 
-        if 'uq_agent_token_network' in index_names:
-            print("✅ Composite unique constraint already exists, skipping migration")
-            return
+        # Check for any sqlite_autoindex on agents table (indicates UNIQUE constraint exists)
+        # Also need to verify it's a composite index on (token_id, network_id)
+        for idx in indexes:
+            idx_name = idx[1]
+            # Check index columns
+            cursor.execute(f"PRAGMA index_info({idx_name})")
+            idx_cols = cursor.fetchall()
+            col_names = [col[2] for col in idx_cols]
+
+            # If we find an index on both token_id and network_id, constraint exists
+            if 'token_id' in col_names and 'network_id' in col_names and len(col_names) == 2:
+                print(f"✅ Composite unique constraint already exists ({idx_name}), skipping migration")
+                return
 
         # SQLite doesn't support DROP CONSTRAINT, so we need to recreate the table
         # First, check current schema
@@ -78,6 +88,8 @@ def migrate():
                 skills TEXT,
                 domains TEXT,
                 classification_source TEXT,
+                endpoint_status TEXT,
+                endpoint_checked_at TIMESTAMP,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP,
                 UNIQUE(token_id, network_id)
@@ -91,13 +103,17 @@ def migrate():
                 id, name, address, description, reputation_score, status,
                 network_id, token_id, owner_address, metadata_uri, on_chain_data,
                 last_synced_at, sync_status, reputation_count, reputation_last_updated,
-                skills, domains, classification_source, created_at, updated_at
+                skills, domains, classification_source,
+                endpoint_status, endpoint_checked_at,
+                created_at, updated_at
             )
             SELECT
                 id, name, address, description, reputation_score, status,
                 network_id, token_id, owner_address, metadata_uri, on_chain_data,
                 last_synced_at, sync_status, reputation_count, reputation_last_updated,
-                skills, domains, classification_source, created_at, updated_at
+                skills, domains, classification_source,
+                endpoint_status, endpoint_checked_at,
+                created_at, updated_at
             FROM agents
         """)
 

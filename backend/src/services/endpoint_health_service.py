@@ -22,8 +22,11 @@ from src.services.onchain_feedback_service import get_onchain_feedback_service
 logger = structlog.get_logger(__name__)
 
 # Configuration
-HEALTH_CHECK_TIMEOUT = 10  # seconds
-MAX_CONCURRENT_CHECKS = 5
+HEALTH_CHECK_TIMEOUT = 5  # seconds (reduced from 10 for faster scanning)
+METADATA_FETCH_TIMEOUT = 5  # seconds for metadata fetch
+MAX_CONCURRENT_ENDPOINTS = 5  # concurrent endpoint checks per agent
+MAX_CONCURRENT_AGENTS = 30  # concurrent agent scans
+BATCH_SIZE = 50  # agents per batch for progress reporting
 IPFS_GATEWAY = "https://ipfs.io/ipfs/"
 
 
@@ -167,7 +170,7 @@ class EndpointHealthService:
 
         # Fetch from HTTP/HTTPS URL
         try:
-            async with httpx.AsyncClient(timeout=HEALTH_CHECK_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=METADATA_FETCH_TIMEOUT) as client:
                 response = await client.get(url)
                 response.raise_for_status()
                 data = response.json()
@@ -305,7 +308,7 @@ class EndpointHealthService:
         endpoint_results = []
         if endpoints_info:
             # Check endpoints with concurrency limit
-            semaphore = asyncio.Semaphore(MAX_CONCURRENT_CHECKS)
+            semaphore = asyncio.Semaphore(MAX_CONCURRENT_ENDPOINTS)
 
             async def check_with_semaphore(ep: EndpointInfo) -> EndpointHealthResult:
                 async with semaphore:
@@ -410,6 +413,138 @@ class EndpointHealthService:
             "working_agents": [r.to_dict() for r in working_agents[:20]],
             "all_reports": [r.to_dict() for r in reports],
             "generated_at": datetime.utcnow().isoformat(),
+        }
+
+    async def check_agent_fast(self, agent: Agent) -> dict:
+        """Fast endpoint check for a single agent (no feedbacks, minimal data)"""
+        try:
+            # Skip agents without metadata
+            if not agent.metadata_uri or agent.metadata_uri.strip() == "":
+                return {
+                    "agent_id": agent.id,
+                    "agent_name": agent.name,
+                    "has_working_endpoints": False,
+                    "total_endpoints": 0,
+                    "healthy_endpoints": 0,
+                    "endpoints": [],
+                    "skipped": True,
+                }
+
+            # Fetch and parse metadata
+            metadata = await self._fetch_metadata(agent.metadata_uri)
+            endpoints_info = self._extract_endpoints(metadata)
+
+            if not endpoints_info:
+                return {
+                    "agent_id": agent.id,
+                    "agent_name": agent.name,
+                    "has_working_endpoints": False,
+                    "total_endpoints": 0,
+                    "healthy_endpoints": 0,
+                    "endpoints": [],
+                    "skipped": False,
+                }
+
+            # Check endpoints concurrently
+            semaphore = asyncio.Semaphore(MAX_CONCURRENT_ENDPOINTS)
+
+            async def check_with_semaphore(ep: EndpointInfo) -> EndpointHealthResult:
+                async with semaphore:
+                    return await self._check_endpoint_health(ep)
+
+            endpoint_results = await asyncio.gather(
+                *[check_with_semaphore(ep) for ep in endpoints_info],
+                return_exceptions=True
+            )
+
+            # Filter out exceptions
+            valid_results = [
+                r for r in endpoint_results
+                if isinstance(r, EndpointHealthResult)
+            ]
+
+            has_working = any(r.is_healthy for r in valid_results)
+            healthy_count = sum(1 for r in valid_results if r.is_healthy)
+
+            return {
+                "agent_id": agent.id,
+                "agent_name": agent.name,
+                "has_working_endpoints": has_working,
+                "total_endpoints": len(valid_results),
+                "healthy_endpoints": healthy_count,
+                "endpoints": [r.to_dict() for r in valid_results],
+                "skipped": False,
+            }
+
+        except Exception as e:
+            logger.debug("agent_check_failed", agent_id=agent.id, error=str(e))
+            return {
+                "agent_id": agent.id,
+                "agent_name": agent.name,
+                "has_working_endpoints": False,
+                "total_endpoints": 0,
+                "healthy_endpoints": 0,
+                "endpoints": [],
+                "error": str(e)[:100],
+                "skipped": False,
+            }
+
+    async def scan_agents_concurrent(
+        self,
+        agents: list[Agent],
+        progress_callback=None,
+    ) -> dict:
+        """
+        Scan multiple agents concurrently with progress reporting.
+
+        Args:
+            agents: List of Agent objects to scan
+            progress_callback: Optional async callback(checked, total, working, agent_name)
+
+        Returns:
+            Summary dict with results
+        """
+        total = len(agents)
+        if total == 0:
+            return {"checked": 0, "total": 0, "working": 0, "results": []}
+
+        # Use semaphore to limit concurrent agent scans
+        semaphore = asyncio.Semaphore(MAX_CONCURRENT_AGENTS)
+        checked = 0
+        working = 0
+        results = []
+        lock = asyncio.Lock()
+
+        async def scan_one(agent: Agent) -> dict:
+            nonlocal checked, working
+            async with semaphore:
+                result = await self.check_agent_fast(agent)
+
+                async with lock:
+                    checked += 1
+                    if result.get("has_working_endpoints"):
+                        working += 1
+                    results.append(result)
+
+                    # Report progress
+                    if progress_callback:
+                        await progress_callback(
+                            checked, total, working, agent.name, result
+                        )
+
+                return result
+
+        # Run all scans concurrently
+        await asyncio.gather(
+            *[scan_one(agent) for agent in agents],
+            return_exceptions=True
+        )
+
+        return {
+            "checked": checked,
+            "total": total,
+            "working": working,
+            "results": results,
         }
 
 

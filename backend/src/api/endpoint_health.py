@@ -102,6 +102,16 @@ async def get_quick_stats(
             text("SELECT COUNT(*) FROM agents WHERE network_id = :network AND endpoint_status IS NOT NULL"),
             {"network": network}
         ).scalar()
+        # Count agents with working endpoints using JSON extraction
+        working_result = db.execute(
+            text("""
+                SELECT COUNT(*) FROM agents
+                WHERE network_id = :network
+                AND endpoint_status IS NOT NULL
+                AND json_extract(endpoint_status, '$.has_working_endpoints') = 1
+            """),
+            {"network": network}
+        ).scalar()
         feedback_result = db.execute(
             text("SELECT COUNT(*) FROM agents WHERE network_id = :network AND reputation_count > 0"),
             {"network": network}
@@ -121,6 +131,14 @@ async def get_quick_stats(
         scanned_result = db.execute(
             text("SELECT COUNT(*) FROM agents WHERE endpoint_status IS NOT NULL")
         ).scalar()
+        # Count agents with working endpoints using JSON extraction
+        working_result = db.execute(
+            text("""
+                SELECT COUNT(*) FROM agents
+                WHERE endpoint_status IS NOT NULL
+                AND json_extract(endpoint_status, '$.has_working_endpoints') = 1
+            """)
+        ).scalar()
         feedback_result = db.execute(
             text("SELECT COUNT(*) FROM agents WHERE reputation_count > 0")
         ).scalar()
@@ -136,6 +154,7 @@ async def get_quick_stats(
 
     total_agents = count_result or 0
     agents_scanned = scanned_result or 0
+    agents_with_working = working_result or 0
     agents_with_feedbacks = feedback_result or 0
     total_feedbacks = int(rep_stats[0]) if rep_stats else 0
     avg_reputation_score = round(float(rep_stats[1]), 1) if rep_stats and rep_stats[1] else 0
@@ -162,8 +181,7 @@ async def get_quick_stats(
             Agent.reputation_count > 0
         ).order_by(desc(Agent.reputation_count)).limit(10).all()
 
-    # Calculate stats
-    agents_with_working = 0
+    # Calculate endpoint stats from scanned agents (top 20 by reputation)
     total_endpoints = 0
     healthy_endpoints = 0
     working_list = []
@@ -174,7 +192,6 @@ async def get_quick_stats(
             total_endpoints += status.get("total_endpoints", 0)
             healthy_endpoints += status.get("healthy_endpoints", 0)
             if status.get("has_working_endpoints"):
-                agents_with_working += 1
                 working_list.append(agent)
 
     return {
@@ -312,14 +329,14 @@ async def get_full_endpoint_health_report(
 @router.get("/endpoint-health/scan-stream")
 async def stream_endpoint_scan(
     network: str = Query(None, description="Filter by network key"),
-    limit: int = Query(None, ge=1, le=1000, description="Limit agents to scan"),
+    limit: int = Query(None, ge=1, le=10000, description="Limit agents to scan"),
     force: bool = Query(False, description="Re-scan already checked agents"),
 ):
     """
     Start endpoint scan and stream progress in real-time.
 
+    Uses concurrent scanning for high performance (30 agents simultaneously).
     Results are saved to database as they complete.
-    Use this for the frontend scan button.
     """
     from src.db.migrate_add_endpoint_status import migrate
 
@@ -367,47 +384,86 @@ async def stream_endpoint_scan(
             yield f"data: {json.dumps({'type': 'start', 'total': total})}\n\n"
 
             service = get_endpoint_health_service()
-            checked = 0
-            working = 0
 
-            for agent in agents:
+            # Create a queue for progress updates
+            progress_queue = asyncio.Queue()
+            last_progress_time = datetime.utcnow()
+            progress_interval = 0.5  # Send progress every 0.5 seconds
+
+            # Progress callback that queues updates
+            async def progress_callback(checked, total_count, working, agent_name, result):
+                await progress_queue.put({
+                    "checked": checked,
+                    "total": total_count,
+                    "working": working,
+                    "agent_name": agent_name,
+                    "result": result,
+                })
+
+            # Start concurrent scanning in background
+            scan_task = asyncio.create_task(
+                service.scan_agents_concurrent(agents, progress_callback)
+            )
+
+            # Stream progress updates
+            completed = False
+            while not completed:
                 try:
-                    # Update current agent being scanned
-                    update_scan_state(current_agent=agent.name)
-
-                    report = await service.check_agent_endpoints(agent, include_feedbacks=False)
+                    # Wait for progress update with timeout
+                    update = await asyncio.wait_for(
+                        progress_queue.get(),
+                        timeout=progress_interval
+                    )
 
                     # Save to database
-                    endpoint_status = {
-                        "endpoints": [ep.to_dict() for ep in report.endpoints],
-                        "has_working_endpoints": report.has_working_endpoints,
-                        "total_endpoints": report.total_endpoints,
-                        "healthy_endpoints": report.healthy_endpoints,
-                        "checked_at": datetime.utcnow().isoformat(),
-                    }
-                    agent.endpoint_status = endpoint_status
-                    agent.endpoint_checked_at = datetime.utcnow()
-                    db.commit()
-
-                    checked += 1
-                    if report.has_working_endpoints:
-                        working += 1
+                    result = update["result"]
+                    agent_id = result.get("agent_id")
+                    if agent_id:
+                        try:
+                            agent = db.query(Agent).filter(Agent.id == agent_id).first()
+                            if agent:
+                                # Always mark as checked
+                                agent.endpoint_checked_at = datetime.utcnow()
+                                # Only save endpoint_status if not skipped
+                                if not result.get("skipped"):
+                                    agent.endpoint_status = {
+                                        "endpoints": result.get("endpoints", []),
+                                        "has_working_endpoints": result.get("has_working_endpoints", False),
+                                        "total_endpoints": result.get("total_endpoints", 0),
+                                        "healthy_endpoints": result.get("healthy_endpoints", 0),
+                                        "checked_at": datetime.utcnow().isoformat(),
+                                    }
+                                db.commit()
+                        except Exception as e:
+                            logger.debug("db_save_failed", agent_id=agent_id, error=str(e))
+                            db.rollback()
 
                     # Update global state
-                    update_scan_state(checked=checked, working=working)
+                    update_scan_state(
+                        checked=update["checked"],
+                        working=update["working"],
+                        current_agent=update["agent_name"],
+                    )
 
-                    yield f"data: {json.dumps({'type': 'progress', 'checked': checked, 'total': total, 'working': working, 'agent_name': agent.name, 'has_working': report.has_working_endpoints})}\n\n"
+                    # Send progress event
+                    yield f"data: {json.dumps({'type': 'progress', 'checked': update['checked'], 'total': update['total'], 'working': update['working'], 'agent_name': update['agent_name'], 'has_working': result.get('has_working_endpoints', False)})}\n\n"
 
-                except Exception as e:
-                    checked += 1
-                    update_scan_state(checked=checked)
-                    yield f"data: {json.dumps({'type': 'error', 'checked': checked, 'total': total, 'agent_name': agent.name, 'error': str(e)[:100]})}\n\n"
+                    # Check if scan completed
+                    if update["checked"] >= total:
+                        completed = True
 
-                await asyncio.sleep(0.05)
+                except asyncio.TimeoutError:
+                    # No updates, check if scan task is done
+                    if scan_task.done():
+                        completed = True
+
+            # Wait for scan task to complete
+            await scan_task
+            final_result = scan_task.result()
 
             # Mark scan as complete
             update_scan_state(is_scanning=False, current_agent=None)
-            yield f"data: {json.dumps({'type': 'complete', 'total': total, 'checked': checked, 'working': working})}\n\n"
+            yield f"data: {json.dumps({'type': 'complete', 'total': total, 'checked': final_result['checked'], 'working': final_result['working']})}\n\n"
 
         finally:
             db.close()

@@ -19,7 +19,7 @@ export function Header() {
   }, []);
 
   // SVG 图标组件 - 统一使用简洁线条风格
-  const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' }) => {
+  const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' | 'endpoints' }) => {
     const icons = {
       overview: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -42,6 +42,11 @@ export function Header() {
           <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" />
         </svg>
       ),
+      endpoints: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 12H18L15 21L9 3L6 12H2" />
+        </svg>
+      ),
     };
     return icons[type];
   };
@@ -50,6 +55,7 @@ export function Header() {
     { href: '/', label: 'Overview', iconType: 'overview' as const },
     { href: '/agents', label: 'Agents', iconType: 'agents' as const },
     { href: '/networks', label: 'Networks', iconType: 'networks' as const },
+    { href: '/endpoint-status', label: 'Endpoints', iconType: 'endpoints' as const },
   ];
 
   const isActive = (href: string) => {

@@ -3,11 +3,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { NetworkSelector } from '@/components/common/NetworkSelector'
-import { endpointHealthService } from '@/lib/api/services'
 import type { AgentEndpointReport, EndpointSummary, ReputationAgent } from '@/types'
 
 // Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const AUTO_REFRESH_INTERVAL = 60000 // 60 seconds - refresh stats from database
 
 export default function EndpointStatusPage() {
   const [summary, setSummary] = useState<EndpointSummary | null>(null)
@@ -15,19 +15,17 @@ export default function EndpointStatusPage() {
   const [topReputationAgents, setTopReputationAgents] = useState<ReputationAgent[]>([])
   const [selectedNetwork, setSelectedNetwork] = useState('all')
   const [loading, setLoading] = useState(true)
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [streamProgress, setStreamProgress] = useState({ checked: 0, total: 0, working: 0 })
-  const [liveReports, setLiveReports] = useState<AgentEndpointReport[]>([])
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'endpoints' | 'reputation'>('endpoints')
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [lastScanTime, setLastScanTime] = useState<string | null>(null)
 
-  const eventSourceRef = useRef<EventSource | null>(null)
-  const needsRefreshRef = useRef(false)
+  const autoRefreshRef = useRef<NodeJS.Timeout | null>(null)
 
   // Fetch quick stats (fast, from database)
-  const fetchQuickStats = useCallback(async () => {
+  const fetchQuickStats = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true)
+      if (showLoading) setLoading(true)
       setError(null)
       const network = selectedNetwork !== 'all' ? selectedNetwork : undefined
       const query = network ? `?network=${network}` : ''
@@ -55,140 +53,63 @@ export default function EndpointStatusPage() {
 
       // Set top reputation agents
       setTopReputationAgents(data.top_reputation_agents || [])
+
+      // Update last updated time
+      setLastUpdated(new Date())
+
+      // Get last scan time from the first working agent's checked_at
+      if (data.working_agents && data.working_agents.length > 0) {
+        const checkedAt = data.working_agents[0]?.checked_at
+        if (checkedAt) {
+          setLastScanTime(checkedAt)
+        }
+      }
     } catch (err) {
       console.error('Failed to fetch quick stats:', err)
       setError('Failed to load data')
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }, [selectedNetwork])
 
-  // Start scan and save to database (with progress)
-  const startScanning = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close()
-    }
-
-    setIsStreaming(true)
-    setLiveReports([])
-    setStreamProgress({ checked: 0, total: 0, working: 0 })
-
-    const params = new URLSearchParams()
-    if (selectedNetwork !== 'all') params.set('network', selectedNetwork)
-    // Scan unchecked agents only (remove force to re-scan all)
-    const query = params.toString()
-    const url = `${API_BASE_URL}/endpoint-health/scan-stream${query ? `?${query}` : ''}`
-
-    const eventSource = new EventSource(url)
-    eventSourceRef.current = eventSource
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-
-        if (data.type === 'start') {
-          setStreamProgress({ checked: 0, total: data.total || 0, working: 0 })
-        } else if (data.type === 'progress') {
-          setStreamProgress({
-            checked: data.checked || 0,
-            total: data.total || 0,
-            working: data.working || 0,
-          })
-        } else if (data.type === 'complete') {
-          setIsStreaming(false)
-          eventSource.close()
-          // Refresh data after scan completes
-          fetchQuickStats()
-        }
-      } catch (err) {
-        console.error('Failed to parse stream event:', err)
-      }
-    }
-
-    eventSource.onerror = () => {
-      setIsStreaming(false)
-      eventSource.close()
-    }
-  }, [selectedNetwork, fetchQuickStats])
-
-  // Stop streaming
-  const stopStreaming = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close()
-      eventSourceRef.current = null
-    }
-    setIsStreaming(false)
-  }, [])
-
-  // Check for existing scan in progress (restore after page refresh)
-  const checkScanStatus = useCallback(async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/endpoint-health/scan-status`)
-      if (!response.ok) return false
-      const data = await response.json()
-
-      if (data.is_scanning) {
-        // Restore scan progress
-        setIsStreaming(true)
-        setStreamProgress({
-          checked: data.checked || 0,
-          total: data.total || 0,
-          working: data.working || 0,
-        })
-
-        // Start polling for updates instead of reconnecting to stream
-        // (to avoid starting a new scan)
-        const pollInterval = setInterval(async () => {
-          try {
-            const pollResponse = await fetch(`${API_BASE_URL}/endpoint-health/scan-status`)
-            if (!pollResponse.ok) {
-              clearInterval(pollInterval)
-              return
-            }
-            const pollData = await pollResponse.json()
-
-            if (pollData.is_scanning) {
-              setStreamProgress({
-                checked: pollData.checked || 0,
-                total: pollData.total || 0,
-                working: pollData.working || 0,
-              })
-            } else {
-              // Scan completed
-              clearInterval(pollInterval)
-              setIsStreaming(false)
-              needsRefreshRef.current = true
-              fetchQuickStats()
-            }
-          } catch (err) {
-            clearInterval(pollInterval)
-          }
-        }, 500) // Poll every 500ms
-
-        return true
-      }
-      return false
-    } catch (err) {
-      console.error('Failed to check scan status:', err)
-      return false
-    }
-  }, [fetchQuickStats])
-
+  // Initialize page - only fetch cached data from database
   useEffect(() => {
-    // First check if there's a scan in progress
-    checkScanStatus()
-    // Then fetch the quick stats
     fetchQuickStats()
+
+    // Set up auto-refresh interval (reads from database, no scanning)
+    autoRefreshRef.current = setInterval(() => {
+      fetchQuickStats(false)
+    }, AUTO_REFRESH_INTERVAL)
+
+    // Cleanup
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
+      if (autoRefreshRef.current) {
+        clearInterval(autoRefreshRef.current)
       }
     }
-  }, [fetchQuickStats, checkScanStatus])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Refresh when network changes
+  useEffect(() => {
+    fetchQuickStats()
+  }, [selectedNetwork]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNetworkChange = (networkId: string) => {
     setSelectedNetwork(networkId)
-    stopStreaming()
+  }
+
+  // Format scan time (from ISO string)
+  const formatScanTime = (isoString: string | null) => {
+    if (!isoString) return 'Never'
+    const date = new Date(isoString)
+    const now = new Date()
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (diff < 60) return 'Just now'
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+    if (diff < 172800) return 'Yesterday'
+    return date.toLocaleDateString()
   }
 
   // Format response time
@@ -198,11 +119,17 @@ export default function EndpointStatusPage() {
     return `${(ms / 1000).toFixed(2)}s`
   }
 
-  // Format timestamp
-  const formatTimestamp = (timestamp?: string | null) => {
-    if (!timestamp) return '-'
-    const date = new Date(timestamp)
-    return date.toLocaleString()
+  // Format relative time (e.g., "2 minutes ago")
+  const formatRelativeTime = (date: Date | null) => {
+    if (!date) return 'Never'
+    const now = new Date()
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (diff < 10) return 'Just now'
+    if (diff < 60) return `${diff}s ago`
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+    return date.toLocaleDateString()
   }
 
   return (
@@ -235,48 +162,20 @@ export default function EndpointStatusPage() {
                 Endpoint Health Monitor
               </h1>
               <p className="text-sm text-[#525252] dark:text-[#a3a3a3] max-w-xl">
-                Check which agents have reachable endpoints and view their recent activity
+                Real-time monitoring of agent endpoint availability with automatic background sync
               </p>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={isStreaming ? stopStreaming : startScanning}
-                disabled={loading}
-                className={`
-                  inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                  ${isStreaming
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-[#0a0a0a] dark:bg-[#fafafa] hover:bg-[#262626] dark:hover:bg-[#e5e5e5] text-white dark:text-[#0a0a0a]'
-                  }
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                `}
-              >
-                {isStreaming ? (
-                  <>
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    Stop Scan
-                  </>
-                ) : (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 4.93L16.24 7.76M7.76 16.24L4.93 19.07M19.07 19.07L16.24 16.24M7.76 7.76L4.93 4.93" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                    Scan Unchecked Agents
-                  </>
-                )}
-              </button>
-              <button
-                onClick={fetchQuickStats}
-                disabled={loading || isStreaming}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg text-sm font-medium hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors disabled:opacity-50"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={loading ? 'animate-spin' : ''}>
-                  <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C14.8273 3 17.35 4.30367 19 6.34267" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                Refresh
-              </button>
+            {/* Status and Actions */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              {/* Status Indicator */}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg">
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-xs text-[#737373]">
+                  Last scan: {formatScanTime(lastScanTime)} • Data: {formatRelativeTime(lastUpdated)}
+                </span>
+              </div>
+
             </div>
           </div>
 
@@ -296,31 +195,9 @@ export default function EndpointStatusPage() {
           </div>
         )}
 
-        {/* Streaming Progress */}
-        {isStreaming && (
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                Scanning endpoints...
-              </span>
-              <span className="text-sm text-blue-600 dark:text-blue-400">
-                {streamProgress.checked} / {streamProgress.total} agents checked
-              </span>
-            </div>
-            <div className="w-full h-2 bg-blue-200 dark:bg-blue-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-blue-500 transition-all duration-300"
-                style={{ width: `${streamProgress.total > 0 ? (streamProgress.checked / streamProgress.total) * 100 : 0}%` }}
-              />
-            </div>
-            <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-              Found {streamProgress.working} agents with working endpoints
-            </p>
-          </div>
-        )}
 
         {/* Summary Stats */}
-        {summary && !isStreaming && (
+        {summary && (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
             <StatCard
               label="Total Agents"
@@ -391,7 +268,7 @@ export default function EndpointStatusPage() {
         )}
 
         {/* Reputation Stats Row */}
-        {summary && !isStreaming && (
+        {summary && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
             <StatCard
               label="Total Feedbacks"
@@ -429,8 +306,7 @@ export default function EndpointStatusPage() {
         )}
 
         {/* Tab Navigation */}
-        {!isStreaming && (
-          <div className="flex gap-2 mb-6 border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="flex gap-2 mb-6 border-b border-[#e5e5e5] dark:border-[#262626]">
             <button
               onClick={() => setActiveTab('endpoints')}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
@@ -462,25 +338,10 @@ export default function EndpointStatusPage() {
                 Top Reputation ({topReputationAgents.length})
               </span>
             </button>
-          </div>
-        )}
-
-        {/* Live Results */}
-        {isStreaming && liveReports.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-4">
-              Live Results ({liveReports.length} found)
-            </h2>
-            <div className="space-y-4">
-              {liveReports.slice(-10).reverse().map((report) => (
-                <AgentReportCard key={report.agent_id} report={report} formatResponseTime={formatResponseTime} />
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Working Agents List (Endpoints Tab) */}
-        {!isStreaming && activeTab === 'endpoints' && workingAgents.length > 0 && (
+        {activeTab === 'endpoints' && workingAgents.length > 0 && (
           <div>
             <div className="space-y-4">
               {workingAgents.map((report) => (
@@ -491,7 +352,7 @@ export default function EndpointStatusPage() {
         )}
 
         {/* Top Reputation Agents (Reputation Tab) */}
-        {!isStreaming && activeTab === 'reputation' && topReputationAgents.length > 0 && (
+        {activeTab === 'reputation' && topReputationAgents.length > 0 && (
           <div>
             <div className="space-y-3">
               {topReputationAgents.map((agent, index) => (
@@ -552,7 +413,7 @@ export default function EndpointStatusPage() {
         )}
 
         {/* Empty State for Endpoints Tab */}
-        {!loading && !isStreaming && activeTab === 'endpoints' && workingAgents.length === 0 && (
+        {!loading && activeTab === 'endpoints' && workingAgents.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-16 h-16 bg-[#f5f5f5] dark:bg-[#171717] rounded-2xl flex items-center justify-center mb-4">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-[#a3a3a3]">
@@ -562,23 +423,15 @@ export default function EndpointStatusPage() {
             <h3 className="text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-2">
               No working endpoints found
             </h3>
-            <p className="text-sm text-[#737373] text-center max-w-md mb-6">
-              Start a live scan to check all agent endpoints in real-time
+            <p className="text-sm text-[#737373] text-center max-w-md">
+              Endpoint health scans run automatically every day at 03:00 UTC.
+              No reachable endpoints have been found yet.
             </p>
-            <button
-              onClick={startScanning}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] rounded-lg text-sm font-medium hover:bg-[#262626] dark:hover:bg-[#e5e5e5] transition-colors"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 4.93L16.24 7.76M7.76 16.24L4.93 19.07M19.07 19.07L16.24 16.24M7.76 7.76L4.93 4.93" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              Scan Unchecked Agents
-            </button>
           </div>
         )}
 
         {/* Empty State for Reputation Tab */}
-        {!loading && !isStreaming && activeTab === 'reputation' && topReputationAgents.length === 0 && (
+        {!loading && activeTab === 'reputation' && topReputationAgents.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-16 h-16 bg-[#f5f5f5] dark:bg-[#171717] rounded-2xl flex items-center justify-center mb-4">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-[#a3a3a3]">
@@ -595,7 +448,7 @@ export default function EndpointStatusPage() {
         )}
 
         {/* Loading State */}
-        {loading && !isStreaming && (
+        {loading && (
           <div className="flex items-center justify-center py-16">
             <div className="w-8 h-8 border-2 border-[#e5e5e5] dark:border-[#404040] border-t-[#0a0a0a] dark:border-t-[#fafafa] rounded-full animate-spin" />
           </div>
@@ -643,9 +496,9 @@ function StatCard({
               <path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             {showTooltip && (
-              <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] text-xs rounded-lg shadow-lg whitespace-nowrap max-w-xs">
-                <div className="text-center" style={{ whiteSpace: 'normal' }}>{tooltip}</div>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0a0a0a] dark:border-t-[#fafafa]" />
+              <div className="absolute z-50 bottom-full right-0 mb-2 px-3 py-2 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] text-xs rounded-lg shadow-lg w-56">
+                <div className="leading-relaxed">{tooltip}</div>
+                <div className="absolute top-full right-2 border-4 border-transparent border-t-[#0a0a0a] dark:border-t-[#fafafa]" />
               </div>
             )}
           </div>
