@@ -44,9 +44,11 @@ def get_skill_display_name(skill_slug: str) -> str:
     """将 skill slug 转换为显示名称
 
     例如: "advanced_reasoning_planning/strategic_planning" -> "Strategic Planning"
+    支持多层路径: "a/b/c" -> "C"
     """
     if "/" in skill_slug:
-        category, skill = skill_slug.split("/")
+        # 取最后一个部分作为显示名称
+        skill = skill_slug.split("/")[-1]
         return skill.replace("_", " ").title()
     return skill_slug.replace("_", " ").title()
 
@@ -55,9 +57,11 @@ def get_domain_display_name(domain_slug: str) -> str:
     """将 domain slug 转换为显示名称
 
     例如: "finance_and_business/investment_services" -> "Investment Services"
+    支持多层路径: "a/b/c" -> "C"
     """
     if "/" in domain_slug:
-        category, domain = domain_slug.split("/")
+        # 取最后一个部分作为显示名称
+        domain = domain_slug.split("/")[-1]
         return domain.replace("_", " ").title()
     return domain_slug.replace("_", " ").title()
 

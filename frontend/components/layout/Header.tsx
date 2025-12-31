@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { WalletButton } from '@/components/web3/WalletButton';
 
 export function Header() {
   const [mounted, setMounted] = useState(false);
@@ -19,7 +20,7 @@ export function Header() {
   }, []);
 
   // SVG 图标组件 - 统一使用简洁线条风格
-  const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' | 'endpoints' }) => {
+  const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' | 'endpoints' | 'create' }) => {
     const icons = {
       overview: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -47,6 +48,13 @@ export function Header() {
           <path d="M22 12H18L15 21L9 3L6 12H2" />
         </svg>
       ),
+      create: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8V16" />
+          <path d="M8 12H16" />
+        </svg>
+      ),
     };
     return icons[type];
   };
@@ -56,6 +64,7 @@ export function Header() {
     { href: '/agents', label: 'Agents', iconType: 'agents' as const },
     { href: '/networks', label: 'Networks', iconType: 'networks' as const },
     { href: '/endpoint-status', label: 'Endpoints', iconType: 'endpoints' as const },
+    { href: '/create', label: 'Create', iconType: 'create' as const },
   ];
 
   const isActive = (href: string) => {
@@ -165,6 +174,11 @@ export function Header() {
                 );
               })}
             </nav>
+          </div>
+
+          {/* Wallet Button - Right side */}
+          <div className="hidden md:flex items-center">
+            <WalletButton />
           </div>
         </div>
       </div>

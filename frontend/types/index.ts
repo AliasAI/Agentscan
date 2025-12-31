@@ -276,3 +276,57 @@ export interface EndpointStreamEvent {
   agent_id?: string;
   report?: AgentEndpointReport;
 }
+
+// ============================================
+// Web3 / Wallet / Create Agent Types
+// ============================================
+
+// Supported network for wallet connection
+export interface SupportedNetwork {
+  id: number;
+  name: string;
+  contractAddress: `0x${string}`;
+}
+
+// Form input for creating agent endpoints
+export interface EndpointInput {
+  url: string;
+  skills: string[];
+  domains: string[];
+}
+
+// Form state for creating an agent
+export interface CreateAgentForm {
+  name: string;
+  description: string;
+  endpoints: EndpointInput[];
+}
+
+// Agent metadata (OASF compliant)
+export interface AgentMetadata {
+  name: string;
+  description: string;
+  endpoints: Array<{
+    url: string;
+    skills: string[];
+    domains: string[];
+  }>;
+  version: string;
+  created_at: string;
+}
+
+// OASF Taxonomy item from API
+export interface TaxonomyItem {
+  slug: string;
+  display_name: string;
+}
+
+// Taxonomy API response
+export interface TaxonomyResponse {
+  count: number;
+  skills?: TaxonomyItem[];
+  domains?: TaxonomyItem[];
+}
+
+// Transaction status for UI
+export type TransactionStatus = 'idle' | 'uploading' | 'pending' | 'confirming' | 'success' | 'error';
