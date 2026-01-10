@@ -277,16 +277,17 @@ Agent 模型保存到数据库
 - 从 .env 文件加载（需要 load_dotenv()）
 
 **同步配置参数（RPC 优化后）：**
-- START_BLOCK = 9419801（合约部署区块）
+- START_BLOCK = 9989393（合约部署区块，Jan 2026 更新）
 - BLOCKS_PER_BATCH = 1000（批量大小，从 10000 降低 90%）
 - SYNC_INTERVAL_MINUTES = 10（同步间隔，实际由 CronTrigger 控制）
 - MAX_RETRIES = 1（从 2 降低，减少失败重试）
 - RETRY_DELAY_SECONDS = 5（从 3 增加，避免快速重试）
 - REQUEST_DELAY_SECONDS = 0.5（新增：事件处理间延迟）
 
-**合约地址：**
-- Identity Registry: 0x8004a6090Cd10A7288092483047B097295Fb8847
-- Reputation Registry: 0x8004B8FD1A363aa02fDC07635C0c5F94f6Af5B7E
+**合约地址（Jan 2026 Test Net）：**
+- Identity Registry: 0x8004A818BFB912233c491871b3d84c89A494BD9e
+- Reputation Registry: 0x8004B663056A597Dffe9eCcC1965A193B7388713
+- Validation Registry: 待部署（与 TEE 社区讨论中）
 
 **定时执行时间表：**
 - Blockchain Sync: 每小时 :00, :10, :20, :30, :40, :50 执行（每天 144 次）

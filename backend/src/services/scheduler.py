@@ -77,25 +77,18 @@ def start_scheduler():
         max_instances=1
     )
 
-    # Add Base Sepolia sync job - runs every 2 minutes (offset by 1 minute to avoid overlap)
-    scheduler.add_job(
-        sync_base_sepolia_task,
-        trigger=CronTrigger(minute='1-59/2'),  # Runs at 1, 3, 5, ... minutes
-        id='base_sepolia_sync',
-        name='Sync Base Sepolia blockchain data',
-        replace_existing=True,
-        max_instances=1
-    )
-
-    # Add BSC Testnet sync job - runs every 2 minutes (offset by 30 seconds using different minute pattern)
-    scheduler.add_job(
-        sync_bsc_testnet_task,
-        trigger=CronTrigger(minute='*/2', second='30'),  # Runs at :00:30, :02:30, :04:30, ...
-        id='bsc_testnet_sync',
-        name='Sync BSC Testnet blockchain data',
-        replace_existing=True,
-        max_instances=1
-    )
+    # Note: Base Sepolia and BSC Testnet sync jobs disabled (Jan 2026)
+    # These networks are pending deployment of new contracts
+    # Uncomment when contracts are deployed:
+    #
+    # scheduler.add_job(
+    #     sync_base_sepolia_task,
+    #     trigger=CronTrigger(minute='1-59/2'),
+    #     id='base_sepolia_sync',
+    #     name='Sync Base Sepolia blockchain data',
+    #     replace_existing=True,
+    #     max_instances=1
+    # )
 
     # Add endpoint health scan job - runs daily at 03:00 UTC
     scheduler.add_job(
@@ -112,19 +105,13 @@ def start_scheduler():
 
     # Get next run times for logging
     sepolia_job = scheduler.get_job('sepolia_sync')
-    base_sepolia_job = scheduler.get_job('base_sepolia_sync')
-    bsc_testnet_job = scheduler.get_job('bsc_testnet_sync')
     endpoint_scan_job = scheduler.get_job('endpoint_scan')
 
     logger.info(
         "scheduler_started",
-        networks=["sepolia", "base-sepolia", "bsc-testnet"],
+        networks=["sepolia"],  # Only Sepolia enabled (Jan 2026)
         sepolia_schedule="Every 2 minutes (:00, :02, :04, ...)",
         sepolia_next_run=sepolia_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if sepolia_job and sepolia_job.next_run_time else 'N/A',
-        base_sepolia_schedule="Every 2 minutes (:01, :03, :05, ...)",
-        base_sepolia_next_run=base_sepolia_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if base_sepolia_job and base_sepolia_job.next_run_time else 'N/A',
-        bsc_testnet_schedule="Every 2 minutes (:00:30, :02:30, :04:30, ...)",
-        bsc_testnet_next_run=bsc_testnet_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if bsc_testnet_job and bsc_testnet_job.next_run_time else 'N/A',
         endpoint_scan_schedule=f"Daily at {ENDPOINT_SCAN_HOUR:02d}:00 UTC",
         endpoint_scan_next_run=endpoint_scan_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if endpoint_scan_job and endpoint_scan_job.next_run_time else 'N/A',
         reputation_mode="EVENT-DRIVEN (via NewFeedback/FeedbackRevoked events)"

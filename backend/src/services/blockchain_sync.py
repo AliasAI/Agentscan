@@ -230,8 +230,8 @@ class NetworkSyncService:
             if i < len(registered_events) - 1:
                 await asyncio.sleep(REQUEST_DELAY_SECONDS)
 
-        # Get UriUpdated events
-        updated_events = self.contract.events.UriUpdated.get_logs(
+        # Get URIUpdated events (renamed from UriUpdated in Jan 2026 update)
+        updated_events = self.contract.events.URIUpdated.get_logs(
             from_block=from_block,
             to_block=to_block
         )
@@ -239,7 +239,7 @@ class NetworkSyncService:
         logger.info(
             "events_found",
             network=self.network_key,
-            event_type="UriUpdated",
+            event_type="URIUpdated",
             count=len(updated_events)
         )
 
@@ -298,7 +298,7 @@ class NetworkSyncService:
 
         token_id = event['args']['agentId']
         owner = event['args']['owner']
-        metadata_uri = event['args']['tokenURI']
+        metadata_uri = event['args']['agentURI']  # renamed from tokenURI in Jan 2026 update
 
         # Get block timestamp for accurate registration time
         block = self.w3.eth.get_block(event['blockNumber'])
@@ -401,9 +401,9 @@ class NetworkSyncService:
             )
 
     async def _process_updated_event(self, db: Session, event):
-        """Process UriUpdated event"""
+        """Process URIUpdated event (renamed from UriUpdated in Jan 2026 update)"""
         token_id = event['args']['agentId']
-        metadata_uri = event['args']['newUri']
+        metadata_uri = event['args']['newURI']  # renamed from newUri in Jan 2026 update
 
         network_id = self._get_network_id(db)
         agent = db.query(Agent).filter(

@@ -12,15 +12,17 @@ SEPOLIA_RPC_URL = os.getenv("SEPOLIA_RPC_URL", "")
 SEPOLIA_CHAIN_ID = 11155111
 
 # ERC-8004 ID Registry contract (Sepolia - legacy)
-REGISTRY_CONTRACT_ADDRESS = "0x8004a6090Cd10A7288092483047B097295Fb8847"  
+# Updated: Jan 2026 Test Net deployment
+REGISTRY_CONTRACT_ADDRESS = "0x8004A818BFB912233c491871b3d84c89A494BD9e"
 
-# ERC-8004 ID Registry ABI (from IdentityRegistry contract)
+# ERC-8004 ID Registry ABI (from IdentityRegistryUpgradeable contract)
+# Updated: Jan 2026 - Event parameter names changed (tokenURI -> agentURI, UriUpdated -> URIUpdated)
 REGISTRY_ABI = [
     {
         "anonymous": False,
         "inputs": [
             {"indexed": True, "internalType": "uint256", "name": "agentId", "type": "uint256"},
-            {"indexed": False, "internalType": "string", "name": "tokenURI", "type": "string"},
+            {"indexed": False, "internalType": "string", "name": "agentURI", "type": "string"},
             {"indexed": True, "internalType": "address", "name": "owner", "type": "address"}
         ],
         "name": "Registered",
@@ -30,10 +32,10 @@ REGISTRY_ABI = [
         "anonymous": False,
         "inputs": [
             {"indexed": True, "internalType": "uint256", "name": "agentId", "type": "uint256"},
-            {"indexed": False, "internalType": "string", "name": "newUri", "type": "string"},
+            {"indexed": False, "internalType": "string", "name": "newURI", "type": "string"},
             {"indexed": True, "internalType": "address", "name": "updatedBy", "type": "address"}
         ],
-        "name": "UriUpdated",
+        "name": "URIUpdated",
         "type": "event"
     },
     {
@@ -44,6 +46,17 @@ REGISTRY_ABI = [
             {"indexed": True, "internalType": "uint256", "name": "tokenId", "type": "uint256"}
         ],
         "name": "Transfer",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": True, "internalType": "uint256", "name": "agentId", "type": "uint256"},
+            {"indexed": True, "internalType": "string", "name": "indexedMetadataKey", "type": "string"},
+            {"indexed": False, "internalType": "string", "name": "metadataKey", "type": "string"},
+            {"indexed": False, "internalType": "bytes", "name": "metadataValue", "type": "bytes"}
+        ],
+        "name": "MetadataSet",
         "type": "event"
     },
     {
@@ -59,11 +72,29 @@ REGISTRY_ABI = [
         "outputs": [{"internalType": "string", "name": "", "type": "string"}],
         "stateMutability": "view",
         "type": "function"
+    },
+    {
+        "inputs": [{"internalType": "string", "name": "agentURI", "type": "string"}],
+        "name": "register",
+        "outputs": [{"internalType": "uint256", "name": "agentId", "type": "uint256"}],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {"internalType": "uint256", "name": "agentId", "type": "uint256"},
+            {"internalType": "string", "name": "newURI", "type": "string"}
+        ],
+        "name": "setAgentURI",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
     }
 ]
 
 # Sync configuration
-START_BLOCK = 9419801  # Start from this block (contract deployment block)
+# Updated: Jan 2026 Test Net deployment block
+START_BLOCK = 9989393  # Start from this block (contract deployment block)
 BLOCKS_PER_BATCH = 1000  # Process 1000 blocks at a time (reduce RPC calls)
 MAX_BATCHES_PER_RUN = 50  # Max batches to process in one sync run (50 batches = 50k blocks = ~5-10 mins)
 # Note: Interval is now controlled by CronTrigger in scheduler.py (every 10 minutes)

@@ -6,23 +6,24 @@
 
 import type { Address, Abi } from 'viem'
 
-// Identity Registry ABI - includes register method for agent creation
+// Identity Registry ABI - from IdentityRegistryUpgradeable contract
+// Updated: Jan 2026 Test Net deployment
 export const IDENTITY_REGISTRY_ABI = [
-  // Register new agent - returns token ID
+  // Register new agent - returns token ID (multiple overloads available)
   {
-    inputs: [{ name: 'tokenURI_', type: 'string' }],
+    inputs: [{ name: 'agentURI', type: 'string' }],
     name: 'register',
-    outputs: [{ name: '', type: 'uint256' }],
+    outputs: [{ name: 'agentId', type: 'uint256' }],
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  // Update metadata URI
+  // Update metadata URI (renamed from setTokenURI)
   {
     inputs: [
       { name: 'agentId', type: 'uint256' },
-      { name: 'newUri', type: 'string' },
+      { name: 'newURI', type: 'string' },
     ],
-    name: 'setTokenURI',
+    name: 'setAgentURI',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -42,12 +43,12 @@ export const IDENTITY_REGISTRY_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-  // Events
+  // Events (updated parameter names in Jan 2026)
   {
     anonymous: false,
     inputs: [
       { indexed: true, name: 'agentId', type: 'uint256' },
-      { indexed: false, name: 'tokenURI', type: 'string' },
+      { indexed: false, name: 'agentURI', type: 'string' },
       { indexed: true, name: 'owner', type: 'address' },
     ],
     name: 'Registered',
@@ -57,10 +58,10 @@ export const IDENTITY_REGISTRY_ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, name: 'agentId', type: 'uint256' },
-      { indexed: false, name: 'newUri', type: 'string' },
+      { indexed: false, name: 'newURI', type: 'string' },
       { indexed: true, name: 'updatedBy', type: 'address' },
     ],
-    name: 'UriUpdated',
+    name: 'URIUpdated',
     type: 'event',
   },
   {
@@ -73,15 +74,29 @@ export const IDENTITY_REGISTRY_ABI = [
     name: 'Transfer',
     type: 'event',
   },
+  // New: On-chain metadata
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'agentId', type: 'uint256' },
+      { indexed: true, name: 'indexedMetadataKey', type: 'string' },
+      { indexed: false, name: 'metadataKey', type: 'string' },
+      { indexed: false, name: 'metadataValue', type: 'bytes' },
+    ],
+    name: 'MetadataSet',
+    type: 'event',
+  },
 ] as const satisfies Abi
 
 // Contract addresses per chain - matches backend networks_config.py
+// Updated: Jan 2026 Test Net deployment
 export const IDENTITY_CONTRACTS: Record<number, Address> = {
-  11155111: '0x8004a6090Cd10A7288092483047B097295Fb8847', // Sepolia
-  84532: '0x8004AA63c570c570eBF15376c0dB199918BFe9Fb', // Base Sepolia
-  97: '0x4f8c8694eAB93bbF7616EDD522503544E61E7dB7', // BSC Testnet
-  59141: '0x8004aa7C931bCE1233973a0C6A667f73F66282e7', // Linea Sepolia
-  296: '0x0dDaa2de07deb24D5F0288ee29c3c57c4159DcC7', // Hedera Testnet
+  11155111: '0x8004A818BFB912233c491871b3d84c89A494BD9e', // Sepolia (Jan 2026)
+  // Other networks pending deployment (Jan 2026)
+  // 84532: '', // Base Sepolia - to be deployed
+  // 59141: '', // Linea Sepolia - to be deployed
+  // 80002: '', // Polygon Amoy - to be deployed
+  // 296: '', // Hedera Testnet - to be deployed
 }
 
 // Get contract address for a chain
@@ -90,11 +105,13 @@ export function getIdentityContract(chainId: number): Address | undefined {
 }
 
 // Block explorer URLs for transaction links
+// Updated: Jan 2026 Test Net deployment
 export const BLOCK_EXPLORERS: Record<number, string> = {
   11155111: 'https://sepolia.etherscan.io',
+  // Other networks pending deployment
   84532: 'https://sepolia.basescan.org',
-  97: 'https://testnet.bscscan.com',
   59141: 'https://sepolia.lineascan.build',
+  80002: 'https://amoy.polygonscan.com',
   296: 'https://hashscan.io/testnet',
 }
 
