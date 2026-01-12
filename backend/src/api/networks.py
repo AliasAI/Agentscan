@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -14,8 +14,8 @@ from src.models import Network, Agent
 class ContractsInfo(BaseModel):
     """Contract addresses info"""
     identity: str
-    reputation: str
-    validation: str
+    reputation: Optional[str] = None
+    validation: Optional[str] = None
 
 
 class NetworkResponse(BaseModel):
