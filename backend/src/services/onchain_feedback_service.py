@@ -206,14 +206,19 @@ class OnChainFeedbackService:
         return feedbacks
 
     def _parse_feedback_event(self, event, network_key: str) -> dict:
-        """Parse a NewFeedback event into our response format"""
+        """Parse a NewFeedback event into our response format
+
+        Jan 2026 update: tag1/tag2 changed from bytes32 to string,
+        feedbackUri renamed to feedbackURI, added endpoint and feedbackIndex
+        """
         args = event["args"]
         block_number = event["blockNumber"]
         tx_hash = event["transactionHash"].hex()
 
-        # Convert bytes32 tags to string
-        tag1 = self._bytes32_to_string(args.get("tag1"))
-        tag2 = self._bytes32_to_string(args.get("tag2"))
+        # Jan 2026: tags are now string type, not bytes32
+        # Handle both old (bytes32) and new (string) formats for compatibility
+        tag1 = self._parse_tag(args.get("tag1"))
+        tag2 = self._parse_tag(args.get("tag2"))
 
         # Create unique ID from network + block + log index
         log_index = event.get("logIndex", 0)
@@ -223,9 +228,11 @@ class OnChainFeedbackService:
             "id": feedback_id,
             "score": args.get("score", 0),
             "client_address": args.get("clientAddress", ""),
+            "feedback_index": args.get("feedbackIndex"),  # New in Jan 2026
             "tag1": tag1,
             "tag2": tag2,
-            "feedback_uri": args.get("feedbackUri"),
+            "endpoint": args.get("endpoint"),  # New in Jan 2026
+            "feedback_uri": args.get("feedbackURI") or args.get("feedbackUri"),  # Support both cases
             "feedback_hash": self._bytes32_to_hex(args.get("feedbackHash")),
             "is_revoked": False,  # We'd need to check FeedbackRevoked events
             "timestamp": None,  # Block timestamp would require additional call
@@ -233,8 +240,21 @@ class OnChainFeedbackService:
             "transaction_hash": tx_hash,
         }
 
+    def _parse_tag(self, value) -> Optional[str]:
+        """Parse tag value - handles both string (Jan 2026) and bytes32 (legacy) formats"""
+        if not value:
+            return None
+        # New format: string
+        if isinstance(value, str):
+            return value if value else None
+        # Legacy format: bytes32
+        if isinstance(value, bytes):
+            decoded = value.rstrip(b'\x00').decode('utf-8', errors='ignore')
+            return decoded if decoded else None
+        return None
+
     def _bytes32_to_string(self, value) -> Optional[str]:
-        """Convert bytes32 to readable string"""
+        """Convert bytes32 to readable string (legacy, kept for compatibility)"""
         if not value:
             return None
         if isinstance(value, bytes):

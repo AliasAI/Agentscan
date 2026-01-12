@@ -464,12 +464,13 @@ class NetworkSyncService:
 
         try:
             # Call getSummary to get updated reputation
+            # Jan 2026 update: tag1/tag2 changed from bytes32 to string
             count, average_score = await asyncio.to_thread(
                 self.reputation_contract.functions.getSummary(
                     token_id,
-                    [],
-                    b'\x00' * 32,
-                    b'\x00' * 32
+                    [],   # All clients
+                    "",   # tag1 = empty string (no filter)
+                    ""    # tag2 = empty string (no filter)
                 ).call
             )
 

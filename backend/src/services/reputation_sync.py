@@ -132,14 +132,15 @@ class ReputationSyncService:
     async def _update_agent_reputation(self, db: Session, agent: Agent):
         """Update reputation score for a single agent"""
         try:
-            # Call getSummary(agentId, [], 0, 0) in thread pool
-            # Empty array = all clients, 0 bytes = all tags
+            # Call getSummary(agentId, [], "", "") in thread pool
+            # Empty array = all clients, empty string = all tags
+            # Jan 2026 update: tag1/tag2 changed from bytes32 to string
             count, average_score = await asyncio.to_thread(
                 self.contract.functions.getSummary(
                     agent.token_id,
                     [],  # All clients
-                    b'\x00' * 32,  # tag1 = 0 (no filter)
-                    b'\x00' * 32   # tag2 = 0 (no filter)
+                    "",  # tag1 = empty string (no filter)
+                    ""   # tag2 = empty string (no filter)
                 ).call
             )
 
