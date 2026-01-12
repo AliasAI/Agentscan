@@ -270,7 +270,7 @@ Agent 模型保存到数据库
 3. init_networks() - 初始化网络数据
 4. startup_event: start_scheduler() - 启动定时任务
 
-### 区块链配置（backend/src/core/blockchain_config.py）[UPDATED: 2025-11-15]
+### 区块链配置（backend/src/core/blockchain_config.py）[UPDATED: 2026-01-12]
 
 **必须配置的环境变量：**
 - SEPOLIA_RPC_URL：必填，否则启动失败
@@ -284,14 +284,50 @@ Agent 模型保存到数据库
 - RETRY_DELAY_SECONDS = 5（从 3 增加，避免快速重试）
 - REQUEST_DELAY_SECONDS = 0.5（新增：事件处理间延迟）
 
-**合约地址（Jan 2026 Test Net）：**
-- Identity Registry: 0x8004A818BFB912233c491871b3d84c89A494BD9e
-- Reputation Registry: 0x8004B663056A597Dffe9eCcC1965A193B7388713
-- Validation Registry: 待部署（与 TEE 社区讨论中）
-
 **定时执行时间表：**
 - Blockchain Sync: 每小时 :00, :10, :20, :30, :40, :50 执行（每天 144 次）
 - Reputation Sync: 事件驱动（监听 NewFeedback/FeedbackRevoked 事件，零定期轮询）
+
+### ERC-8004 合约版本与网络状态 [UPDATED: 2026-01-12]
+
+**当前启用的网络：**
+
+| 网络 | Chain ID | 状态 | 说明 |
+|------|----------|------|------|
+| **Sepolia** | 11155111 | ✅ 启用 | 唯一部署新版本合约的网络 |
+| Base Sepolia | 84532 | ❌ 禁用 | 等待新合约部署 |
+| Linea Sepolia | 59141 | ❌ 禁用 | 等待新合约部署 |
+| Hedera Testnet | 296 | ❌ 禁用 | 等待新合约部署 |
+| BSC Testnet | 97 | ❌ 禁用 | 等待新合约部署 |
+
+**Sepolia 合约地址（Jan 2026 新版本）：**
+- Identity Registry: `0x8004A818BFB912233c491871b3d84c89A494BD9e`
+- Reputation Registry: `0x8004B663056A597Dffe9eCcC1965A193B7388713`
+- Validation Registry: 待部署（与 TEE 社区讨论中）
+
+**合约更新要点（Jan 2026）：**
+1. **新合约地址**：Sepolia 网络部署了新版本的 Identity 和 Reputation 合约
+2. **其他网络暂停**：Base Sepolia、Linea Sepolia、Hedera、BSC 等网络的旧合约已废弃，等待新版本部署
+3. **API 兼容性修复**：`ContractsInfo` 的 `reputation` 和 `validation` 字段改为可选，避免缺失字段导致的 ResponseValidationError
+
+**禁用其他网络的命令（生产环境）：**
+```bash
+docker compose exec backend uv run python -c "
+from src.db.database import SessionLocal
+from src.models import Network
+
+db = SessionLocal()
+deleted = db.query(Network).filter(Network.id != 'sepolia').delete()
+db.commit()
+print(f'✅ 已删除 {deleted} 个网络，仅保留 Sepolia')
+db.close()
+"
+```
+
+**配置文件位置：**
+- 网络配置：`backend/src/core/networks_config.py`
+- 网络初始化：`backend/src/db/init_networks.py`
+- API Schema：`backend/src/api/networks.py`
 
 ### API 设计模式
 
