@@ -395,13 +395,15 @@ event NewFeedback(
 - Reputation Registry: `0x8004B663056A597Dffe9eCcC1965A193B7388713`
 - Validation Registry: 待部署
 
-#### 代码适配检查清单
+#### 代码适配检查清单 [UPDATED: 2026-01-12]
 
-- [ ] 更新 Reputation 事件监听：`NewFeedback` 事件签名已变更
-- [ ] 更新 feedback 数据模型：`tag1/tag2` 从 bytes32 改为 string
-- [ ] 移除 `feedbackAuth` 相关逻辑
-- [ ] 新增 `endpoint` 字段支持
-- [ ] 考虑支持 `agentWallet` 验证流程
+- [x] 更新 ABI 文件：Identity 和 Reputation Registry ABI 已更新
+- [x] 更新 `getSummary()` 调用：tag1/tag2 参数从 `bytes32` 改为 `string`
+- [x] 更新 feedback 事件解析：支持新旧两种 tag 格式
+- [x] 新增 `endpoint` 和 `feedbackIndex` 字段支持
+- [x] 兼容 `feedbackURI`（新）和 `feedbackUri`（旧）字段名
+- [ ] 考虑支持 `agentWallet` 验证流程（EIP-712/ERC-1271）
+- [ ] 可选：实现 Endpoint Domain Verification
 
 **禁用其他网络的命令（生产环境）：**
 ```bash
