@@ -288,27 +288,120 @@ Agent 模型保存到数据库
 - Blockchain Sync: 每小时 :00, :10, :20, :30, :40, :50 执行（每天 144 次）
 - Reputation Sync: 事件驱动（监听 NewFeedback/FeedbackRevoked 事件，零定期轮询）
 
-### ERC-8004 合约版本与网络状态 [UPDATED: 2026-01-12]
+### ERC-8004 Jan 2026 规范更新 [UPDATED: 2026-01-12]
 
-**当前启用的网络：**
+> **重要**：ERC-8004 在 2026 年 1 月 9 日发布了重大规范更新，整合了测试网阶段的社区反馈。
+> - 旧规范（Oct 9）：`ethereum/ERCs@cb7ae28...`
+> - 新规范（Jan 9）：`ethereum/ERCs@e8e4955...`
+
+#### 最重要的变更
+
+**1. Reputation Feedback 不再需要 Agent 签名预授权 (`feedbackAuth`)**
+
+| 项目 | 旧版本 | 新版本 |
+|------|--------|--------|
+| 接口 | `giveFeedback(..., bytes feedbackAuth)` | `giveFeedback(..., string endpoint, ...)` |
+| 授权 | Agent 需签名 feedbackAuth 授权 client | 任何 clientAddress 可直接提交 |
+| 防垃圾 | 链上预授权 | 依赖链下过滤 + EIP-7702 |
+
+```solidity
+// 旧接口
+giveFeedback(uint256 agentId, uint8 score, bytes32 tag1, bytes32 tag2,
+             string fileuri, bytes32 filehash, bytes feedbackAuth)
+
+// 新接口
+giveFeedback(uint256 agentId, uint8 score, string tag1, string tag2,
+             string endpoint, string feedbackURI, bytes32 feedbackHash)
+```
+
+**2. Agent Wallet 地址变为链上可验证属性**
+
+- 新增保留 metadata key：`agentWallet`
+- 不能通过 `setMetadata()` 或 `register()` 设置
+- 初始值为 owner 地址
+- 更新需要 **EIP-712 签名**（EOA）或 **ERC-1271**（合约钱包）验证
+- 转让后重置为零地址，需新 owner 重新验证
+
+#### Identity Registry 变更
+
+**术语重命名：**
+- `tokenId` → `agentId`
+- `tokenURI` → `agentURI`
+- `agentRegistry` 格式：`{namespace}:{chainId}:{identityRegistry}`
+
+**新增接口：**
+- `setAgentURI(uint256 agentId, string agentURI)` - 更新 Agent URI
+- `URIUpdated(uint256 agentId, string agentURI)` - URI 更新事件
+
+**Registration JSON 示例更新：**
+- 新增 `web` 和 `email` endpoint 类型（支持人机交互）
+- MCP `capabilities` 从 `{}` 改为 `[]`
+- OASF endpoint 版本从 `0.7` 升级到 `0.8`
+- 新增可选字段：`skills[]`, `domains[]`, `x402Support`, `active`
+
+**可选：Endpoint Domain Verification**
+- Agent 可在 `https://{endpoint-domain}/.well-known/agent-registration.json` 托管验证文件
+- 验证者可检查 `registrations` 条目匹配 `agentRegistry` + `agentId`
+
+#### Reputation Registry 变更
+
+**字段类型变更：**
+- `tag1`, `tag2`: `bytes32` → `string`
+- `fileuri` → `feedbackURI`
+- `filehash` → `feedbackHash`
+- 新增 `endpoint` 参数
+
+**NewFeedback 事件扩展：**
+```solidity
+event NewFeedback(
+    uint256 indexed agentId,
+    address indexed clientAddress,
+    uint64 feedbackIndex,      // 新增：每个 client 的反馈索引
+    uint8 score,
+    string indexed tag1,       // 改为 string
+    string tag2,               // 改为 string
+    string endpoint,           // 新增
+    string feedbackURI,        // 重命名
+    bytes32 feedbackHash       // 重命名
+);
+```
+
+**读取 API 变更：**
+- `getSummary(...)` 使用 `string tag1, string tag2`
+- `readFeedback(...)` 参数 `index` → `feedbackIndex`
+- `readAllFeedback(...)` 新增返回 `uint64[] feedbackIndexes`
+
+**Off-chain Feedback JSON 变更：**
+- 移除必填字段：`feedbackAuth`
+- 重命名：`proof_of_payment` → `proofOfPayment`
+- 新增可选：`endpoint`, `domain`（OASF 定义）
+
+#### Validation Registry 状态
+
+> ⚠️ **注意**：Validation Registry 仍在与 TEE 社区积极讨论中，将在今年晚些时候发布后续更新。
+
+#### 当前网络状态
 
 | 网络 | Chain ID | 状态 | 说明 |
 |------|----------|------|------|
-| **Sepolia** | 11155111 | ✅ 启用 | 唯一部署新版本合约的网络 |
+| **Sepolia** | 11155111 | ✅ 启用 | 唯一部署 Jan 2026 新合约的网络 |
 | Base Sepolia | 84532 | ❌ 禁用 | 等待新合约部署 |
 | Linea Sepolia | 59141 | ❌ 禁用 | 等待新合约部署 |
 | Hedera Testnet | 296 | ❌ 禁用 | 等待新合约部署 |
 | BSC Testnet | 97 | ❌ 禁用 | 等待新合约部署 |
 
-**Sepolia 合约地址（Jan 2026 新版本）：**
+**Sepolia 合约地址（Jan 2026）：**
 - Identity Registry: `0x8004A818BFB912233c491871b3d84c89A494BD9e`
 - Reputation Registry: `0x8004B663056A597Dffe9eCcC1965A193B7388713`
-- Validation Registry: 待部署（与 TEE 社区讨论中）
+- Validation Registry: 待部署
 
-**合约更新要点（Jan 2026）：**
-1. **新合约地址**：Sepolia 网络部署了新版本的 Identity 和 Reputation 合约
-2. **其他网络暂停**：Base Sepolia、Linea Sepolia、Hedera、BSC 等网络的旧合约已废弃，等待新版本部署
-3. **API 兼容性修复**：`ContractsInfo` 的 `reputation` 和 `validation` 字段改为可选，避免缺失字段导致的 ResponseValidationError
+#### 代码适配检查清单
+
+- [ ] 更新 Reputation 事件监听：`NewFeedback` 事件签名已变更
+- [ ] 更新 feedback 数据模型：`tag1/tag2` 从 bytes32 改为 string
+- [ ] 移除 `feedbackAuth` 相关逻辑
+- [ ] 新增 `endpoint` 字段支持
+- [ ] 考虑支持 `agentWallet` 验证流程
 
 **禁用其他网络的命令（生产环境）：**
 ```bash
@@ -328,6 +421,7 @@ db.close()
 - 网络配置：`backend/src/core/networks_config.py`
 - 网络初始化：`backend/src/db/init_networks.py`
 - API Schema：`backend/src/api/networks.py`
+- ABI 文件：`backend/src/abi/` （需要更新以匹配新接口）
 
 ### API 设计模式
 
