@@ -13,13 +13,27 @@ logger = structlog.get_logger(__name__)
 
 # Subgraph endpoints for different networks (The Graph Gateway)
 # Reference: https://sdk.ag0.xyz/4-subgraph/4-1-intro/
-SUBGRAPH_URLS = {
-    "sepolia": "https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/6wQRC7geo9XYAhckfmfo8kbMRLeWU8KQd3XsJqFKmZLT",
-    # base-sepolia, bsc-testnet, etc. coming soon per SDK docs
-}
+#
+# TEMPORARILY DISABLED (Jan 2026):
+# The current Subgraph is based on the old ERC-8004 spec (Oct 2024).
+# After Jan 2026 spec update, the Subgraph schema is outdated:
+# - tag1/tag2 changed from bytes32 to string
+# - feedbackUri renamed to feedbackURI
+# - Added feedbackIndex, endpoint fields
+# - Removed feedbackAuth
+#
+# All requests now fallback to on-chain queries until Subgraph is updated.
+# To re-enable: uncomment SUBGRAPH_URLS and update SUPPORTED_NETWORKS
+#
+# SUBGRAPH_URLS = {
+#     "sepolia": "https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/6wQRC7geo9XYAhckfmfo8kbMRLeWU8KQd3XsJqFKmZLT",
+#     # base-sepolia, bsc-testnet, etc. coming soon per SDK docs
+# }
+SUBGRAPH_URLS = {}  # Temporarily empty - all networks use on-chain fallback
 
 # Networks that have subgraph support
-SUPPORTED_NETWORKS = set(SUBGRAPH_URLS.keys())
+# Temporarily empty to force on-chain queries for all networks
+SUPPORTED_NETWORKS = set()  # Was: set(SUBGRAPH_URLS.keys())
 
 # Chain IDs mapping
 CHAIN_IDS = {
