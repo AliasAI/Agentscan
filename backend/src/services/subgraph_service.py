@@ -2,6 +2,8 @@
 
 This service queries the Agent0 Subgraph for feedback and validation data.
 Uses the agent0-sdk for simplified access to the deployed subgraph.
+
+Updated: Jan 2026 - Adapted to new ERC-8004 spec schema
 """
 
 from typing import Optional
@@ -13,27 +15,14 @@ logger = structlog.get_logger(__name__)
 
 # Subgraph endpoints for different networks (The Graph Gateway)
 # Reference: https://sdk.ag0.xyz/4-subgraph/4-1-intro/
-#
-# TEMPORARILY DISABLED (Jan 2026):
-# The current Subgraph is based on the old ERC-8004 spec (Oct 2024).
-# After Jan 2026 spec update, the Subgraph schema is outdated:
-# - tag1/tag2 changed from bytes32 to string
-# - feedbackUri renamed to feedbackURI
-# - Added feedbackIndex, endpoint fields
-# - Removed feedbackAuth
-#
-# All requests now fallback to on-chain queries until Subgraph is updated.
-# To re-enable: uncomment SUBGRAPH_URLS and update SUPPORTED_NETWORKS
-#
-# SUBGRAPH_URLS = {
-#     "sepolia": "https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/6wQRC7geo9XYAhckfmfo8kbMRLeWU8KQd3XsJqFKmZLT",
-#     # base-sepolia, bsc-testnet, etc. coming soon per SDK docs
-# }
-SUBGRAPH_URLS = {}  # Temporarily empty - all networks use on-chain fallback
+# Updated: Jan 2026 - Schema now matches new ERC-8004 spec
+SUBGRAPH_URLS = {
+    "sepolia": "https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/6wQRC7geo9XYAhckfmfo8kbMRLeWU8KQd3XsJqFKmZLT",
+    # base-sepolia, bsc-testnet, etc. coming soon per SDK docs
+}
 
 # Networks that have subgraph support
-# Temporarily empty to force on-chain queries for all networks
-SUPPORTED_NETWORKS = set()  # Was: set(SUBGRAPH_URLS.keys())
+SUPPORTED_NETWORKS = set(SUBGRAPH_URLS.keys())
 
 # Chain IDs mapping
 CHAIN_IDS = {
@@ -108,9 +97,10 @@ class SubgraphService:
         agent_id = f"{chain_id}:{token_id}"
         skip = (page - 1) * page_size
 
-        # Note: Field names match Agent0 Subgraph schema
-        # - createdAt (not timestamp)
-        # - No blockNumber/transactionHash in current schema
+        # Updated: Jan 2026 - New field names per ERC-8004 spec
+        # - feedbackURI (was feedbackUri)
+        # - feedbackIndex (new)
+        # - endpoint (new)
         query = """
         query GetAgentFeedbacks($agentId: String!, $first: Int!, $skip: Int!) {
             feedbacks(
@@ -123,9 +113,11 @@ class SubgraphService:
                 id
                 score
                 clientAddress
+                feedbackIndex
                 tag1
                 tag2
-                feedbackUri
+                endpoint
+                feedbackURI
                 feedbackHash
                 isRevoked
                 createdAt
@@ -143,7 +135,6 @@ class SubgraphService:
         data = result.get("data") or {}
 
         feedbacks = data.get("feedbacks") or []
-        # Calculate total from returned feedbacks (subgraph doesn't have feedbackCount on agent)
         total = len(feedbacks) if page == 1 else (page - 1) * page_size + len(feedbacks)
 
         # Transform feedbacks to our format
@@ -153,9 +144,11 @@ class SubgraphService:
                 "id": fb.get("id"),
                 "score": fb.get("score", 0),
                 "client_address": fb.get("clientAddress"),
-                "tag1": self._bytes32_to_string(fb.get("tag1")),
-                "tag2": self._bytes32_to_string(fb.get("tag2")),
-                "feedback_uri": fb.get("feedbackUri"),
+                "feedback_index": fb.get("feedbackIndex"),
+                "tag1": self._parse_tag(fb.get("tag1")),
+                "tag2": self._parse_tag(fb.get("tag2")),
+                "endpoint": fb.get("endpoint"),
+                "feedback_uri": fb.get("feedbackURI"),
                 "feedback_hash": fb.get("feedbackHash"),
                 "is_revoked": fb.get("isRevoked", False),
                 "timestamp": self._parse_timestamp(fb.get("createdAt")),
@@ -163,13 +156,13 @@ class SubgraphService:
                 "transaction_hash": None,
             })
 
-        # Estimate total pages (we don't have exact count from subgraph)
+        # Estimate total pages
         has_more = len(feedbacks) == page_size
         total_pages = page + 1 if has_more else page
 
         return {
             "items": items,
-            "total": total if not has_more else total + 1,  # Indicate there might be more
+            "total": total if not has_more else total + 1,
             "page": page,
             "page_size": page_size,
             "total_pages": total_pages,
@@ -198,10 +191,6 @@ class SubgraphService:
         agent_id = f"{chain_id}:{token_id}"
         skip = (page - 1) * page_size
 
-        # Note: Field names match Agent0 Subgraph schema
-        # - createdAt/updatedAt (not requestedAt/completedAt)
-        # - agent field accepts agent ID string directly
-        # - Agent type doesn't have validationCount, we estimate from returned results
         query = """
         query GetAgentValidations($agentId: String!, $first: Int!, $skip: Int!) {
             validations(
@@ -236,7 +225,6 @@ class SubgraphService:
         data = result.get("data") or {}
 
         validations = data.get("validations") or []
-        # Estimate total from returned validations (no validationCount field on Agent)
         total = len(validations) if page == 1 else (page - 1) * page_size + len(validations)
 
         # Transform validations to our format
@@ -250,19 +238,19 @@ class SubgraphService:
                 "response": val.get("response"),
                 "response_uri": val.get("responseUri"),
                 "response_hash": val.get("responseHash"),
-                "tag": self._bytes32_to_string(val.get("tag")),
+                "tag": self._parse_tag(val.get("tag")),
                 "status": val.get("status", "PENDING"),
                 "requested_at": self._parse_timestamp(val.get("createdAt")),
                 "completed_at": self._parse_timestamp(val.get("updatedAt")),
             })
 
-        # Estimate total pages (we don't have exact count from subgraph)
+        # Estimate total pages
         has_more = len(validations) == page_size
         total_pages = page + 1 if has_more else page
 
         return {
             "items": items,
-            "total": total if not has_more else total + 1,  # Indicate there might be more
+            "total": total if not has_more else total + 1,
             "page": page,
             "page_size": page_size,
             "total_pages": total_pages,
@@ -284,12 +272,11 @@ class SubgraphService:
         chain_id = CHAIN_IDS.get(network, 11155111)
         agent_id = f"{chain_id}:{token_id}"
 
+        # Updated: Jan 2026 - Use totalFeedback instead of feedbackCount
         query = """
         query GetReputationSummary($agentId: String!) {
             agent(id: $agentId) {
-                feedbackCount
-                averageScore
-                validationCount
+                totalFeedback
             }
         }
         """
@@ -299,22 +286,23 @@ class SubgraphService:
         agent_data = data.get("agent") or {}
 
         return {
-            "feedback_count": agent_data.get("feedbackCount", 0),
-            "average_score": agent_data.get("averageScore", 0),
-            "validation_count": agent_data.get("validationCount", 0),
+            "feedback_count": agent_data.get("totalFeedback", 0),
+            "average_score": 0,  # Not available in current schema
+            "validation_count": 0,  # Not available in current schema
         }
 
-    def _bytes32_to_string(self, value: Optional[str]) -> Optional[str]:
+    def _parse_tag(self, value: Optional[str]) -> Optional[str]:
         """
-        Process bytes32 tag value from subgraph.
+        Parse tag value from subgraph.
 
-        The subgraph returns bytes32 as decoded binary strings (not hex).
-        Per ERC-8004, tags are bytes32 hashes for on-chain filtering.
+        Jan 2026 update: tags can be either:
+        - String (human-readable, e.g., "finance", "latency")
+        - Bytes32 hex (0x...) for backward compatibility
 
         Strategy:
-        - If value is all zeros or empty, return None
-        - If value contains only printable ASCII, return as-is (human-readable tag)
-        - Otherwise, convert to hex format for display (0x...)
+        - If value is empty or all zeros, return None
+        - If value is human-readable string, return as-is
+        - If value is hex, truncate for display
         """
         if not value:
             return None
@@ -327,12 +315,11 @@ class SubgraphService:
             # Return truncated hex for display
             return value[:10] + "..." + value[-6:] if len(value) > 20 else value
 
-        # Subgraph returns decoded binary - check if it's all null bytes
+        # Human-readable string - check if it's all null bytes
         if all(c == "\x00" for c in value):
             return None
 
         # Check if the string is human-readable (printable ASCII only)
-        # Valid printable ASCII range: 0x20 (space) to 0x7E (~)
         is_readable = all(0x20 <= ord(c) <= 0x7E for c in value.rstrip("\x00"))
 
         if is_readable:
@@ -341,12 +328,10 @@ class SubgraphService:
         # Not readable - convert to hex format for display
         try:
             hex_value = "0x" + value.encode("latin-1").hex()
-            # Truncate for display if too long
             if len(hex_value) > 20:
                 return hex_value[:10] + "..." + hex_value[-6:]
             return hex_value
         except (UnicodeEncodeError, ValueError):
-            # Fallback: return None for unprocessable values
             return None
 
     def _parse_timestamp(self, value: Optional[str]) -> Optional[str]:

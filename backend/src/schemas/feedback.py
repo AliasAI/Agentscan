@@ -1,6 +1,8 @@
 """Feedback and Validation Schemas
 
 Data models for feedback (reviews) and validation history from the subgraph.
+
+Updated: Jan 2026 - Added feedbackIndex and endpoint fields per new ERC-8004 spec
 """
 
 from pydantic import BaseModel
@@ -13,8 +15,10 @@ class FeedbackResponse(BaseModel):
     id: str
     score: int  # 0-100
     client_address: str
+    feedback_index: Optional[int] = None  # Jan 2026: per-client feedback index
     tag1: Optional[str] = None
     tag2: Optional[str] = None
+    endpoint: Optional[str] = None  # Jan 2026: endpoint URI for this feedback
     feedback_uri: Optional[str] = None
     feedback_hash: Optional[str] = None
     is_revoked: bool = False
