@@ -54,3 +54,37 @@ export function formatRelativeTime(date: string): string {
   if (minutes > 0) return `${minutes} minutes ago`;
   return 'just now';
 }
+
+/**
+ * Resolve image URI to a displayable URL
+ * Handles: IPFS URIs, data URIs, HTTP/HTTPS URLs
+ */
+export function resolveImageUrl(uri: string | undefined | null): string | null {
+  if (!uri || typeof uri !== 'string') return null;
+
+  const trimmed = uri.trim();
+  if (!trimmed) return null;
+
+  // Handle IPFS URIs
+  if (trimmed.startsWith('ipfs://')) {
+    const hash = trimmed.slice(7);
+    return `https://ipfs.io/ipfs/${hash}`;
+  }
+
+  // Handle data URIs (base64 images)
+  if (trimmed.startsWith('data:image/')) {
+    return trimmed;
+  }
+
+  // Handle HTTP/HTTPS URLs
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+
+  // Handle bare IPFS hashes (Qm... or bafy...)
+  if (trimmed.startsWith('Qm') || trimmed.startsWith('bafy')) {
+    return `https://ipfs.io/ipfs/${trimmed}`;
+  }
+
+  return null;
+}

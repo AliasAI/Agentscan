@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { DetailPageSkeleton } from '@/components/common/Skeleton'
 import { useToast } from '@/components/common/Toast'
 import { agentService } from '@/lib/api/services'
-import { formatAddress, formatDate } from '@/lib/utils/format'
+import { formatAddress, formatDate, resolveImageUrl } from '@/lib/utils/format'
 import { getNftExplorerUrl } from '@/lib/utils/network'
 import { NetworkIcon } from '@/components/common/NetworkIcons'
 import { OASFDetailTags } from '@/components/agent/OASFTags'
@@ -35,6 +35,7 @@ export default function AgentDetailPage() {
   // Metadata state - loaded inline
   const [metadataData, setMetadataData] = useState<MetadataResponse | null>(null)
   const [metadataLoading, setMetadataLoading] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -165,11 +166,28 @@ export default function AgentDetailPage() {
             <div className="flex items-start gap-4">
               {/* Agent avatar */}
               <div className="relative flex-shrink-0">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-[#f5f5f5] to-[#e5e5e5] dark:from-[#262626] dark:to-[#171717] rounded-2xl flex items-center justify-center">
-                  <span className="text-2xl lg:text-3xl font-bold text-[#a3a3a3] dark:text-[#525252]">
-                    {agent.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                {(() => {
+                  const imageUrl = resolveImageUrl(metadataData?.metadata?.image as string)
+                  const showImage = imageUrl && !imageError
+
+                  return showImage ? (
+                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-2xl overflow-hidden bg-gradient-to-br from-[#f5f5f5] to-[#e5e5e5] dark:from-[#262626] dark:to-[#171717]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imageUrl}
+                        alt={agent.name}
+                        className="w-full h-full object-cover"
+                        onError={() => setImageError(true)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-[#f5f5f5] to-[#e5e5e5] dark:from-[#262626] dark:to-[#171717] rounded-2xl flex items-center justify-center">
+                      <span className="text-2xl lg:text-3xl font-bold text-[#a3a3a3] dark:text-[#525252]">
+                        {agent.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )
+                })()}
                 {/* Status indicator */}
                 <div className={`absolute -bottom-1 -right-1 w-5 h-5 ${status.bg} rounded-full flex items-center justify-center border-2 border-[#fafafa] dark:border-[#0a0a0a]`}>
                   <div className={`w-2 h-2 rounded-full ${status.dot} ${agent.status === 'active' ? 'animate-pulse' : ''}`} />
