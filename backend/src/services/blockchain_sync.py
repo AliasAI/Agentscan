@@ -18,17 +18,28 @@ from src.core.reputation_config import REPUTATION_REGISTRY_ABI
 from src.core.networks_config import NETWORKS, get_network
 from src.models import (
     Agent, BlockchainSync, SyncStatusEnum, SyncStatus,
-    AgentStatus, Activity, ActivityType, Network
+    AgentStatus, Activity, ActivityType, Network, Feedback, Validation
 )
 from src.db.database import SessionLocal
 from src.services.ai_classifier import ai_classifier_service
+from src.taxonomies.oasf_taxonomy import OASF_SKILLS, OASF_DOMAINS
 import structlog
+from eth_abi import decode
 
 logger = structlog.get_logger()
 
 # Default sync configuration
 DEFAULT_BLOCKS_PER_BATCH = 1000
 DEFAULT_MAX_BATCHES_PER_RUN = 50
+
+# NewFeedback event topic (actual on-chain signature)
+NEWFEEDBACK_TOPIC = "0x31f01d2aa5cdbe0619011211e9ffc39d678bc82e46d60c35953396ae61e896d8"
+
+# Validation event topics
+# ValidationRequest(address indexed validatorAddress, uint256 indexed agentId, string requestUri, bytes32 indexed requestHash)
+VALIDATION_REQUEST_TOPIC = Web3.keccak(text="ValidationRequest(address,uint256,string,bytes32)").hex()
+# ValidationResponse(address indexed validatorAddress, uint256 indexed agentId, bytes32 indexed requestHash, uint8 response, string responseUri, bytes32 tag)
+VALIDATION_RESPONSE_TOPIC = Web3.keccak(text="ValidationResponse(address,uint256,bytes32,uint8,string,bytes32)").hex()
 
 
 class NetworkSyncService:
@@ -252,45 +263,266 @@ class NetworkSyncService:
         if self.reputation_contract:
             await self._process_reputation_events(db, from_block, to_block)
 
+        # Get validation events if validation contract is configured
+        validation_address = self.network_config.get("contracts", {}).get("validation")
+        if validation_address:
+            await self._process_validation_events(db, from_block, to_block)
+
     async def _process_reputation_events(
         self, db: Session, from_block: int, to_block: int
     ):
-        """Process reputation events (NewFeedback, FeedbackRevoked)"""
-        # Get NewFeedback events
-        feedback_events = self.reputation_contract.events.NewFeedback.get_logs(
-            from_block=from_block,
-            to_block=to_block
-        )
+        """Process reputation events using raw log parsing.
 
-        logger.info(
-            "events_found",
-            network=self.network_key,
-            event_type="NewFeedback",
-            count=len(feedback_events)
-        )
+        Uses raw eth_getLogs instead of ABI-based event parsing to handle
+        signature mismatches between our ABI and the actual on-chain contract.
+        """
+        reputation_address = self.network_config.get("contracts", {}).get("reputation")
+        if not reputation_address:
+            return
 
-        for i, event in enumerate(feedback_events):
-            await self._process_feedback_event(db, event)
-            if i < len(feedback_events) - 1:
-                await asyncio.sleep(REQUEST_DELAY_SECONDS)
+        # Get NewFeedback events using raw logs
+        try:
+            logs = await asyncio.to_thread(
+                self.w3.eth.get_logs,
+                {
+                    "address": reputation_address,
+                    "fromBlock": from_block,
+                    "toBlock": to_block,
+                    "topics": [NEWFEEDBACK_TOPIC]
+                }
+            )
 
-        # Get FeedbackRevoked events
-        revoked_events = self.reputation_contract.events.FeedbackRevoked.get_logs(
-            from_block=from_block,
-            to_block=to_block
-        )
+            logger.info(
+                "events_found",
+                network=self.network_key,
+                event_type="NewFeedback",
+                count=len(logs)
+            )
 
-        logger.info(
-            "events_found",
-            network=self.network_key,
-            event_type="FeedbackRevoked",
-            count=len(revoked_events)
-        )
+            for i, log in enumerate(logs):
+                await self._process_raw_feedback_log(db, log)
+                if i < len(logs) - 1:
+                    await asyncio.sleep(REQUEST_DELAY_SECONDS)
 
-        for i, event in enumerate(revoked_events):
-            await self._process_feedback_event(db, event)
-            if i < len(revoked_events) - 1:
-                await asyncio.sleep(REQUEST_DELAY_SECONDS)
+        except Exception as e:
+            logger.warning(
+                "feedback_events_query_failed",
+                network=self.network_key,
+                from_block=from_block,
+                to_block=to_block,
+                error=str(e)
+            )
+
+    async def _process_validation_events(
+        self, db: Session, from_block: int, to_block: int
+    ):
+        """Process validation events (ValidationRequest and ValidationResponse)."""
+        validation_address = self.network_config.get("contracts", {}).get("validation")
+        if not validation_address:
+            return
+
+        # Process ValidationRequest events
+        try:
+            request_logs = await asyncio.to_thread(
+                self.w3.eth.get_logs,
+                {
+                    "address": validation_address,
+                    "fromBlock": from_block,
+                    "toBlock": to_block,
+                    "topics": [VALIDATION_REQUEST_TOPIC]
+                }
+            )
+
+            logger.info(
+                "events_found",
+                network=self.network_key,
+                event_type="ValidationRequest",
+                count=len(request_logs)
+            )
+
+            for log in request_logs:
+                await self._process_validation_request_log(db, log)
+
+        except Exception as e:
+            logger.warning(
+                "validation_request_events_query_failed",
+                network=self.network_key,
+                from_block=from_block,
+                to_block=to_block,
+                error=str(e)
+            )
+
+        # Process ValidationResponse events
+        try:
+            response_logs = await asyncio.to_thread(
+                self.w3.eth.get_logs,
+                {
+                    "address": validation_address,
+                    "fromBlock": from_block,
+                    "toBlock": to_block,
+                    "topics": [VALIDATION_RESPONSE_TOPIC]
+                }
+            )
+
+            logger.info(
+                "events_found",
+                network=self.network_key,
+                event_type="ValidationResponse",
+                count=len(response_logs)
+            )
+
+            for log in response_logs:
+                await self._process_validation_response_log(db, log)
+
+        except Exception as e:
+            logger.warning(
+                "validation_response_events_query_failed",
+                network=self.network_key,
+                from_block=from_block,
+                to_block=to_block,
+                error=str(e)
+            )
+
+    async def _process_validation_request_log(self, db: Session, log: dict):
+        """Process ValidationRequest log and save to database."""
+        try:
+            # Parse indexed topics
+            # topics[0] = event sig, topics[1] = validatorAddress, topics[2] = agentId, topics[3] = requestHash
+            validator_address = "0x" + log["topics"][1].hex()[-40:]
+            agent_id = int(log["topics"][2].hex(), 16)
+            request_hash = "0x" + log["topics"][3].hex()
+
+            # Decode non-indexed data: (string requestUri)
+            data = bytes(log["data"])
+            decoded = decode(["string"], data)
+            request_uri = decoded[0]
+
+            # Get network ID and find agent
+            network_id = self._get_network_id(db)
+            agent = db.query(Agent).filter(
+                Agent.token_id == agent_id,
+                Agent.network_id == network_id
+            ).first()
+
+            if not agent:
+                logger.debug(
+                    "agent_not_found_for_validation",
+                    network=self.network_key,
+                    token_id=agent_id
+                )
+                return
+
+            # Check if validation already exists
+            existing = db.query(Validation).filter(
+                Validation.network_id == network_id,
+                Validation.request_hash == request_hash
+            ).first()
+
+            if existing:
+                return  # Already cached
+
+            # Get block timestamp
+            block = await asyncio.to_thread(
+                self.w3.eth.get_block, log["blockNumber"]
+            )
+            block_timestamp = datetime.fromtimestamp(block["timestamp"])
+
+            # Create validation record
+            validation = Validation(
+                agent_id=agent.id,
+                network_id=network_id,
+                token_id=agent_id,
+                request_hash=request_hash,
+                validator_address=validator_address.lower(),
+                request_uri=request_uri if request_uri else None,
+                request_block=log["blockNumber"],
+                request_tx_hash=log["transactionHash"].hex(),
+                requested_at=block_timestamp,
+                status="PENDING"
+            )
+            db.add(validation)
+            db.commit()
+
+            logger.info(
+                "validation_request_cached",
+                network=self.network_key,
+                token_id=agent_id,
+                request_hash=request_hash[:18] + "..."
+            )
+
+        except Exception as e:
+            logger.error(
+                "process_validation_request_failed",
+                network=self.network_key,
+                error=str(e)
+            )
+
+    async def _process_validation_response_log(self, db: Session, log: dict):
+        """Process ValidationResponse log and update existing validation record."""
+        try:
+            # Parse indexed topics
+            # topics[0] = event sig, topics[1] = validatorAddress, topics[2] = agentId, topics[3] = requestHash
+            request_hash = "0x" + log["topics"][3].hex()
+
+            # Decode non-indexed data: (uint8 response, string responseUri, bytes32 tag)
+            data = bytes(log["data"])
+            decoded = decode(["uint8", "string", "bytes32"], data)
+            response_score = decoded[0]
+            response_uri = decoded[1]
+            tag_bytes = decoded[2]
+
+            # Convert tag bytes32 to string
+            tag = None
+            if tag_bytes and any(b != 0 for b in tag_bytes):
+                tag = tag_bytes.rstrip(b'\x00').decode('utf-8', errors='ignore')
+
+            # Find existing validation
+            network_id = self._get_network_id(db)
+            validation = db.query(Validation).filter(
+                Validation.network_id == network_id,
+                Validation.request_hash == request_hash
+            ).first()
+
+            if not validation:
+                logger.debug(
+                    "validation_not_found_for_response",
+                    network=self.network_key,
+                    request_hash=request_hash[:18] + "..."
+                )
+                return
+
+            if validation.status == "COMPLETED":
+                return  # Already completed
+
+            # Get block timestamp
+            block = await asyncio.to_thread(
+                self.w3.eth.get_block, log["blockNumber"]
+            )
+            block_timestamp = datetime.fromtimestamp(block["timestamp"])
+
+            # Update validation with response
+            validation.response_score = response_score
+            validation.response_uri = response_uri if response_uri else None
+            validation.response_tag = tag
+            validation.response_block = log["blockNumber"]
+            validation.response_tx_hash = log["transactionHash"].hex()
+            validation.completed_at = block_timestamp
+            validation.status = "COMPLETED"
+            db.commit()
+
+            logger.info(
+                "validation_response_cached",
+                network=self.network_key,
+                request_hash=request_hash[:18] + "...",
+                response_score=response_score
+            )
+
+        except Exception as e:
+            logger.error(
+                "process_validation_response_failed",
+                network=self.network_key,
+                error=str(e)
+            )
 
     async def _process_registered_event(self, db: Session, event):
         """Process Registered event"""
@@ -443,6 +675,150 @@ class NetworkSyncService:
             network=self.network_key,
             token_id=token_id
         )
+
+    async def _process_raw_feedback_log(self, db: Session, log: dict):
+        """Process raw NewFeedback log and save to database.
+
+        Parses the raw log data and:
+        1. Saves Feedback record to database for caching
+        2. Updates Agent's reputation_score and reputation_count
+        """
+        try:
+            # Parse indexed topics
+            agent_id = int(log["topics"][1].hex(), 16)
+            client_address = "0x" + log["topics"][2].hex()[-40:]
+
+            # Decode non-indexed data
+            data = bytes(log["data"])
+            decoded = decode(
+                ["uint64", "uint8", "string", "string", "string", "string", "bytes32"],
+                data
+            )
+            feedback_index = decoded[0]
+            score = decoded[1]
+            tag1 = decoded[2]
+            tag2 = decoded[3]
+            endpoint = decoded[4]
+            feedback_uri = decoded[5]
+            feedback_hash = "0x" + decoded[6].hex()
+
+            # Get network ID and find agent
+            network_id = self._get_network_id(db)
+            agent = db.query(Agent).filter(
+                Agent.token_id == agent_id,
+                Agent.network_id == network_id
+            ).first()
+
+            if not agent:
+                logger.warning(
+                    "agent_not_found_for_feedback",
+                    network=self.network_key,
+                    token_id=agent_id
+                )
+                return
+
+            # Check if feedback already exists
+            existing = db.query(Feedback).filter(
+                Feedback.network_id == network_id,
+                Feedback.token_id == agent_id,
+                Feedback.client_address == client_address.lower(),
+                Feedback.feedback_index == feedback_index
+            ).first()
+
+            if existing:
+                logger.debug(
+                    "feedback_already_cached",
+                    network=self.network_key,
+                    token_id=agent_id,
+                    feedback_index=feedback_index
+                )
+                return
+
+            # Get block timestamp
+            block = await asyncio.to_thread(
+                self.w3.eth.get_block, log["blockNumber"]
+            )
+            block_timestamp = datetime.fromtimestamp(block["timestamp"])
+
+            # Create feedback record
+            feedback = Feedback(
+                agent_id=agent.id,
+                network_id=network_id,
+                token_id=agent_id,
+                feedback_index=feedback_index,
+                client_address=client_address.lower(),
+                score=score,
+                tag1=tag1 if tag1 else None,
+                tag2=tag2 if tag2 else None,
+                endpoint=endpoint if endpoint else None,
+                feedback_uri=feedback_uri if feedback_uri else None,
+                feedback_hash=feedback_hash if feedback_hash != "0x" + "00" * 32 else None,
+                is_revoked=False,
+                block_number=log["blockNumber"],
+                transaction_hash=log["transactionHash"].hex(),
+                timestamp=block_timestamp
+            )
+            db.add(feedback)
+
+            # Update agent reputation from on-chain
+            await self._update_agent_reputation(db, agent)
+
+            db.commit()
+
+            logger.info(
+                "feedback_cached",
+                network=self.network_key,
+                token_id=agent_id,
+                agent_name=agent.name,
+                score=score,
+                feedback_index=feedback_index,
+                client=client_address[:10] + "..."
+            )
+
+        except Exception as e:
+            logger.error(
+                "process_raw_feedback_failed",
+                network=self.network_key,
+                error=str(e),
+                log_tx=log.get("transactionHash", b"").hex() if log.get("transactionHash") else None
+            )
+
+    async def _update_agent_reputation(self, db: Session, agent: Agent):
+        """Update agent's reputation from on-chain getSummary call"""
+        if not self.reputation_contract:
+            return
+
+        try:
+            count, average_score = await asyncio.to_thread(
+                self.reputation_contract.functions.getSummary(
+                    agent.token_id,
+                    [],   # All clients
+                    "",   # tag1 = empty string (no filter)
+                    ""    # tag2 = empty string (no filter)
+                ).call
+            )
+
+            old_score = agent.reputation_score
+            agent.reputation_score = float(average_score)
+            agent.reputation_count = int(count)
+            agent.reputation_last_updated = datetime.utcnow()
+
+            # Create activity record if score changed significantly
+            if abs((old_score or 0) - float(average_score)) >= 0.1:
+                activity = Activity(
+                    agent_id=agent.id,
+                    activity_type=ActivityType.REPUTATION_UPDATE,
+                    description=f"Reputation updated: {old_score or 0:.1f} → {average_score:.1f} ({count} reviews)"
+                )
+                db.add(activity)
+
+        except Exception as e:
+            logger.warning(
+                "update_agent_reputation_failed",
+                network=self.network_key,
+                token_id=agent.token_id,
+                error=str(e)
+            )
 
     async def _process_feedback_event(self, db: Session, event):
         """Process NewFeedback or FeedbackRevoked event"""
@@ -721,29 +1097,47 @@ class NetworkSyncService:
         self, metadata: dict, name: str, description: str
     ) -> dict:
         """Extract or auto-classify OASF skills and domains"""
-        skills = []
-        domains = []
+        raw_skills = []
+        raw_domains = []
 
         # Try to extract from metadata endpoints
         if 'endpoints' in metadata and isinstance(metadata['endpoints'], list):
             for endpoint in metadata['endpoints']:
                 if isinstance(endpoint, dict):
                     if 'skills' in endpoint and isinstance(endpoint['skills'], list):
-                        skills.extend(endpoint['skills'])
+                        raw_skills.extend(endpoint['skills'])
                     if 'domains' in endpoint and isinstance(endpoint['domains'], list):
-                        domains.extend(endpoint['domains'])
+                        raw_domains.extend(endpoint['domains'])
 
-        if skills or domains:
+        # Validate extracted skills/domains against OASF standard
+        # Only include values that are in the official OASF taxonomy
+        valid_skills = [s for s in raw_skills if s in OASF_SKILLS]
+        valid_domains = [d for d in raw_domains if d in OASF_DOMAINS]
+
+        # Log invalid entries for debugging
+        invalid_skills = [s for s in raw_skills if s not in OASF_SKILLS]
+        invalid_domains = [d for d in raw_domains if d not in OASF_DOMAINS]
+        if invalid_skills or invalid_domains:
+            logger.debug(
+                "oasf_invalid_entries_filtered",
+                network=self.network_key,
+                name=name,
+                invalid_skills=invalid_skills[:3],
+                invalid_domains=invalid_domains[:3]
+            )
+
+        # Only set source="metadata" if we have valid OASF entries
+        if valid_skills or valid_domains:
             logger.info(
                 "oasf_extracted_from_metadata",
                 network=self.network_key,
                 name=name,
-                skills_count=len(skills),
-                domains_count=len(domains)
+                skills_count=len(valid_skills),
+                domains_count=len(valid_domains)
             )
             return {
-                "skills": list(set(skills))[:5],
-                "domains": list(set(domains))[:3],
+                "skills": list(set(valid_skills))[:5],
+                "domains": list(set(valid_domains))[:3],
                 "source": "metadata"
             }
 

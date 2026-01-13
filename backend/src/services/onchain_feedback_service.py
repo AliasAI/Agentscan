@@ -4,20 +4,26 @@ Fallback service for querying feedback events directly from the blockchain
 when Subgraph data is unavailable (e.g., for agents not indexed by the Subgraph).
 
 Supports multiple networks: Sepolia, Base Sepolia, Linea Sepolia, etc.
+
+Updated: Jan 2026 - Uses raw log parsing to handle ABI signature mismatch
 """
 
 import asyncio
 from typing import Optional
 import structlog
 from web3 import Web3
+from eth_abi import decode
 
 from src.core.networks_config import get_network
-from src.core.reputation_config import REPUTATION_REGISTRY_ABI
 
 logger = structlog.get_logger(__name__)
 
-# Batch size for scanning blocks (to avoid timeout)
-BLOCKS_PER_BATCH = 50000
+# Batch size for scanning blocks (reduced to avoid RPC limits)
+BLOCKS_PER_BATCH = 5000
+
+# NewFeedback event topic (actual on-chain signature)
+# This is the keccak256 hash of the event signature
+NEWFEEDBACK_TOPIC = "0x31f01d2aa5cdbe0619011211e9ffc39d678bc82e46d60c35953396ae61e896d8"
 
 
 class OnChainFeedbackService:
@@ -46,11 +52,8 @@ class OnChainFeedbackService:
         self._web3_clients[network_key] = w3
         return w3
 
-    def _get_contract(self, network_key: str):
-        """Get or create contract instance for a network"""
-        if network_key in self._contracts:
-            return self._contracts[network_key]
-
+    def _get_reputation_address(self, network_key: str) -> Optional[str]:
+        """Get reputation contract address for a network"""
         network = get_network(network_key)
         if not network:
             return None
@@ -63,16 +66,7 @@ class OnChainFeedbackService:
             )
             return None
 
-        w3 = self._get_web3(network_key)
-        if not w3:
-            return None
-
-        contract = w3.eth.contract(
-            address=reputation_address,
-            abi=REPUTATION_REGISTRY_ABI
-        )
-        self._contracts[network_key] = contract
-        return contract
+        return reputation_address
 
     async def get_agent_feedbacks(
         self,
@@ -138,7 +132,11 @@ class OnChainFeedbackService:
         token_id: int,
         network_key: str
     ) -> list[dict]:
-        """Fetch all NewFeedback events for an agent from specified network"""
+        """Fetch all NewFeedback events for an agent using raw log parsing.
+
+        Uses raw eth_getLogs instead of ABI-based event parsing to handle
+        signature mismatches between our ABI and the actual on-chain contract.
+        """
         feedbacks = []
 
         network = get_network(network_key)
@@ -147,9 +145,9 @@ class OnChainFeedbackService:
             return feedbacks
 
         w3 = self._get_web3(network_key)
-        contract = self._get_contract(network_key)
+        reputation_address = self._get_reputation_address(network_key)
 
-        if not w3 or not contract:
+        if not w3 or not reputation_address:
             logger.error(
                 "web3_or_contract_not_available",
                 network_key=network_key
@@ -160,6 +158,9 @@ class OnChainFeedbackService:
         current_block = w3.eth.block_number
         from_block = network.get("start_block", 0)
 
+        # Encode agentId as bytes32 for topic filter
+        agent_id_topic = "0x" + token_id.to_bytes(32, "big").hex()
+
         logger.info(
             "onchain_feedback_scan_started",
             token_id=token_id,
@@ -168,21 +169,36 @@ class OnChainFeedbackService:
             to_block=current_block
         )
 
-        # Scan in batches
+        # Scan in batches using raw logs
         while from_block <= current_block:
             to_block = min(from_block + BLOCKS_PER_BATCH - 1, current_block)
 
             try:
-                events = await asyncio.to_thread(
-                    contract.events.NewFeedback.get_logs,
-                    from_block=from_block,
-                    to_block=to_block,
-                    argument_filters={"agentId": token_id}
+                # Use raw eth_getLogs with topic filters
+                logs = await asyncio.to_thread(
+                    w3.eth.get_logs,
+                    {
+                        "address": reputation_address,
+                        "fromBlock": from_block,
+                        "toBlock": to_block,
+                        "topics": [
+                            NEWFEEDBACK_TOPIC,  # Event signature
+                            agent_id_topic,      # indexed agentId
+                        ]
+                    }
                 )
 
-                for event in events:
-                    feedback = self._parse_feedback_event(event, network_key)
-                    feedbacks.append(feedback)
+                for log in logs:
+                    try:
+                        feedback = self._parse_raw_feedback_log(log, network_key, w3)
+                        if feedback:
+                            feedbacks.append(feedback)
+                    except Exception as parse_err:
+                        logger.warning(
+                            "feedback_log_parse_error",
+                            block=log.get("blockNumber"),
+                            error=str(parse_err)
+                        )
 
             except Exception as e:
                 logger.warning(
@@ -205,37 +221,68 @@ class OnChainFeedbackService:
 
         return feedbacks
 
-    def _parse_feedback_event(self, event, network_key: str) -> dict:
-        """Parse a NewFeedback event into our response format
+    def _parse_raw_feedback_log(self, log, network_key: str, w3: Web3) -> dict:
+        """Parse a raw NewFeedback log into our response format.
 
-        Jan 2026 update: tag1/tag2 changed from bytes32 to string,
-        feedbackUri renamed to feedbackURI, added endpoint and feedbackIndex
+        Raw log structure:
+        - topics[0]: Event signature hash
+        - topics[1]: indexed agentId (uint256)
+        - topics[2]: indexed clientAddress (address)
+        - topics[3]: indexed tag1 hash (keccak256 of string)
+        - data: (uint64 feedbackIndex, uint8 score, string tag1, string tag2,
+                 string endpoint, string feedbackURI, bytes32 feedbackHash)
         """
-        args = event["args"]
-        block_number = event["blockNumber"]
-        tx_hash = event["transactionHash"].hex()
+        block_number = log["blockNumber"]
+        tx_hash = log["transactionHash"].hex()
+        log_index = log.get("logIndex", 0)
 
-        # Jan 2026: tags are now string type, not bytes32
-        # Handle both old (bytes32) and new (string) formats for compatibility
-        tag1 = self._parse_tag(args.get("tag1"))
-        tag2 = self._parse_tag(args.get("tag2"))
+        # Parse indexed parameters from topics
+        topics = log["topics"]
+        agent_id = int.from_bytes(topics[1], "big")
+        client_address = Web3.to_checksum_address("0x" + topics[2].hex()[-40:])
 
-        # Create unique ID from network + block + log index
-        log_index = event.get("logIndex", 0)
+        # Parse non-indexed parameters from data
+        data = log["data"]
+        if isinstance(data, str):
+            data = bytes.fromhex(data[2:] if data.startswith("0x") else data)
+
+        # Decode: (uint64, uint8, string, string, string, string, bytes32)
+        decoded = decode(
+            ["uint64", "uint8", "string", "string", "string", "string", "bytes32"],
+            data
+        )
+
+        feedback_index = decoded[0]
+        score = decoded[1]
+        tag1 = decoded[2]
+        tag2 = decoded[3]
+        endpoint = decoded[4]
+        feedback_uri = decoded[5]
+        feedback_hash = decoded[6]
+
+        # Get block timestamp
+        timestamp = None
+        try:
+            block = w3.eth.get_block(block_number)
+            from datetime import datetime
+            timestamp = datetime.utcfromtimestamp(block.timestamp).isoformat() + "Z"
+        except Exception:
+            pass
+
         feedback_id = f"{network_key}-{block_number}-{log_index}"
 
         return {
             "id": feedback_id,
-            "score": args.get("score", 0),
-            "client_address": args.get("clientAddress", ""),
-            "feedback_index": args.get("feedbackIndex"),  # New in Jan 2026
-            "tag1": tag1,
-            "tag2": tag2,
-            "endpoint": args.get("endpoint"),  # New in Jan 2026
-            "feedback_uri": args.get("feedbackURI") or args.get("feedbackUri"),  # Support both cases
-            "feedback_hash": self._bytes32_to_hex(args.get("feedbackHash")),
-            "is_revoked": False,  # We'd need to check FeedbackRevoked events
-            "timestamp": None,  # Block timestamp would require additional call
+            "score": score,
+            "client_address": client_address,
+            "feedback_index": feedback_index,
+            "tag1": tag1 if tag1 else None,
+            "tag2": tag2 if tag2 else None,
+            "endpoint": endpoint if endpoint else None,
+            "feedback_uri": feedback_uri if feedback_uri else None,
+            "feedback_hash": "0x" + feedback_hash.hex() if feedback_hash else None,
+            "is_revoked": False,
+            "timestamp": timestamp,
             "block_number": block_number,
             "transaction_hash": tx_hash,
         }

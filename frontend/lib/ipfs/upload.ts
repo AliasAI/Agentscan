@@ -137,3 +137,101 @@ export function validateMetadata(metadata: AgentMetadata): string | null {
   }
   return null
 }
+
+// =============================================================================
+// Feedback Metadata (for Write Review feature)
+// =============================================================================
+
+export interface FeedbackMetadata {
+  agentId: number
+  score: number          // 0-100
+  tag1: string
+  tag2: string
+  endpoint: string
+  review?: string        // Optional review text
+  clientAddress: string
+  timestamp: string
+}
+
+/**
+ * Upload feedback metadata to IPFS via Pinata
+ *
+ * @param metadata - Feedback metadata object
+ * @returns Object containing IPFS URI and content hash
+ */
+export async function uploadFeedbackToIPFS(
+  metadata: FeedbackMetadata
+): Promise<{ uri: string; hash: `0x${string}` }> {
+  const headers = getPinataHeaders()
+
+  const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      pinataContent: metadata,
+      pinataMetadata: {
+        name: `feedback-agent${metadata.agentId}-${Date.now()}`,
+      },
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Failed to upload feedback to IPFS: ${error}`)
+  }
+
+  const data: PinataResponse = await response.json()
+  const uri = `ipfs://${data.IpfsHash}`
+
+  // Calculate keccak256 hash of the content for on-chain verification
+  const contentString = JSON.stringify(metadata)
+  const hash = await hashContent(contentString)
+
+  return { uri, hash }
+}
+
+/**
+ * Calculate keccak256 hash of content string
+ * Uses Web Crypto API with fallback
+ */
+async function hashContent(content: string): Promise<`0x${string}`> {
+  // Use viem's keccak256 if available (it handles string encoding properly)
+  try {
+    const { keccak256, toBytes } = await import('viem')
+    const hash = keccak256(toBytes(content))
+    return hash
+  } catch {
+    // Fallback: use a simple hash (not cryptographically secure, but works)
+    // In production, viem should always be available
+    const encoder = new TextEncoder()
+    const data = encoder.encode(content)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+    return `0x${hashHex}` as `0x${string}`
+  }
+}
+
+/**
+ * Build feedback metadata object from form data
+ */
+export function buildFeedbackMetadata(
+  agentId: number,
+  score: number,
+  tag1: string,
+  tag2: string,
+  endpoint: string,
+  clientAddress: string,
+  review?: string
+): FeedbackMetadata {
+  return {
+    agentId,
+    score,
+    tag1,
+    tag2,
+    endpoint,
+    review: review?.trim() || undefined,
+    clientAddress,
+    timestamp: new Date().toISOString(),
+  }
+}

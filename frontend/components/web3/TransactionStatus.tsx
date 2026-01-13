@@ -17,6 +17,9 @@ interface TransactionStatusProps {
   error?: string
   onReset?: () => void
   onCancel?: () => void // Allow user to cancel pending transaction
+  // Custom messages for different contexts
+  successTitle?: string
+  successDescription?: string
 }
 
 export function TransactionStatus({
@@ -26,6 +29,8 @@ export function TransactionStatus({
   error,
   onReset,
   onCancel,
+  successTitle = 'Transaction successful!',
+  successDescription = 'Your transaction has been confirmed on-chain',
 }: TransactionStatusProps) {
   if (status === 'idle') return null
 
@@ -82,7 +87,7 @@ export function TransactionStatus({
             {status === 'uploading' && 'Uploading to IPFS...'}
             {status === 'pending' && 'Waiting for wallet...'}
             {status === 'confirming' && 'Confirming transaction...'}
-            {status === 'success' && 'Agent created successfully!'}
+            {status === 'success' && successTitle}
             {status === 'error' && 'Transaction failed'}
           </h4>
 
@@ -98,7 +103,7 @@ export function TransactionStatus({
             {status === 'uploading' && 'Please wait while metadata is being uploaded...'}
             {status === 'pending' && 'Please confirm the transaction in your wallet'}
             {status === 'confirming' && 'Transaction submitted, waiting for confirmation...'}
-            {status === 'success' && 'Your agent has been registered on-chain'}
+            {status === 'success' && successDescription}
             {status === 'error' && (error || 'An error occurred')}
           </p>
 

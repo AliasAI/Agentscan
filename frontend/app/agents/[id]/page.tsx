@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { DetailPageSkeleton } from '@/components/common/Skeleton'
@@ -21,6 +21,7 @@ import {
   StatsGrid
 } from '@/components/agent/AgentDetailComponents'
 import { MetadataViewer } from '@/components/agent/MetadataViewer'
+import { WriteReviewModal } from '@/components/agent/WriteReviewModal'
 import type { Agent, MetadataResponse } from '@/types'
 
 export default function AgentDetailPage() {
@@ -36,6 +37,10 @@ export default function AgentDetailPage() {
   const [metadataData, setMetadataData] = useState<MetadataResponse | null>(null)
   const [metadataLoading, setMetadataLoading] = useState(false)
   const [imageError, setImageError] = useState(false)
+
+  // Write Review modal state
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,7 +79,15 @@ export default function AgentDetailPage() {
     }
 
     fetchData()
-  }, [agentId])
+  }, [agentId, refreshKey])
+
+  // Handle successful review submission
+  const handleReviewSuccess = useCallback(() => {
+    setIsReviewModalOpen(false)
+    toast.success('Review submitted successfully!')
+    // Trigger data refresh
+    setRefreshKey((prev) => prev + 1)
+  }, [toast])
 
   const copyToClipboard = async (text: string, label: string = 'Text') => {
     try {
@@ -445,10 +458,22 @@ export default function AgentDetailPage() {
                 Quick Actions
               </h2>
               <div className="space-y-2">
+                {/* Write Review - Primary action */}
+                {agent.token_id !== undefined && agent.token_id !== null && (
+                  <button
+                    onClick={() => setIsReviewModalOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] rounded-lg text-sm font-medium hover:bg-[#262626] dark:hover:bg-[#e5e5e5] transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Write Review
+                  </button>
+                )}
                 {agent.owner_address && (
                   <button
                     onClick={() => copyToClipboard(agent.owner_address!, 'Owner Address')}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] rounded-lg text-sm font-medium hover:bg-[#262626] dark:hover:bg-[#e5e5e5] transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#f5f5f5] dark:bg-[#262626] text-[#0a0a0a] dark:text-[#fafafa] rounded-lg text-sm font-medium hover:bg-[#e5e5e5] dark:hover:bg-[#404040] transition-colors"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/>
@@ -480,6 +505,16 @@ export default function AgentDetailPage() {
         </div>
       </div>
 
+      {/* Write Review Modal */}
+      {agent.token_id !== undefined && agent.token_id !== null && (
+        <WriteReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => setIsReviewModalOpen(false)}
+          agentId={agent.token_id}
+          agentName={agent.name}
+          onSuccess={handleReviewSuccess}
+        />
+      )}
     </div>
   )
 }

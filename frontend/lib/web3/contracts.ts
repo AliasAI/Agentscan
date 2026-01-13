@@ -120,3 +120,115 @@ export function getTransactionUrl(chainId: number, txHash: string): string {
   const explorer = BLOCK_EXPLORERS[chainId] || 'https://etherscan.io'
   return `${explorer}/tx/${txHash}`
 }
+
+// =============================================================================
+// Reputation Registry Contract (Jan 2026 Update)
+// =============================================================================
+
+// Reputation Registry ABI - for submitting feedback/reviews
+// Jan 2026 Update: feedbackAuth removed, any wallet can submit reviews
+export const REPUTATION_REGISTRY_ABI = [
+  // Submit feedback - no longer requires agent signature (Jan 2026)
+  {
+    inputs: [
+      { name: 'agentId', type: 'uint256' },
+      { name: 'score', type: 'uint8' },
+      { name: 'tag1', type: 'string' },
+      { name: 'tag2', type: 'string' },
+      { name: 'endpoint', type: 'string' },
+      { name: 'feedbackURI', type: 'string' },
+      { name: 'feedbackHash', type: 'bytes32' },
+    ],
+    name: 'giveFeedback',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  // Revoke feedback
+  {
+    inputs: [
+      { name: 'agentId', type: 'uint256' },
+      { name: 'feedbackIndex', type: 'uint64' },
+    ],
+    name: 'revokeFeedback',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  // Read feedback
+  {
+    inputs: [
+      { name: 'agentId', type: 'uint256' },
+      { name: 'clientAddress', type: 'address' },
+      { name: 'feedbackIndex', type: 'uint64' },
+    ],
+    name: 'readFeedback',
+    outputs: [
+      { name: 'score', type: 'uint8' },
+      { name: 'tag1', type: 'string' },
+      { name: 'tag2', type: 'string' },
+      { name: 'endpoint', type: 'string' },
+      { name: 'feedbackURI', type: 'string' },
+      { name: 'feedbackHash', type: 'bytes32' },
+      { name: 'isRevoked', type: 'bool' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  // Get summary
+  {
+    inputs: [
+      { name: 'agentId', type: 'uint256' },
+      { name: 'clientAddresses', type: 'address[]' },
+      { name: 'tag1', type: 'string' },
+      { name: 'tag2', type: 'string' },
+    ],
+    name: 'getSummary',
+    outputs: [
+      { name: 'count', type: 'uint256' },
+      { name: 'averageScore', type: 'uint8' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  // NewFeedback event (Jan 2026 update: tag1/tag2 now string, added feedbackIndex)
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'agentId', type: 'uint256' },
+      { indexed: true, name: 'clientAddress', type: 'address' },
+      { indexed: false, name: 'feedbackIndex', type: 'uint64' },
+      { indexed: false, name: 'score', type: 'uint8' },
+      { indexed: true, name: 'tag1', type: 'string' },
+      { indexed: false, name: 'tag2', type: 'string' },
+      { indexed: false, name: 'endpoint', type: 'string' },
+      { indexed: false, name: 'feedbackURI', type: 'string' },
+      { indexed: false, name: 'feedbackHash', type: 'bytes32' },
+    ],
+    name: 'NewFeedback',
+    type: 'event',
+  },
+  // FeedbackRevoked event
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'agentId', type: 'uint256' },
+      { indexed: true, name: 'clientAddress', type: 'address' },
+      { indexed: false, name: 'feedbackIndex', type: 'uint64' },
+    ],
+    name: 'FeedbackRevoked',
+    type: 'event',
+  },
+] as const satisfies Abi
+
+// Reputation Registry contract addresses per chain
+// Updated: Jan 2026 Test Net deployment
+export const REPUTATION_CONTRACTS: Record<number, Address> = {
+  11155111: '0x8004B663056A597Dffe9eCcC1965A193B7388713', // Sepolia (Jan 2026)
+  // Other networks pending deployment
+}
+
+// Get reputation contract address for a chain
+export function getReputationContract(chainId: number): Address | undefined {
+  return REPUTATION_CONTRACTS[chainId]
+}
