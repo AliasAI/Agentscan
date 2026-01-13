@@ -56,3 +56,6 @@ Thumbs.db
 
 # gemini
 .gemini-clipboard
+
+# Playwright MCP
+.playwright-mcp/
