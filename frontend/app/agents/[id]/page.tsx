@@ -20,7 +20,8 @@ import {
   VerifiedBadge,
   StatsGrid
 } from '@/components/agent/AgentDetailComponents'
-import type { Agent } from '@/types'
+import { MetadataViewer } from '@/components/agent/MetadataViewer'
+import type { Agent, MetadataResponse } from '@/types'
 
 export default function AgentDetailPage() {
   const params = useParams()
@@ -31,12 +32,38 @@ export default function AgentDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Metadata state - loaded inline
+  const [metadataData, setMetadataData] = useState<MetadataResponse | null>(null)
+  const [metadataLoading, setMetadataLoading] = useState(false)
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
         const agentData = await agentService.getAgentById(agentId)
         setAgent(agentData)
+
+        // Fetch metadata inline if agent has metadata_uri
+        if (agentData.metadata_uri) {
+          setMetadataLoading(true)
+          try {
+            const metadata = await agentService.getAgentMetadata(agentId)
+            setMetadataData(metadata)
+          } catch (metaErr) {
+            console.error('Failed to fetch metadata:', metaErr)
+            setMetadataData({
+              raw_uri: agentData.metadata_uri,
+              resolved_url: '',
+              uri_type: 'empty',
+              metadata: null,
+              success: false,
+              error: 'Failed to fetch metadata',
+              fetch_time_ms: 0,
+            })
+          } finally {
+            setMetadataLoading(false)
+          }
+        }
       } catch (err) {
         console.error('Failed to fetch agent details:', err)
         setError('Failed to load agent details')
@@ -255,6 +282,22 @@ export default function AgentDetailPage() {
                   }
                   action={<CopyButton text={agent.owner_address || agent.address} label="Address" />}
                 />
+                {agent.agent_wallet && (
+                  <InfoRow
+                    label="Agent Wallet"
+                    value={
+                      <span className="font-mono text-xs flex items-center gap-1.5">
+                        <span className="inline-flex items-center justify-center w-4 h-4 bg-[#dcfce7] dark:bg-[#14532d]/30 rounded">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-[#16a34a]">
+                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </span>
+                        {formatAddress(agent.agent_wallet, 10)}
+                      </span>
+                    }
+                    action={<CopyButton text={agent.agent_wallet} label="Agent Wallet" />}
+                  />
+                )}
                 <InfoRow
                   label="Reputation"
                   value={
@@ -289,50 +332,46 @@ export default function AgentDetailPage() {
               </div>
             )}
 
-            {/* Blockchain Data */}
-            {agent.token_id !== undefined && agent.token_id !== null && (
-              <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
-                <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] uppercase tracking-wider mb-4">
-                  Blockchain Data
-                </h2>
-                <div>
-                  {agent.metadata_uri && (
-                    <div className="py-3 border-b border-[#f5f5f5] dark:border-[#1f1f1f]">
-                      <span className="text-xs text-[#737373] dark:text-[#737373] font-medium block mb-2">
-                        Metadata URI
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={agent.metadata_uri.startsWith('ipfs://')
-                            ? `https://ipfs.io/ipfs/${agent.metadata_uri.slice(7)}`
-                            : agent.metadata_uri
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-mono text-[#525252] dark:text-[#a3a3a3] hover:text-[#0a0a0a] dark:hover:text-[#fafafa] transition-colors truncate flex-1"
-                        >
-                          {agent.metadata_uri}
-                        </a>
-                        <CopyButton text={agent.metadata_uri} label="URI" />
+            {/* Agent Metadata - Inline display */}
+            {agent.metadata_uri && (
+              <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden animate-fade-in" style={{ animationDelay: '150ms' }}>
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-[#e5e5e5] dark:border-[#262626]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-[#f5f5f5] dark:bg-[#262626] flex items-center justify-center">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#525252] dark:text-[#a3a3a3]">
+                          <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                          Agent Metadata
+                        </h2>
+                        <p className="text-xs text-[#737373] mt-0.5">
+                          ERC-8004 Registration Data
+                        </p>
                       </div>
                     </div>
-                  )}
-                  {agent.last_synced_at && (
-                    <InfoRow label="Last Synced" value={formatDate(agent.last_synced_at)} isLast />
-                  )}
+                    {metadataData?.uri_type && (
+                      <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        {metadataData.uri_type.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* On-chain Data */}
-            {agent.on_chain_data && Object.keys(agent.on_chain_data).length > 0 && (
-              <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
-                <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] uppercase tracking-wider mb-4">
-                  On-chain Metadata
-                </h2>
-                <pre className="bg-[#fafafa] dark:bg-[#0a0a0a] p-4 rounded-lg text-xs overflow-x-auto text-[#525252] dark:text-[#a3a3a3] font-mono leading-relaxed">
-                  {JSON.stringify(agent.on_chain_data, null, 2)}
-                </pre>
+                {/* Content */}
+                <div className="p-6">
+                  <MetadataViewer
+                    metadata={metadataData?.metadata || null}
+                    loading={metadataLoading}
+                    error={metadataData?.error}
+                    uriType={metadataData?.uri_type}
+                    resolvedUrl={metadataData?.resolved_url}
+                    fetchTimeMs={metadataData?.fetch_time_ms}
+                  />
+                </div>
               </div>
             )}
 
@@ -422,6 +461,7 @@ export default function AgentDetailPage() {
           </div>
         </div>
       </div>
+
     </div>
   )
 }

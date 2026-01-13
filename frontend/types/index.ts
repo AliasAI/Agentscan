@@ -38,6 +38,9 @@ export interface Agent {
   last_synced_at?: string;
   sync_status?: SyncStatus;
 
+  // Jan 2026 ERC-8004: agentWallet (verifiable agent-controlled wallet)
+  agent_wallet?: string;
+
   // Reputation data fields
   reputation_count?: number;
   reputation_last_updated?: string;
@@ -330,3 +333,14 @@ export interface TaxonomyResponse {
 
 // Transaction status for UI
 export type TransactionStatus = 'idle' | 'uploading' | 'pending' | 'confirming' | 'success' | 'error';
+
+// Metadata API Response (for real-time metadata fetching)
+export interface MetadataResponse {
+  raw_uri: string;
+  resolved_url: string;
+  uri_type: 'ipfs' | 'data' | 'http' | 'json' | 'empty';
+  metadata: Record<string, unknown> | null;
+  success: boolean;
+  error?: string;
+  fetch_time_ms: number;
+}

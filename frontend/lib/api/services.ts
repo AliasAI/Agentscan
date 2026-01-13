@@ -15,6 +15,7 @@ import type {
   ReputationSummary,
   AgentEndpointReport,
   EndpointHealthSummaryResponse,
+  MetadataResponse,
 } from '@/types';
 
 // 统计数据服务
@@ -54,6 +55,10 @@ export const agentService = {
 
   getAgentById: (id: string) =>
     apiGet<Agent>(`/agents/${id}`),
+
+  // Fetch agent's metadata in real-time (resolves IPFS/data URI)
+  getAgentMetadata: (id: string) =>
+    apiGet<MetadataResponse>(`/agents/${id}/metadata`),
 };
 
 // 网络服务

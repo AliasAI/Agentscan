@@ -51,6 +51,9 @@ class AgentResponse(AgentBase):
     last_synced_at: datetime | None = None
     sync_status: SyncStatus | None = None
 
+    # Jan 2026 ERC-8004: agentWallet (extracted from on_chain_data for convenience)
+    agent_wallet: str | None = None
+
     # Reputation data fields
     reputation_count: int = 0
     reputation_last_updated: datetime | None = None
@@ -65,6 +68,11 @@ class AgentResponse(AgentBase):
     @classmethod
     def from_orm_with_network(cls, agent) -> "AgentResponse":
         """从 ORM 对象创建响应，包含网络名称"""
+        # Extract agentWallet from on_chain_data if present
+        agent_wallet = None
+        if agent.on_chain_data and isinstance(agent.on_chain_data, dict):
+            agent_wallet = agent.on_chain_data.get("agentWallet")
+
         data = {
             "id": agent.id,
             "name": agent.name,
@@ -82,6 +90,7 @@ class AgentResponse(AgentBase):
             "on_chain_data": agent.on_chain_data,
             "last_synced_at": agent.last_synced_at,
             "sync_status": agent.sync_status,
+            "agent_wallet": agent_wallet,
             "reputation_count": agent.reputation_count or 0,
             "reputation_last_updated": agent.reputation_last_updated,
             "skills": agent.skills,
