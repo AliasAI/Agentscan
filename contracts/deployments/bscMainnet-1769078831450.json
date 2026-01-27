@@ -1,0 +1,11 @@
+{
+  "network": "bscMainnet",
+  "chainId": 56,
+  "deployer": "0x1832eb84bcf7a97aa9c1c58329fa47ff3c9da41d",
+  "identityImplementation": "0x01087213e3934bc156194e0d8a9c00f09874c572",
+  "reputationImplementation": "0xe55d10f699bcf2207573b7be697c983c0d92c2b5",
+  "identityProxy": "0xd2184d4377b2dc4fcc9ad8f2f0b9842bf6f1a19f",
+  "reputationProxy": "0xcd40e749c64761da2298436fe0ea4dc23f58c1f3",
+  "timestamp": "2026-01-22T10:47:11.450Z",
+  "blockNumber": 76742171
+}

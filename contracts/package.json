@@ -1,0 +1,25 @@
+{
+  "name": "erc8004-bsc-deployment",
+  "version": "1.0.0",
+  "description": "ERC-8004 / BEP-620 contract deployment for BNB Smart Chain",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:bsc-testnet": "hardhat run scripts/deploy.ts --network bscTestnet",
+    "deploy:bsc-mainnet": "hardhat run scripts/deploy.ts --network bscMainnet",
+    "verify:bsc-testnet": "hardhat run scripts/verify.ts --network bscTestnet",
+    "verify:bsc-mainnet": "hardhat run scripts/verify.ts --network bscMainnet"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "@openzeppelin/hardhat-upgrades": "^3.0.5",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.0",
+    "typescript": "^5.4.0",
+    "viem": "^2.21.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
