@@ -235,12 +235,21 @@ async def get_agent_reputation_summary(
 
     # Use cache only if it has ALL feedbacks
     if db_count >= onchain_count and db_count > 0:
-        # Calculate from cache
-        result = db.query(func.avg(Feedback.score)).filter(
+        # Calculate from cache - need to handle value_decimals
+        feedbacks = db.query(Feedback.value, Feedback.value_decimals).filter(
             Feedback.agent_id == agent_id,
             Feedback.is_revoked == False
-        ).scalar()
-        average_score = float(result) if result else 0.0
+        ).all()
+
+        if feedbacks:
+            # Calculate actual values with decimals and average them
+            actual_values = [
+                fb.value / (10 ** fb.value_decimals) if fb.value_decimals else fb.value
+                for fb in feedbacks
+            ]
+            average_score = sum(actual_values) / len(actual_values)
+        else:
+            average_score = 0.0
 
         validation_count = db.query(Validation).filter(
             Validation.agent_id == agent_id

@@ -10,7 +10,10 @@ Migration logic:
 3. Drop score column (SQLite requires table recreation)
 """
 
+import os
 import sqlite3
+from pathlib import Path
+
 import structlog
 from dotenv import load_dotenv
 
@@ -19,15 +22,37 @@ load_dotenv()
 logger = structlog.get_logger(__name__)
 
 
+def _get_db_path() -> Path:
+    """Get database path from environment"""
+    db_url = os.getenv("DATABASE_URL", "sqlite:///./8004scan.db")
+    if db_url.startswith("sqlite:///"):
+        db_path = db_url.replace("sqlite:///", "")
+        # Handle relative path
+        if not db_path.startswith("/"):
+            db_path = Path(__file__).parent.parent.parent / db_path
+        return Path(db_path)
+    raise ValueError("This migration only works with SQLite databases")
+
+
 def migrate():
     """Run the migration"""
-    conn = sqlite3.connect("8004scan.db")
+    db_path = _get_db_path()
+    if not db_path.exists():
+        logger.info("feedback_value_migration_skipped", reason="db_not_exists")
+        return
+
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     try:
         # Check if migration is needed
         cursor.execute("PRAGMA table_info(feedbacks)")
         columns = {col[1] for col in cursor.fetchall()}
+
+        # If table doesn't exist yet, skip - create_all() will create it with correct schema
+        if not columns:
+            logger.info("feedback_value_migration_skipped", reason="table_not_exists")
+            return
 
         # If value column already exists, migration is done
         if "value" in columns and "value_decimals" in columns:
