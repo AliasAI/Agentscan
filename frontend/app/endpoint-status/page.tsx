@@ -631,11 +631,11 @@ function AgentReportCard({
                   >
                     <div className="flex items-center gap-3">
                       <div className={`px-2 py-1 rounded text-xs font-medium ${
-                        feedback.score >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                        feedback.score >= 50 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                        feedback.value >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                        feedback.value >= 50 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
                         'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                       }`}>
-                        {feedback.score}
+                        {feedback.display_value || feedback.value}
                       </div>
                       <span className="text-xs text-[#737373] font-mono">
                         {feedback.client_address?.slice(0, 6)}...{feedback.client_address?.slice(-4)}
