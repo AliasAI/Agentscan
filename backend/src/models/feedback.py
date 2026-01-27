@@ -2,12 +2,16 @@
 
 Stores on-chain feedback/review data for fast retrieval.
 Synced from NewFeedback events during blockchain sync.
+
+Updated: Jan 27, 2026 - ERC-8004 mainnet freeze
+  - score (uint8) → value (int128) + value_decimals (uint8)
+  - Supports decimals, negative numbers, and values > 100
 """
 
 import uuid
 from datetime import datetime
 from sqlalchemy import (
-    Column, String, Integer, Boolean, DateTime,
+    Column, String, Integer, BigInteger, Boolean, DateTime,
     ForeignKey, Text, Index
 )
 from sqlalchemy.orm import relationship
@@ -32,9 +36,13 @@ class Feedback(Base):
     feedback_index = Column(Integer, nullable=False)  # Per-client feedback index
     client_address = Column(String(42), nullable=False, index=True)
 
-    # Feedback content
-    score = Column(Integer, nullable=False)  # 0-100
-    tag1 = Column(String(100), nullable=True)
+    # Feedback content (Jan 2026 update: score → value/value_decimals)
+    # value: int128 on-chain, supports negative numbers and large values
+    # value_decimals: number of decimal places (0-18)
+    # Example: 99.77% uptime → value=9977, value_decimals=2
+    value = Column(BigInteger, nullable=False)  # int128 as BigInteger
+    value_decimals = Column(Integer, nullable=False, default=0)  # 0-18
+    tag1 = Column(String(100), nullable=True)  # Standard tags: starred, uptime, etc.
     tag2 = Column(String(100), nullable=True)
     endpoint = Column(String(500), nullable=True)
     feedback_uri = Column(Text, nullable=True)  # IPFS URI
@@ -63,11 +71,46 @@ class Feedback(Base):
         Index('ix_feedback_unique', 'network_id', 'token_id', 'client_address', 'feedback_index', unique=True),
     )
 
+    @property
+    def display_value(self) -> str:
+        """Format value for display based on tag1 type"""
+        if self.value is None:
+            return "N/A"
+
+        # Calculate actual value with decimals
+        actual = self.value / (10 ** self.value_decimals) if self.value_decimals else self.value
+
+        # Format based on tag1 type
+        tag = (self.tag1 or "").lower()
+
+        if tag in ("uptime", "successrate"):
+            return f"{actual:.{self.value_decimals}f}%"
+        elif tag == "responsetime":
+            return f"{int(actual)}ms"
+        elif tag in ("reachable", "ownerverified"):
+            return "Yes" if actual == 1 else "No"
+        elif tag == "revenues":
+            return f"${actual:,.0f}"
+        elif tag == "tradingyield":
+            sign = "+" if actual > 0 else ""
+            return f"{sign}{actual:.{self.value_decimals}f}%"
+        elif tag == "blocktimefreshness":
+            return f"{int(actual)} blocks"
+        elif tag == "starred":
+            return f"{int(actual)}/100"
+        else:
+            # Default: show raw value with decimals
+            if self.value_decimals > 0:
+                return f"{actual:.{self.value_decimals}f}"
+            return str(int(actual))
+
     def to_dict(self) -> dict:
         """Convert to API response format"""
         return {
             "id": self.id,
-            "score": self.score,
+            "value": self.value,
+            "value_decimals": self.value_decimals,
+            "display_value": self.display_value,
             "client_address": self.client_address,
             "feedback_index": self.feedback_index,
             "tag1": self.tag1,

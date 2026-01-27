@@ -288,11 +288,18 @@ Agent 模型保存到数据库
 - Blockchain Sync: 每小时 :00, :10, :20, :30, :40, :50 执行（每天 144 次）
 - Reputation Sync: 事件驱动（监听 NewFeedback/FeedbackRevoked 事件，零定期轮询）
 
-### ERC-8004 Jan 2026 规范更新 [UPDATED: 2026-01-12]
+### ERC-8004 Jan 2026 规范更新 [UPDATED: 2026-01-27]
 
-> **重要**：ERC-8004 在 2026 年 1 月 9 日发布了重大规范更新，整合了测试网阶段的社区反馈。
-> - 旧规范（Oct 9）：`ethereum/ERCs@cb7ae28...`
-> - 新规范（Jan 9）：`ethereum/ERCs@e8e4955...`
+> **🧊 规范已冻结**：ERC-8004 规范已于 2026-01-27 冻结，主网上线预计在本周四（~2026-01-30）9 AM ET。
+>
+> **更新历史：**
+> - Jan 9：重大规范更新（feedbackAuth 移除、agentWallet 验证等）
+> - **Jan 27：主网冻结版本**（score → value/valueDecimals、tag1 标准化、endpoints → services）
+>
+> 参考资料：
+> - 最新 Specs: https://eips.ethereum.org/EIPS/eip-8004
+> - Registration 最佳实践: https://github.com/erc-8004/best-practices/blob/main/Registration.md
+> - Reputation 最佳实践: https://github.com/erc-8004/best-practices/blob/main/Reputation.md
 
 #### 最重要的变更
 
@@ -345,29 +352,61 @@ giveFeedback(uint256 agentId, uint8 score, string tag1, string tag2,
 
 #### Reputation Registry 变更
 
+**🆕 Jan 27 主网冻结：score → value/valueDecimals**
+
+| 项目 | 旧版本 | 新版本 |
+|------|--------|--------|
+| 评分字段 | `uint8 score` (0-100) | `int128 value` + `uint8 valueDecimals` |
+| 支持范围 | 仅 0-100 整数 | 小数、负数、大于 100 的值 |
+| getSummary 返回 | `(count, averageScore)` | `(count, averageValue, valueDecimals)` |
+
+**为什么这个变更很重要：**
+
+| 场景 | 旧版本 | 新版本 (value, decimals) |
+|------|--------|-------------------------|
+| 成功率 99.77% | ❌ 只能近似为 100 | ✅ (9977, 2) |
+| 交易收益 -3.2% | ❌ 不支持负数 | ✅ (-32, 1) |
+| 累计收入 $556,000 | ❌ 最大 100 | ✅ (556000, 0) |
+| 响应时间 560ms | ❌ 超出范围 | ✅ (560, 0) |
+
+**标准化 tag1 值（Best Practices）：**
+
+| tag1 | 测量类型 | 示例 | value | valueDecimals |
+|------|---------|------|-------|---------------|
+| `starred` | 质量评分 (0-100) | 87/100 | 87 | 0 |
+| `reachable` | 可达性 (二进制) | true | 1 | 0 |
+| `ownerVerified` | 所有者验证 | true | 1 | 0 |
+| `uptime` | 正常运行时间 | 99.77% | 9977 | 2 |
+| `successRate` | 成功率 | 89% | 89 | 0 |
+| `responseTime` | 响应时间 (ms) | 560ms | 560 | 0 |
+| `blocktimeFreshness` | 区块延迟 | 4 blocks | 4 | 0 |
+| `revenues` | 累计收入 | $560 | 560 | 0 |
+| `tradingYield` | 交易收益率 | -3.2% | -32 | 1 |
+
 **字段类型变更：**
 - `tag1`, `tag2`: `bytes32` → `string`
 - `fileuri` → `feedbackURI`
 - `filehash` → `feedbackHash`
 - 新增 `endpoint` 参数
 
-**NewFeedback 事件扩展：**
+**NewFeedback 事件（主网冻结版本）：**
 ```solidity
 event NewFeedback(
     uint256 indexed agentId,
     address indexed clientAddress,
-    uint64 feedbackIndex,      // 新增：每个 client 的反馈索引
-    uint8 score,
-    string indexed tag1,       // 改为 string
-    string tag2,               // 改为 string
-    string endpoint,           // 新增
-    string feedbackURI,        // 重命名
-    bytes32 feedbackHash       // 重命名
+    uint64 feedbackIndex,      // 每个 client 的反馈索引
+    int128 value,              // 🆕 替代 uint8 score
+    uint8 valueDecimals,       // 🆕 小数位数 (0-18)
+    string indexed tag1,       // string 类型
+    string tag2,
+    string endpoint,
+    string feedbackURI,
+    bytes32 feedbackHash
 );
 ```
 
 **读取 API 变更：**
-- `getSummary(...)` 使用 `string tag1, string tag2`
+- `getSummary(...)` 返回 `(count, averageValue, valueDecimals)` 而非 `(count, averageScore)`
 - `readFeedback(...)` 参数 `index` → `feedbackIndex`
 - `readAllFeedback(...)` 新增返回 `uint64[] feedbackIndexes`
 
@@ -375,6 +414,24 @@ event NewFeedback(
 - 移除必填字段：`feedbackAuth`
 - 重命名：`proof_of_payment` → `proofOfPayment`
 - 新增可选：`endpoint`, `domain`（OASF 定义）
+
+#### Registration 文件变更
+
+**🆕 Jan 27 主网冻结：endpoints → services**
+
+为避免与 feedback 中的 `endpoint` 字段（单个路由）混淆，Registration JSON 中的 `endpoints` 重命名为 `services`：
+
+```json
+// 旧版本
+{
+  "endpoints": [...]  // 容易与 feedback endpoint 混淆
+}
+
+// 新版本（主网）
+{
+  "services": [...]  // 清晰表示 agent 提供的服务
+}
+```
 
 #### Validation Registry 状态
 
@@ -395,15 +452,29 @@ event NewFeedback(
 - Reputation Registry: `0x8004B663056A597Dffe9eCcC1965A193B7388713`
 - Validation Registry: 待部署
 
-#### 代码适配检查清单 [UPDATED: 2026-01-12]
+#### 代码适配检查清单 [UPDATED: 2026-01-27]
 
+**Jan 9 更新（已完成）：**
 - [x] 更新 ABI 文件：Identity 和 Reputation Registry ABI 已更新
 - [x] 更新 `getSummary()` 调用：tag1/tag2 参数从 `bytes32` 改为 `string`
 - [x] 更新 feedback 事件解析：支持新旧两种 tag 格式
 - [x] 新增 `endpoint` 和 `feedbackIndex` 字段支持
 - [x] 兼容 `feedbackURI`（新）和 `feedbackUri`（旧）字段名
+
+**Jan 27 主网冻结更新（已完成）：**
+- [x] 更新 Reputation ABI：NewFeedback 事件 score → value/valueDecimals
+- [x] 更新 Reputation ABI：getSummary 返回 (count, averageValue, valueDecimals)
+- [x] 更新 Feedback 数据库模型：score → value/value_decimals 字段
+- [x] 创建数据库迁移脚本：`migrate_feedback_value.py`
+- [x] 更新 blockchain_sync.py：事件解析适配新格式
+- [x] 更新 reputation_sync.py：getSummary 结果处理
+- [x] 更新前端类型定义：Feedback 接口新增 value/value_decimals
+- [x] 更新前端组件：FeedbackList 支持多种 tag1 类型的格式化显示
+
+**待完成：**
 - [ ] 考虑支持 `agentWallet` 验证流程（EIP-712/ERC-1271）
 - [ ] 可选：实现 Endpoint Domain Verification
+- [ ] 可选：支持 Registration 中的 `services` 字段（向后兼容 `endpoints`）
 
 **禁用其他网络的命令（生产环境）：**
 ```bash
@@ -641,11 +712,12 @@ load_dotenv()
 ### docs/ - 正式文档
 
 - **DEPLOYMENT.md** - 完整的部署指南（本地开发、Docker 部署、生产环境）
+- **erc8004-mainnet-freeze-update.md** - ERC-8004 主网冻结更新文档 [NEW: 2026-01-27]
 - **oasf-classification.md** - OASF 自动分类功能说明
 - **background-classification-guide.md** - 异步批量分类使用指南
 - **classification-validation-rules.md** - 分类验证规则和标准
 - **reputation_sync_design.md** - 声誉系统设计文档
-- **rpc-optimization-final.md** - RPC 请求优化完整文档（事件驱动架构）[NEW: 2025-11-15]
+- **rpc-optimization-final.md** - RPC 请求优化完整文档（事件驱动架构）
 
 ### discuss/ - 讨论和历史记录
 

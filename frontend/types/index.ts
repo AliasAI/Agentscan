@@ -152,12 +152,19 @@ export interface CategoryDistributionData {
 }
 
 // Feedback (Review) from Subgraph
+// Updated Jan 27, 2026: ERC-8004 mainnet freeze - score → value/value_decimals
 export interface Feedback {
   id: string;
-  score: number; // 0-100
+  // Jan 2026 update: value (int128) + value_decimals (uint8)
+  // Supports decimals, negative numbers, and values > 100
+  value: number;
+  value_decimals: number;
+  display_value?: string;  // Pre-formatted by backend (e.g., "99.77%", "560ms")
   client_address: string;
-  tag1?: string | null;
+  feedback_index?: number;
+  tag1?: string | null;  // Standard tags: starred, uptime, successRate, etc.
   tag2?: string | null;
+  endpoint?: string | null;
   feedback_uri?: string | null;
   feedback_hash?: string | null;
   is_revoked: boolean;

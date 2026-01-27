@@ -130,15 +130,33 @@ class ReputationSyncService:
                 raise
 
     async def _update_agent_reputation(self, db: Session, agent: Agent):
-        """Update reputation score for a single agent"""
+        """Update reputation score for a single agent
+
+        Jan 27, 2026 mainnet freeze:
+        - getSummary now returns (count, averageValue, valueDecimals)
+        - clientAddresses MUST NOT be empty (use getClients first)
+        """
         try:
-            # Call getSummary(agentId, [], "", "") in thread pool
-            # Empty array = all clients, empty string = all tags
-            # Jan 2026 update: tag1/tag2 changed from bytes32 to string
-            count, average_score = await asyncio.to_thread(
+            # First get all clients (required for getSummary in mainnet freeze)
+            clients = await asyncio.to_thread(
+                self.contract.functions.getClients(agent.token_id).call
+            )
+
+            if not clients:
+                # No clients = no feedback
+                logger.debug(
+                    "no_clients_for_agent",
+                    token_id=agent.token_id,
+                    agent_name=agent.name
+                )
+                return
+
+            # Call getSummary with actual clients (not empty array)
+            # Jan 2026 mainnet freeze: clientAddresses required
+            count, average_value, value_decimals = await asyncio.to_thread(
                 self.contract.functions.getSummary(
                     agent.token_id,
-                    [],  # All clients
+                    clients,  # Actual clients list (required)
                     "",  # tag1 = empty string (no filter)
                     ""   # tag2 = empty string (no filter)
                 ).call
@@ -147,18 +165,22 @@ class ReputationSyncService:
             # Only update if there's actual feedback
             if count > 0:
                 old_score = agent.reputation_score
-                agent.reputation_score = float(average_score)
+                # Convert value with decimals to float score
+                # For 'starred' ratings (0-100), this preserves the value
+                # For other types, this gives a reasonable float representation
+                actual_value = average_value / (10 ** value_decimals) if value_decimals else average_value
+                agent.reputation_score = float(actual_value)
                 agent.reputation_count = int(count)
                 agent.reputation_last_updated = datetime.utcnow()
 
                 db.commit()
 
                 # Create activity record if score changed
-                if old_score != float(average_score):
+                if old_score != float(actual_value):
                     activity = Activity(
                         agent_id=agent.id,
                         activity_type=ActivityType.REPUTATION_UPDATE,
-                        description=f"Reputation updated: {old_score:.1f} → {average_score:.1f} ({count} reviews)",
+                        description=f"Reputation updated: {old_score:.1f} → {actual_value:.1f} ({count} reviews)",
                         tx_hash=None
                     )
                     db.add(activity)
@@ -168,7 +190,9 @@ class ReputationSyncService:
                     "reputation_updated",
                     token_id=agent.token_id,
                     agent_name=agent.name,
-                    score=average_score,
+                    value=average_value,
+                    value_decimals=value_decimals,
+                    actual_score=actual_value,
                     count=count
                 )
             else:

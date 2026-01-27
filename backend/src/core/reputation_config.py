@@ -1,81 +1,23 @@
-"""Reputation Registry Configuration"""
-# Updated: Jan 2026 Test Net deployment
+"""Reputation Registry Configuration
+
+Updated: Jan 27, 2026 - ERC-8004 Mainnet Freeze
+- ABI loaded from official GitHub: https://github.com/erc-8004/erc-8004-contracts/tree/master/abis
+- score (uint8) → value (int128) + valueDecimals (uint8)
+- Supports decimals, negative numbers, and values > 100
+"""
+
+import json
+from pathlib import Path
 
 # Sepolia Reputation Registry Contract
 REPUTATION_REGISTRY_ADDRESS = "0x8004B663056A597Dffe9eCcC1965A193B7388713"
 
-# Reputation Registry ABI (from ReputationRegistryUpgradeable contract)
-# Updated: Jan 2026 - tag parameters changed from bytes32 to string, added feedbackIndex and endpoint
-REPUTATION_REGISTRY_ABI = [
-    {
-        "inputs": [
-            {"internalType": "uint256", "name": "agentId", "type": "uint256"},
-            {"internalType": "address[]", "name": "clientAddresses", "type": "address[]"},
-            {"internalType": "string", "name": "tag1", "type": "string"},
-            {"internalType": "string", "name": "tag2", "type": "string"}
-        ],
-        "name": "getSummary",
-        "outputs": [
-            {"internalType": "uint64", "name": "count", "type": "uint64"},
-            {"internalType": "uint8", "name": "averageScore", "type": "uint8"}
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "anonymous": False,
-        "inputs": [
-            {"indexed": True, "internalType": "uint256", "name": "agentId", "type": "uint256"},
-            {"indexed": True, "internalType": "address", "name": "clientAddress", "type": "address"},
-            {"indexed": False, "internalType": "uint64", "name": "feedbackIndex", "type": "uint64"},
-            {"indexed": False, "internalType": "uint8", "name": "score", "type": "uint8"},
-            {"indexed": True, "internalType": "string", "name": "tag1", "type": "string"},
-            {"indexed": False, "internalType": "string", "name": "tag2", "type": "string"},
-            {"indexed": False, "internalType": "string", "name": "endpoint", "type": "string"},
-            {"indexed": False, "internalType": "string", "name": "feedbackURI", "type": "string"},
-            {"indexed": False, "internalType": "bytes32", "name": "feedbackHash", "type": "bytes32"}
-        ],
-        "name": "NewFeedback",
-        "type": "event"
-    },
-    {
-        "anonymous": False,
-        "inputs": [
-            {"indexed": True, "internalType": "uint256", "name": "agentId", "type": "uint256"},
-            {"indexed": True, "internalType": "address", "name": "clientAddress", "type": "address"},
-            {"indexed": True, "internalType": "uint64", "name": "feedbackIndex", "type": "uint64"}
-        ],
-        "name": "FeedbackRevoked",
-        "type": "event"
-    },
-    {
-        "anonymous": False,
-        "inputs": [
-            {"indexed": True, "internalType": "uint256", "name": "agentId", "type": "uint256"},
-            {"indexed": True, "internalType": "address", "name": "clientAddress", "type": "address"},
-            {"indexed": False, "internalType": "uint64", "name": "feedbackIndex", "type": "uint64"},
-            {"indexed": True, "internalType": "address", "name": "responder", "type": "address"},
-            {"indexed": False, "internalType": "string", "name": "responseURI", "type": "string"},
-            {"indexed": False, "internalType": "bytes32", "name": "responseHash", "type": "bytes32"}
-        ],
-        "name": "ResponseAppended",
-        "type": "event"
-    },
-    {
-        "inputs": [],
-        "name": "getIdentityRegistry",
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [{"internalType": "uint256", "name": "agentId", "type": "uint256"}],
-        "name": "getClients",
-        "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
-        "stateMutability": "view",
-        "type": "function"
-    }
-]
+# Load ABI from JSON file (official version from erc-8004-contracts)
+_ABI_DIR = Path(__file__).parent.parent / "abi"
+_REPUTATION_ABI_PATH = _ABI_DIR / "ReputationRegistry.json"
+
+with open(_REPUTATION_ABI_PATH, "r") as f:
+    REPUTATION_REGISTRY_ABI = json.load(f)
 
 # Sync Configuration
 # Updated: Jan 2026 Test Net deployment block

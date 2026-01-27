@@ -11,7 +11,92 @@ interface FeedbackListProps {
   onCountChange?: (count: number) => void
 }
 
-// Score ring component with color gradient
+// Value display component - handles ERC-8004 value/valueDecimals format
+// Jan 2026 update: Supports decimals, negative numbers, and various tag types
+function ValueDisplay({ feedback }: { feedback: Feedback }) {
+  const { value, value_decimals, display_value, tag1 } = feedback
+
+  // Use pre-formatted display_value from backend if available
+  if (display_value) {
+    return (
+      <div className="flex flex-col items-center justify-center min-w-[48px]">
+        <span className="text-sm font-bold text-[#0a0a0a] dark:text-[#fafafa]">
+          {display_value}
+        </span>
+        {tag1 && (
+          <span className="text-[9px] text-[#a3a3a3] mt-0.5">
+            {tag1}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  // Calculate actual value with decimals
+  const actualValue = value_decimals > 0 ? value / Math.pow(10, value_decimals) : value
+  const tag = (tag1 || '').toLowerCase()
+
+  // For starred ratings (0-100), show as ring
+  if (tag === 'starred' || (!tag && actualValue >= 0 && actualValue <= 100)) {
+    return <ScoreRing score={Math.round(actualValue)} />
+  }
+
+  // Format based on tag type
+  let formattedValue: string
+  let unit = ''
+
+  if (tag === 'uptime' || tag === 'successrate') {
+    formattedValue = actualValue.toFixed(value_decimals)
+    unit = '%'
+  } else if (tag === 'responsetime') {
+    formattedValue = Math.round(actualValue).toString()
+    unit = 'ms'
+  } else if (tag === 'reachable' || tag === 'ownerverified') {
+    formattedValue = actualValue === 1 ? '✓' : '✗'
+  } else if (tag === 'revenues') {
+    formattedValue = `$${actualValue.toLocaleString()}`
+  } else if (tag === 'tradingyield') {
+    const sign = actualValue > 0 ? '+' : ''
+    formattedValue = `${sign}${actualValue.toFixed(value_decimals)}%`
+  } else if (tag === 'blocktimefreshness') {
+    formattedValue = Math.round(actualValue).toString()
+    unit = ' blocks'
+  } else {
+    // Default formatting
+    formattedValue = value_decimals > 0 ? actualValue.toFixed(value_decimals) : actualValue.toString()
+  }
+
+  // Color based on value type and magnitude
+  const getColor = () => {
+    if (tag === 'reachable' || tag === 'ownerverified') {
+      return actualValue === 1 ? '#22c55e' : '#ef4444'
+    }
+    if (tag === 'tradingyield') {
+      return actualValue >= 0 ? '#22c55e' : '#ef4444'
+    }
+    if (tag === 'uptime' || tag === 'successrate') {
+      if (actualValue >= 99) return '#22c55e'
+      if (actualValue >= 95) return '#eab308'
+      return '#ef4444'
+    }
+    return '#0a0a0a' // Default dark
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-w-[48px]">
+      <span className="text-sm font-bold" style={{ color: getColor() }}>
+        {formattedValue}{unit}
+      </span>
+      {tag1 && (
+        <span className="text-[9px] text-[#a3a3a3] mt-0.5">
+          {tag1}
+        </span>
+      )}
+    </div>
+  )
+}
+
+// Score ring component for starred ratings (0-100)
 function ScoreRing({ score }: { score: number }) {
   const radius = 18
   const stroke = 3
@@ -165,9 +250,9 @@ function FeedbackRow({ feedback }: { feedback: Feedback }) {
       `}
     >
       <div className="flex items-center gap-4">
-        {/* Score ring */}
+        {/* Value display - supports various tag types (Jan 2026 update) */}
         <div className="flex-shrink-0">
-          <ScoreRing score={feedback.score} />
+          <ValueDisplay feedback={feedback} />
         </div>
 
         {/* Main content */}

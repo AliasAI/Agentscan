@@ -2,7 +2,7 @@
 
 Data models for feedback (reviews) and validation history from the subgraph.
 
-Updated: Jan 2026 - Added feedbackIndex and endpoint fields per new ERC-8004 spec
+Updated: Jan 27, 2026 - ERC-8004 mainnet freeze: score → value/value_decimals
 """
 
 from pydantic import BaseModel
@@ -10,15 +10,23 @@ from typing import Optional
 
 
 class FeedbackResponse(BaseModel):
-    """Single feedback/review response"""
+    """Single feedback/review response
+
+    Jan 27, 2026: ERC-8004 mainnet freeze
+    - score (uint8) → value (int128) + value_decimals (uint8)
+    - Supports decimals, negative numbers, and values > 100
+    """
 
     id: str
-    score: int  # 0-100
+    # Jan 2026 mainnet freeze: value/value_decimals replaces score
+    value: int  # int128: supports negative and large values
+    value_decimals: int = 0  # 0-18 decimal places
+    display_value: Optional[str] = None  # Pre-formatted value (e.g., "99.77%")
     client_address: str
-    feedback_index: Optional[int] = None  # Jan 2026: per-client feedback index
-    tag1: Optional[str] = None
+    feedback_index: Optional[int] = None  # Per-client feedback index
+    tag1: Optional[str] = None  # Standard tags: starred, uptime, successRate, etc.
     tag2: Optional[str] = None
-    endpoint: Optional[str] = None  # Jan 2026: endpoint URI for this feedback
+    endpoint: Optional[str] = None  # Endpoint URI for this feedback
     feedback_uri: Optional[str] = None
     feedback_hash: Optional[str] = None
     is_revoked: bool = False

@@ -79,7 +79,9 @@ async def get_agent_feedbacks(
 
         items = [FeedbackResponse(
             id=fb.id,
-            score=fb.score,
+            value=fb.value,
+            value_decimals=fb.value_decimals,
+            display_value=fb.display_value,  # Pre-formatted by model property
             client_address=fb.client_address,
             feedback_index=fb.feedback_index,
             tag1=fb.tag1,

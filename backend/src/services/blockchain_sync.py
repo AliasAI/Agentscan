@@ -682,25 +682,29 @@ class NetworkSyncService:
         Parses the raw log data and:
         1. Saves Feedback record to database for caching
         2. Updates Agent's reputation_score and reputation_count
+
+        Updated Jan 27, 2026: ERC-8004 mainnet freeze
+        - score (uint8) → value (int128) + valueDecimals (uint8)
         """
         try:
             # Parse indexed topics
             agent_id = int(log["topics"][1].hex(), 16)
             client_address = "0x" + log["topics"][2].hex()[-40:]
 
-            # Decode non-indexed data
+            # Decode non-indexed data (Jan 2026: value/valueDecimals instead of score)
             data = bytes(log["data"])
             decoded = decode(
-                ["uint64", "uint8", "string", "string", "string", "string", "bytes32"],
+                ["uint64", "int128", "uint8", "string", "string", "string", "string", "bytes32"],
                 data
             )
             feedback_index = decoded[0]
-            score = decoded[1]
-            tag1 = decoded[2]
-            tag2 = decoded[3]
-            endpoint = decoded[4]
-            feedback_uri = decoded[5]
-            feedback_hash = "0x" + decoded[6].hex()
+            value = decoded[1]  # int128: supports negative and large values
+            value_decimals = decoded[2]  # uint8: 0-18 decimal places
+            tag1 = decoded[3]
+            tag2 = decoded[4]
+            endpoint = decoded[5]
+            feedback_uri = decoded[6]
+            feedback_hash = "0x" + decoded[7].hex()
 
             # Get network ID and find agent
             network_id = self._get_network_id(db)
@@ -740,14 +744,15 @@ class NetworkSyncService:
             )
             block_timestamp = datetime.fromtimestamp(block["timestamp"])
 
-            # Create feedback record
+            # Create feedback record (Jan 2026: value/value_decimals)
             feedback = Feedback(
                 agent_id=agent.id,
                 network_id=network_id,
                 token_id=agent_id,
                 feedback_index=feedback_index,
                 client_address=client_address.lower(),
-                score=score,
+                value=value,
+                value_decimals=value_decimals,
                 tag1=tag1 if tag1 else None,
                 tag2=tag2 if tag2 else None,
                 endpoint=endpoint if endpoint else None,
@@ -770,7 +775,9 @@ class NetworkSyncService:
                 network=self.network_key,
                 token_id=agent_id,
                 agent_name=agent.name,
-                score=score,
+                value=value,
+                value_decimals=value_decimals,
+                tag1=tag1,
                 feedback_index=feedback_index,
                 client=client_address[:10] + "..."
             )
@@ -784,31 +791,48 @@ class NetworkSyncService:
             )
 
     async def _update_agent_reputation(self, db: Session, agent: Agent):
-        """Update agent's reputation from on-chain getSummary call"""
+        """Update agent's reputation from on-chain getSummary call
+
+        Jan 27, 2026 mainnet freeze:
+        - getSummary now returns (count, averageValue, valueDecimals)
+        - clientAddresses MUST NOT be empty (use getClients first)
+        """
         if not self.reputation_contract:
             return
 
         try:
-            count, average_score = await asyncio.to_thread(
+            # First get all clients (required for getSummary in mainnet freeze)
+            clients = await asyncio.to_thread(
+                self.reputation_contract.functions.getClients(agent.token_id).call
+            )
+
+            if not clients:
+                # No clients = no feedback, skip update
+                return
+
+            # Call getSummary with actual clients (not empty array)
+            count, average_value, value_decimals = await asyncio.to_thread(
                 self.reputation_contract.functions.getSummary(
                     agent.token_id,
-                    [],   # All clients
+                    clients,  # Actual clients list (required)
                     "",   # tag1 = empty string (no filter)
                     ""    # tag2 = empty string (no filter)
                 ).call
             )
 
             old_score = agent.reputation_score
-            agent.reputation_score = float(average_score)
+            # Convert value with decimals to float
+            actual_value = average_value / (10 ** value_decimals) if value_decimals else average_value
+            agent.reputation_score = float(actual_value)
             agent.reputation_count = int(count)
             agent.reputation_last_updated = datetime.utcnow()
 
             # Create activity record if score changed significantly
-            if abs((old_score or 0) - float(average_score)) >= 0.1:
+            if abs((old_score or 0) - float(actual_value)) >= 0.1:
                 activity = Activity(
                     agent_id=agent.id,
                     activity_type=ActivityType.REPUTATION_UPDATE,
-                    description=f"Reputation updated: {old_score or 0:.1f} → {average_score:.1f} ({count} reviews)"
+                    description=f"Reputation updated: {old_score or 0:.1f} → {actual_value:.1f} ({count} reviews)"
                 )
                 db.add(activity)
 
@@ -839,12 +863,25 @@ class NetworkSyncService:
             return
 
         try:
-            # Call getSummary to get updated reputation
-            # Jan 2026 update: tag1/tag2 changed from bytes32 to string
-            count, average_score = await asyncio.to_thread(
+            # First get all clients (required for getSummary in mainnet freeze)
+            clients = await asyncio.to_thread(
+                self.reputation_contract.functions.getClients(token_id).call
+            )
+
+            if not clients:
+                logger.debug(
+                    "no_clients_for_feedback_event",
+                    network=self.network_key,
+                    token_id=token_id
+                )
+                return
+
+            # Call getSummary with actual clients (not empty array)
+            # Jan 2026 mainnet freeze: clientAddresses required
+            count, average_value, value_decimals = await asyncio.to_thread(
                 self.reputation_contract.functions.getSummary(
                     token_id,
-                    [],   # All clients
+                    clients,  # Actual clients list (required)
                     "",   # tag1 = empty string (no filter)
                     ""    # tag2 = empty string (no filter)
                 ).call
@@ -852,18 +889,19 @@ class NetworkSyncService:
 
             # Update reputation
             old_score = agent.reputation_score
-            agent.reputation_score = float(average_score)
+            actual_value = average_value / (10 ** value_decimals) if value_decimals else average_value
+            agent.reputation_score = float(actual_value)
             agent.reputation_count = int(count)
             agent.reputation_last_updated = datetime.utcnow()
 
             db.commit()
 
             # Create activity record if score changed
-            if old_score != float(average_score):
+            if old_score != float(actual_value):
                 activity = Activity(
                     agent_id=agent.id,
                     activity_type=ActivityType.REPUTATION_UPDATE,
-                    description=f"Reputation updated: {old_score:.1f} → {average_score:.1f} ({count} reviews)",
+                    description=f"Reputation updated: {old_score:.1f} → {actual_value:.1f} ({count} reviews)",
                     tx_hash=event['transactionHash'].hex() if 'transactionHash' in event else None
                 )
                 db.add(activity)
@@ -874,7 +912,8 @@ class NetworkSyncService:
                 network=self.network_key,
                 token_id=token_id,
                 agent_name=agent.name,
-                score=average_score,
+                value=average_value,
+                value_decimals=value_decimals,
                 count=count,
                 event_type=event['event']
             )
