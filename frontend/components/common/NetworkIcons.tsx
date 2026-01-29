@@ -75,8 +75,24 @@ interface NetworkIconProps {
   className?: string
 }
 
+export function EthereumMainnetIcon({ className = 'w-5 h-5' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 784 784" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="392" cy="392" r="392" fill="#627EEA"/>
+      <path d="M392.07 92.5V315.35L580.15 392.01L392.07 92.5Z" fill="white" fillOpacity="0.602"/>
+      <path d="M392.07 92.5L204 392.01L392.07 315.35V92.5Z" fill="white"/>
+      <path d="M392.07 536.09V691.16L580.28 432.34L392.07 536.09Z" fill="white" fillOpacity="0.602"/>
+      <path d="M392.07 691.16V535.95L204 432.34L392.07 691.16Z" fill="white"/>
+      <path d="M392.07 495.69L580.15 392.01L392.07 315.47V495.69Z" fill="white" fillOpacity="0.2"/>
+      <path d="M204 392.01L392.07 495.69V315.47L204 392.01Z" fill="white" fillOpacity="0.602"/>
+    </svg>
+  )
+}
+
 export function NetworkIcon({ networkName, className = 'w-5 h-5' }: NetworkIconProps) {
   switch (networkName) {
+    case 'Ethereum Mainnet':
+      return <EthereumMainnetIcon className={className} />
     case 'Sepolia':
       return <SepoliaIcon className={className} />
     case 'Base Sepolia':
