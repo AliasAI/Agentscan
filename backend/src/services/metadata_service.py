@@ -164,7 +164,7 @@ class MetadataService:
 
         for attempt in range(retries):
             try:
-                async with httpx.AsyncClient(timeout=timeout) as client:
+                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
                     response = await client.get(url)
                     response.raise_for_status()
                     data = response.json()
