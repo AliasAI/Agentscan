@@ -9,8 +9,24 @@ load_dotenv()
 
 # Network configurations
 # RPC URLs are loaded from environment variables to prevent exposure
-# Updated: Jan 2026 Test Net deployment
+# Updated: Jan 2026 Mainnet deployment
 NETWORKS: Dict[str, Dict[str, Any]] = {
+    # === Ethereum Mainnet (Production) ===
+    "ethereum": {
+        "name": "Ethereum Mainnet",
+        "chain_id": 1,
+        "rpc_url": os.getenv("ETHEREUM_RPC_URL", ""),
+        "explorer_url": "https://etherscan.io",
+        "contracts": {
+            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+            # validation: to be deployed (under discussion with TEE community)
+        },
+        "start_block": 24339871,  # Contract deployment block (Jan 29, 2026 10:20:23 UTC)
+        "blocks_per_batch": 2000,  # Mainnet has faster blocks
+        "enabled": True,
+    },
+    # === Testnets ===
     "sepolia": {
         "name": "Sepolia",
         "chain_id": 11155111,
@@ -23,7 +39,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         },
         "start_block": 9989393,
         "blocks_per_batch": 10000,
-        "enabled": True,
+        "enabled": False,  # Disabled for mainnet testing
     },
     # === Networks pending deployment (Jan 2026) ===
     "base-sepolia": {

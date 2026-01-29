@@ -7,6 +7,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from src.services.blockchain_sync import (
     get_sync_service,
+    sync_ethereum,
     sync_sepolia,
     sync_base_sepolia,
     sync_bsc_testnet,
@@ -27,14 +28,14 @@ STARTUP_SCAN_THRESHOLD = 10  # Trigger startup scan if unchecked agents >= this
 def start_scheduler():
     """Start the background task scheduler with multi-network support"""
 
-    async def sync_sepolia_task():
-        """Periodic Sepolia blockchain sync task"""
+    async def sync_ethereum_task():
+        """Periodic Ethereum Mainnet blockchain sync task"""
         try:
-            logger.info("scheduler_task_started", task="sepolia_sync")
-            await asyncio.to_thread(_sync_network_blocking, "sepolia")
-            logger.info("scheduler_task_completed", task="sepolia_sync")
+            logger.info("scheduler_task_started", task="ethereum_sync")
+            await asyncio.to_thread(_sync_network_blocking, "ethereum")
+            logger.info("scheduler_task_completed", task="ethereum_sync")
         except Exception as e:
-            logger.error("scheduler_task_failed", task="sepolia_sync", error=str(e))
+            logger.error("scheduler_task_failed", task="ethereum_sync", error=str(e))
 
     async def sync_base_sepolia_task():
         """Periodic Base Sepolia blockchain sync task"""
@@ -67,25 +68,25 @@ def start_scheduler():
         except Exception as e:
             logger.error("scheduler_task_failed", task="endpoint_scan", error=str(e))
 
-    # Add Sepolia sync job - runs every 2 minutes
+    # Add Ethereum Mainnet sync job - runs every 2 minutes
     scheduler.add_job(
-        sync_sepolia_task,
+        sync_ethereum_task,
         trigger=CronTrigger(minute='*/2'),
-        id='sepolia_sync',
-        name='Sync Sepolia blockchain data',
+        id='ethereum_sync',
+        name='Sync Ethereum Mainnet blockchain data',
         replace_existing=True,
         max_instances=1
     )
 
-    # Note: Base Sepolia and BSC Testnet sync jobs disabled (Jan 2026)
-    # These networks are pending deployment of new contracts
-    # Uncomment when contracts are deployed:
+    # Note: Testnet sync jobs disabled (Jan 2026)
+    # Testnets are disabled for mainnet testing
+    # Uncomment when needed:
     #
     # scheduler.add_job(
-    #     sync_base_sepolia_task,
+    #     sync_sepolia_task,
     #     trigger=CronTrigger(minute='1-59/2'),
-    #     id='base_sepolia_sync',
-    #     name='Sync Base Sepolia blockchain data',
+    #     id='sepolia_sync',
+    #     name='Sync Sepolia blockchain data',
     #     replace_existing=True,
     #     max_instances=1
     # )
@@ -104,14 +105,14 @@ def start_scheduler():
     scheduler.start()
 
     # Get next run times for logging
-    sepolia_job = scheduler.get_job('sepolia_sync')
+    ethereum_job = scheduler.get_job('ethereum_sync')
     endpoint_scan_job = scheduler.get_job('endpoint_scan')
 
     logger.info(
         "scheduler_started",
-        networks=["sepolia"],  # Only Sepolia enabled (Jan 2026)
-        sepolia_schedule="Every 2 minutes (:00, :02, :04, ...)",
-        sepolia_next_run=sepolia_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if sepolia_job and sepolia_job.next_run_time else 'N/A',
+        networks=["ethereum"],  # Ethereum Mainnet (Jan 2026)
+        ethereum_schedule="Every 2 minutes (:00, :02, :04, ...)",
+        ethereum_next_run=ethereum_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if ethereum_job and ethereum_job.next_run_time else 'N/A',
         endpoint_scan_schedule=f"Daily at {ENDPOINT_SCAN_HOUR:02d}:00 UTC",
         endpoint_scan_next_run=endpoint_scan_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if endpoint_scan_job and endpoint_scan_job.next_run_time else 'N/A',
         reputation_mode="EVENT-DRIVEN (via NewFeedback/FeedbackRevoked events)"

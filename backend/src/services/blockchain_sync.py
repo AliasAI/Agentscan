@@ -1267,13 +1267,19 @@ def get_sync_service(network_key: str) -> NetworkSyncService:
     return _sync_services[network_key]
 
 
-# Backward compatibility: default Sepolia sync service
-blockchain_sync_service = get_sync_service("sepolia")
+# Default sync service: Ethereum Mainnet (Production)
+blockchain_sync_service = get_sync_service("ethereum")
 
 
 # Convenience functions for scheduler
+async def sync_ethereum():
+    """Sync Ethereum Mainnet (Production)"""
+    service = get_sync_service("ethereum")
+    await service.sync()
+
+
 async def sync_sepolia():
-    """Sync Sepolia network"""
+    """Sync Sepolia network (Testnet)"""
     service = get_sync_service("sepolia")
     await service.sync()
 
