@@ -16,6 +16,7 @@ import type {
   AgentEndpointReport,
   EndpointHealthSummaryResponse,
   MetadataResponse,
+  AnalyticsResponse,
 } from '@/types';
 
 // 统计数据服务
@@ -171,4 +172,27 @@ export const endpointHealthService = {
     const query = params.toString();
     return `/api/endpoint-health/stream${query ? `?${query}` : ''}`;
   },
+};
+
+// Analytics 服务
+export const analyticsService = {
+  // 获取分析概览
+  getOverview: (params?: {
+    days?: number;
+    limit?: number;
+    network?: string;
+  }) => {
+    const query = new URLSearchParams(
+      Object.entries(params || {})
+        .filter(([_, v]) => v !== undefined && v !== null)
+        .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {})
+    ).toString();
+    return apiGet<AnalyticsResponse>(
+      `/analytics/overview${query ? `?${query}` : ''}`
+    );
+  },
+
+  // 获取单个 Agent 的交易详情
+  getAgentTransactions: (agentId: string) =>
+    apiGet<any>(`/analytics/agent/${agentId}/transactions`),
 };

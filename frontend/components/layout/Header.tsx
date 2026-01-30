@@ -20,7 +20,7 @@ export function Header() {
   }, []);
 
   // SVG 图标组件 - 统一使用简洁线条风格
-  const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' | 'endpoints' | 'create' }) => {
+  const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' | 'endpoints' | 'analytics' | 'create' }) => {
     const icons = {
       overview: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -48,6 +48,11 @@ export function Header() {
           <path d="M22 12H18L15 21L9 3L6 12H2" />
         </svg>
       ),
+      analytics: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 20V10M18 20V4M6 20V16" />
+        </svg>
+      ),
       create: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
@@ -64,6 +69,7 @@ export function Header() {
     { href: '/agents', label: 'Agents', iconType: 'agents' as const },
     { href: '/networks', label: 'Networks', iconType: 'networks' as const },
     { href: '/endpoint-status', label: 'Endpoints', iconType: 'endpoints' as const },
+    { href: '/analytics', label: 'Analytics', iconType: 'analytics' as const },
     { href: '/create', label: 'Create', iconType: 'create' as const },
   ];
 

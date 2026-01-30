@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.db.database import engine, Base
-from src.api import stats, agents, sync, networks, activities, classification, feedback, endpoint_health, metadata
+from src.api import stats, agents, sync, networks, activities, classification, feedback, endpoint_health, metadata, analytics
 from src.services.scheduler import start_scheduler, shutdown_scheduler
 from src.db.migrate_add_contracts import migrate as migrate_contracts
 from src.db.migrate_add_oasf_fields import migrate as migrate_oasf
@@ -14,6 +14,7 @@ from src.db.migrate_multi_network import migrate as migrate_multi_network
 from src.db.migrate_network_ids import migrate as migrate_network_ids
 from src.db.migrate_add_endpoint_status import migrate as migrate_endpoint_status
 from src.db.migrate_feedback_value import migrate as migrate_feedback_value
+from src.db.migrate_add_gas_fields import migrate as migrate_gas_fields
 from src.db.init_networks import init_networks
 
 # Create database tables
@@ -28,6 +29,7 @@ try:
     migrate_network_ids()  # Fix orphaned network_id references
     migrate_endpoint_status()  # Add endpoint health check fields
     migrate_feedback_value()  # ERC-8004 mainnet: score → value/value_decimals
+    migrate_gas_fields()  # Add gas tracking fields to activities
 except Exception as e:
     print(f"Migration warning: {e}")
 
@@ -60,6 +62,7 @@ app.include_router(classification.router, prefix="/api", tags=["classification"]
 app.include_router(feedback.router, prefix="/api", tags=["feedback"])
 app.include_router(endpoint_health.router, prefix="/api", tags=["endpoint-health"])
 app.include_router(metadata.router, prefix="/api", tags=["metadata"])
+app.include_router(analytics.router, prefix="/api", tags=["analytics"])
 
 
 @app.on_event("startup")
