@@ -22,13 +22,9 @@ if [ ! -d ".venv" ]; then
   uv sync
 fi
 
-# 运行数据库迁移（如果需要）
-echo "运行数据库迁移..."
-uv run python -m src.db.migrate_add_contracts
-
-# 初始化数据库（如果需要）
-echo "初始化数据库..."
-uv run python -m src.db.init_data
+# 注意：数据库表创建和迁移由 main.py 启动时自动处理
+# 顺序：create_all() → migrate_*() → init_networks()
+# 无需在此手动运行迁移脚本
 
 # 启动开发服务器
 echo "启动 FastAPI 服务器..."
