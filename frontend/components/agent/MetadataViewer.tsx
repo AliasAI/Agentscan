@@ -227,71 +227,133 @@ function FieldRow({
   )
 }
 
-// Endpoint card component
-function EndpointCard({ endpoint, index }: { endpoint: Record<string, unknown>; index: number }) {
-  const url = endpoint.url as string | undefined
+// Service card component (formerly EndpointCard)
+function EndpointCard({ endpoint }: { endpoint: Record<string, unknown>; index: number }) {
+  const name = endpoint.name as string | undefined
+  const url = (endpoint.url || endpoint.endpoint) as string | undefined
+  const version = endpoint.version as string | undefined
   const skills = endpoint.skills as string[] | undefined
   const domains = endpoint.domains as string[] | undefined
+  // A2A specific fields
+  const a2aSkills = endpoint.a2aSkills as string[] | undefined
+
+  // Fields to exclude from "other fields" display
+  const excludedFields = ['name', 'url', 'endpoint', 'version', 'skills', 'domains', 'a2aSkills']
+
+  // Get service type icon
+  const getServiceIcon = (serviceName?: string) => {
+    const n = (serviceName || '').toLowerCase()
+    if (n.includes('a2a')) return '🤖'
+    if (n.includes('oasf')) return '📋'
+    if (n.includes('mcp')) return '🔌'
+    if (n.includes('web')) return '🌐'
+    if (n.includes('twitter') || n.includes('x.com')) return '𝕏'
+    if (n.includes('email')) return '📧'
+    if (n.includes('api')) return '⚡'
+    return '🔗'
+  }
 
   return (
-    <div className="bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-lg p-3">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs text-[#737373] font-mono">[{index}]</span>
-        {url ? (
+    <div className="bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-lg p-4">
+      {/* Header: Name + Version */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-base">{getServiceIcon(name)}</span>
+          <span className="font-medium text-[#0a0a0a] dark:text-[#fafafa]">
+            {name || 'Service'}
+          </span>
+          {version && (
+            <span className="px-1.5 py-0.5 text-[10px] bg-[#e5e5e5] dark:bg-[#333] text-[#737373] rounded">
+              v{version.replace(/^v/, '')}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* URL/Endpoint */}
+      {url && (
+        <div className="mb-3">
           <a
-            href={url}
+            href={url.includes('@') ? `mailto:${url}` : url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-mono text-blue-600 dark:text-blue-400 hover:underline truncate"
+            className="text-sm font-mono text-blue-600 dark:text-blue-400 hover:underline break-all"
           >
             {url}
           </a>
-        ) : (
-          <span className="text-sm text-[#737373]">No URL</span>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Skills tags */}
+      {/* Skills tags (OASF standard) */}
       {skills && skills.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          <span className="text-xs text-[#737373] mr-1">Skills:</span>
-          {skills.map((skill) => (
-            <span
-              key={skill}
-              className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"
-            >
-              {skill}
-            </span>
-          ))}
+        <div className="mb-2">
+          <span className="text-xs text-[#737373] font-medium">Skills</span>
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {skills.map((skill) => (
+              <span
+                key={skill}
+                className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md"
+              >
+                {skill.split('/').pop()}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* A2A Skills (if present) */}
+      {a2aSkills && a2aSkills.length > 0 && (
+        <div className="mb-2">
+          <span className="text-xs text-[#737373] font-medium">A2A Skills</span>
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {a2aSkills.map((skill) => (
+              <span
+                key={skill}
+                className="px-2 py-1 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-md"
+              >
+                {skill.split('/').pop()}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Domains tags */}
       {domains && domains.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-1.5">
-          <span className="text-xs text-[#737373] mr-1">Domains:</span>
-          {domains.map((domain) => (
-            <span
-              key={domain}
-              className="px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded"
-            >
-              {domain}
-            </span>
-          ))}
+        <div className="mb-2">
+          <span className="text-xs text-[#737373] font-medium">Domains</span>
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {domains.map((domain) => (
+              <span
+                key={domain}
+                className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-md"
+              >
+                {domain.split('/').pop()}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Other fields */}
+      {/* Other fields (compact display) */}
       {Object.entries(endpoint)
-        .filter(([key]) => !['url', 'skills', 'domains'].includes(key))
-        .map(([key, value]) => (
-          <div key={key} className="mt-2 text-xs">
-            <span className="text-[#737373]">{key}: </span>
-            <span className="text-[#525252] dark:text-[#a3a3a3]">
-              {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-            </span>
+        .filter(([key]) => !excludedFields.includes(key))
+        .length > 0 && (
+        <div className="mt-3 pt-3 border-t border-[#e5e5e5] dark:border-[#262626]">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            {Object.entries(endpoint)
+              .filter(([key]) => !excludedFields.includes(key))
+              .map(([key, value]) => (
+                <div key={key} className="text-xs">
+                  <span className="text-[#737373]">{key}: </span>
+                  <span className="text-[#525252] dark:text-[#a3a3a3]">
+                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                  </span>
+                </div>
+              ))}
           </div>
-        ))}
+        </div>
+      )}
     </div>
   )
 }
