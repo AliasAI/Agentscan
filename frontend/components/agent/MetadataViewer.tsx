@@ -13,7 +13,7 @@ interface MetadataViewerProps {
 }
 
 // OASF standard fields to highlight
-const OASF_FIELDS = ['name', 'description', 'endpoints', 'version', 'skills', 'domains']
+const OASF_FIELDS = ['name', 'description', 'services', 'endpoints', 'version', 'skills', 'domains']
 
 export function MetadataViewer({
   metadata,
@@ -70,10 +70,13 @@ export function MetadataViewer({
     setExpandedSections(newExpanded)
   }
 
-  // Separate endpoints from basic fields
-  const { endpoints, ...basicFields } = metadata as Record<string, unknown> & {
+  // Separate services/endpoints from basic fields (ERC-8004 Jan 2026: endpoints → services)
+  const { services, endpoints, ...basicFields } = metadata as Record<string, unknown> & {
+    services?: Array<Record<string, unknown>>
     endpoints?: Array<Record<string, unknown>>
   }
+  // Prefer services (new format), fall back to endpoints (old format)
+  const servicesList = services || endpoints
 
   return (
     <div className="space-y-4">
@@ -112,16 +115,16 @@ export function MetadataViewer({
         </div>
       </CollapsibleSection>
 
-      {/* Endpoints section */}
-      {endpoints && Array.isArray(endpoints) && endpoints.length > 0 && (
+      {/* Services section (ERC-8004 Jan 2026: renamed from Endpoints) */}
+      {servicesList && Array.isArray(servicesList) && servicesList.length > 0 && (
         <CollapsibleSection
-          title={`Endpoints (${endpoints.length})`}
+          title={`Services (${servicesList.length})`}
           isExpanded={expandedSections.has('endpoints')}
           onToggle={() => toggleSection('endpoints')}
         >
           <div className="space-y-3">
-            {endpoints.map((endpoint, idx) => (
-              <EndpointCard key={idx} endpoint={endpoint} index={idx} />
+            {servicesList.map((service, idx) => (
+              <EndpointCard key={idx} endpoint={service} index={idx} />
             ))}
           </div>
         </CollapsibleSection>

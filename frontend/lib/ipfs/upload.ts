@@ -7,7 +7,8 @@
 interface AgentMetadata {
   name: string
   description: string
-  endpoints: Array<{
+  // ERC-8004 Jan 2026 主网格式: use "services" instead of "endpoints"
+  services: Array<{
     url: string
     skills: string[]
     domains: string[]
@@ -98,7 +99,8 @@ export function buildMetadata(
   return {
     name,
     description,
-    endpoints: endpoints.filter((e) => e.url.trim()).map((e) => ({
+    // ERC-8004 Jan 2026 主网格式: use "services" instead of "endpoints"
+    services: endpoints.filter((e) => e.url.trim()).map((e) => ({
       url: e.url.trim(),
       skills: e.skills,
       domains: e.domains,
@@ -121,11 +123,11 @@ export function validateMetadata(metadata: AgentMetadata): string | null {
   if (!metadata.description || metadata.description.length < 20) {
     return 'Description must be at least 20 characters'
   }
-  if (metadata.endpoints.length === 0) {
-    return 'At least one endpoint is required'
+  if (metadata.services.length === 0) {
+    return 'At least one service is required'
   }
-  for (let i = 0; i < metadata.endpoints.length; i++) {
-    const ep = metadata.endpoints[i]
+  for (let i = 0; i < metadata.services.length; i++) {
+    const ep = metadata.services[i]
     if (!ep.url) {
       return `Endpoint ${i + 1}: URL is required`
     }

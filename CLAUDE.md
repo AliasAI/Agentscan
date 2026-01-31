@@ -290,7 +290,7 @@ Agent 模型保存到数据库
 
 ### ERC-8004 Jan 2026 规范更新 [UPDATED: 2026-01-27]
 
-> **🧊 规范已冻结**：ERC-8004 规范已于 2026-01-27 冻结，主网上线预计在本周四（~2026-01-30）9 AM ET。
+> **🚀 主网已上线**：ERC-8004 已于 2026-01-30 在 Ethereum Mainnet 正式上线！
 >
 > **更新历史：**
 > - Jan 9：重大规范更新（feedbackAuth 移除、agentWallet 验证等）
@@ -441,16 +441,21 @@ event NewFeedback(
 
 | 网络 | Chain ID | 状态 | 说明 |
 |------|----------|------|------|
-| **Sepolia** | 11155111 | ✅ 启用 | 唯一部署 Jan 2026 新合约的网络 |
+| **Ethereum Mainnet** | 1 | ✅ 启用 | 主网已上线（Jan 30, 2026） |
+| Sepolia | 11155111 | 🔧 测试 | 测试网，仅供开发使用 |
 | Base Sepolia | 84532 | ❌ 禁用 | 等待新合约部署 |
 | Linea Sepolia | 59141 | ❌ 禁用 | 等待新合约部署 |
 | Hedera Testnet | 296 | ❌ 禁用 | 等待新合约部署 |
 | BSC Testnet | 97 | ❌ 禁用 | 等待新合约部署 |
 
-**Sepolia 合约地址（Jan 2026）：**
+**Ethereum Mainnet 合约地址（Jan 2026）：**
+- Identity Registry: `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`
+- Reputation Registry: `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`
+- Validation Registry: 待部署
+
+**Sepolia 测试网合约地址（仅供开发）：**
 - Identity Registry: `0x8004A818BFB912233c491871b3d84c89A494BD9e`
 - Reputation Registry: `0x8004B663056A597Dffe9eCcC1965A193B7388713`
-- Validation Registry: 待部署
 
 #### 代码适配检查清单 [UPDATED: 2026-01-27]
 
@@ -474,7 +479,7 @@ event NewFeedback(
 **待完成：**
 - [ ] 考虑支持 `agentWallet` 验证流程（EIP-712/ERC-1271）
 - [ ] 可选：实现 Endpoint Domain Verification
-- [ ] 可选：支持 Registration 中的 `services` 字段（向后兼容 `endpoints`）
+- [x] 支持 Registration 中的 `services` 字段（向后兼容 `endpoints`）
 
 **禁用其他网络的命令（生产环境）：**
 ```bash

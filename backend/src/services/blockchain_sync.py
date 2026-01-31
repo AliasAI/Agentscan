@@ -32,8 +32,10 @@ logger = structlog.get_logger()
 DEFAULT_BLOCKS_PER_BATCH = 1000
 DEFAULT_MAX_BATCHES_PER_RUN = 50
 
-# NewFeedback event topic (actual on-chain signature)
-NEWFEEDBACK_TOPIC = "0x31f01d2aa5cdbe0619011211e9ffc39d678bc82e46d60c35953396ae61e896d8"
+# NewFeedback event topic (Jan 2026 mainnet freeze)
+# NewFeedback(uint256,address,uint64,int128,uint8,string,string,string,string,string,bytes32)
+# Note: has indexedTag1 (string indexed) AND tag1 (string) = 2 string params for tag1
+NEWFEEDBACK_TOPIC = "0x6a4a61743519c9d648a14e6493f47dbe3ff1aa29e7785c96c8326a205e58febc"
 
 # Validation event topics
 # ValidationRequest(address indexed validatorAddress, uint256 indexed agentId, string requestUri, bytes32 indexed requestHash)
@@ -1139,14 +1141,16 @@ class NetworkSyncService:
         raw_skills = []
         raw_domains = []
 
-        # Try to extract from metadata endpoints
-        if 'endpoints' in metadata and isinstance(metadata['endpoints'], list):
-            for endpoint in metadata['endpoints']:
-                if isinstance(endpoint, dict):
-                    if 'skills' in endpoint and isinstance(endpoint['skills'], list):
-                        raw_skills.extend(endpoint['skills'])
-                    if 'domains' in endpoint and isinstance(endpoint['domains'], list):
-                        raw_domains.extend(endpoint['domains'])
+        # Try to extract from metadata services (Jan 2026 主网格式)
+        # Also check endpoints for backward compatibility
+        services_list = metadata.get('services') or metadata.get('endpoints') or []
+        if isinstance(services_list, list):
+            for service in services_list:
+                if isinstance(service, dict):
+                    if 'skills' in service and isinstance(service['skills'], list):
+                        raw_skills.extend(service['skills'])
+                    if 'domains' in service and isinstance(service['domains'], list):
+                        raw_domains.extend(service['domains'])
 
         # Validate extracted skills/domains against OASF standard
         # Only include values that are in the official OASF taxonomy
@@ -1168,7 +1172,7 @@ class NetworkSyncService:
         # Only set source="metadata" if we have valid OASF entries
         if valid_skills or valid_domains:
             logger.info(
-                "oasf_extracted_from_metadata",
+                "oasf_extracted_from_services",
                 network=self.network_key,
                 name=name,
                 skills_count=len(valid_skills),

@@ -12,7 +12,8 @@ import type { EndpointInput } from './EndpointEditor'
 interface AgentMetadata {
   name: string
   description: string
-  endpoints: Array<{
+  // ERC-8004 Jan 2026 主网格式: use "services" instead of "endpoints"
+  services: Array<{
     url: string
     skills: string[]
     domains: string[]
@@ -34,7 +35,7 @@ export function MetadataPreview({ name, description, endpoints }: MetadataPrevie
     () => ({
       name: name || 'Agent Name',
       description: description || 'Agent description...',
-      endpoints: endpoints
+      services: endpoints
         .filter((e) => e.url.trim())
         .map((e) => ({
           url: e.url,

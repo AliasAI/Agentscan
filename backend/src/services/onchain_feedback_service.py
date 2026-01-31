@@ -21,9 +21,10 @@ logger = structlog.get_logger(__name__)
 # Batch size for scanning blocks (reduced to avoid RPC limits)
 BLOCKS_PER_BATCH = 5000
 
-# NewFeedback event topic (actual on-chain signature)
-# This is the keccak256 hash of the event signature
-NEWFEEDBACK_TOPIC = "0x31f01d2aa5cdbe0619011211e9ffc39d678bc82e46d60c35953396ae61e896d8"
+# NewFeedback event topic (Jan 2026 mainnet freeze)
+# NewFeedback(uint256,address,uint64,int128,uint8,string,string,string,string,string,bytes32)
+# Note: has indexedTag1 (string indexed) AND tag1 (string) = 2 string params for tag1
+NEWFEEDBACK_TOPIC = "0x6a4a61743519c9d648a14e6493f47dbe3ff1aa29e7785c96c8326a205e58febc"
 
 
 class OnChainFeedbackService:
@@ -224,13 +225,13 @@ class OnChainFeedbackService:
     def _parse_raw_feedback_log(self, log, network_key: str, w3: Web3) -> dict:
         """Parse a raw NewFeedback log into our response format.
 
-        Raw log structure:
+        Raw log structure (Jan 2026 mainnet freeze):
         - topics[0]: Event signature hash
         - topics[1]: indexed agentId (uint256)
         - topics[2]: indexed clientAddress (address)
         - topics[3]: indexed tag1 hash (keccak256 of string)
-        - data: (uint64 feedbackIndex, uint8 score, string tag1, string tag2,
-                 string endpoint, string feedbackURI, bytes32 feedbackHash)
+        - data: (uint64 feedbackIndex, int128 value, uint8 valueDecimals,
+                 string tag1, string tag2, string endpoint, string feedbackURI, bytes32 feedbackHash)
         """
         block_number = log["blockNumber"]
         tx_hash = log["transactionHash"].hex()
@@ -246,19 +247,24 @@ class OnChainFeedbackService:
         if isinstance(data, str):
             data = bytes.fromhex(data[2:] if data.startswith("0x") else data)
 
-        # Decode: (uint64, uint8, string, string, string, string, bytes32)
+        # Decode: Jan 2026 mainnet freeze format
+        # (uint64, int128, uint8, string, string, string, string, bytes32)
         decoded = decode(
-            ["uint64", "uint8", "string", "string", "string", "string", "bytes32"],
+            ["uint64", "int128", "uint8", "string", "string", "string", "string", "bytes32"],
             data
         )
 
         feedback_index = decoded[0]
-        score = decoded[1]
-        tag1 = decoded[2]
-        tag2 = decoded[3]
-        endpoint = decoded[4]
-        feedback_uri = decoded[5]
-        feedback_hash = decoded[6]
+        value = decoded[1]           # int128: supports negative and large values
+        value_decimals = decoded[2]  # uint8: 0-18 decimal places
+        tag1 = decoded[3]
+        tag2 = decoded[4]
+        endpoint = decoded[5]
+        feedback_uri = decoded[6]
+        feedback_hash = decoded[7]
+
+        # Convert to score for backward compatibility (0-100 range)
+        score = value / (10 ** value_decimals) if value_decimals else value
 
         # Get block timestamp
         timestamp = None
@@ -273,7 +279,9 @@ class OnChainFeedbackService:
 
         return {
             "id": feedback_id,
-            "score": score,
+            "score": score,  # Backward compatible: converted from value/valueDecimals
+            "value": value,  # Jan 2026: raw int128 value
+            "value_decimals": value_decimals,  # Jan 2026: decimal places
             "client_address": client_address,
             "feedback_index": feedback_index,
             "tag1": tag1 if tag1 else None,

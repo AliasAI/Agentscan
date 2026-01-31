@@ -312,11 +312,12 @@ export interface CreateAgentForm {
   endpoints: EndpointInput[];
 }
 
-// Agent metadata (OASF compliant)
+// Agent metadata (OASF compliant, ERC-8004 Jan 2026 主网格式)
 export interface AgentMetadata {
   name: string;
   description: string;
-  endpoints: Array<{
+  // ERC-8004 Jan 2026: renamed from "endpoints" to "services"
+  services: Array<{
     url: string;
     skills: string[];
     domains: string[];

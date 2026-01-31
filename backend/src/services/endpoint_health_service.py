@@ -185,9 +185,11 @@ class EndpointHealthService:
         """Extract endpoint URLs from metadata"""
         endpoints = []
 
-        # Standard OASF format: endpoints array
-        if "endpoints" in metadata and isinstance(metadata["endpoints"], list):
-            for ep in metadata["endpoints"]:
+        # ERC-8004 Jan 2026 主网格式: services array
+        # Also check endpoints for backward compatibility
+        services_list = metadata.get("services") or metadata.get("endpoints") or []
+        if isinstance(services_list, list):
+            for ep in services_list:
                 if isinstance(ep, dict):
                     url = ep.get("url") or ep.get("uri") or ep.get("endpoint")
                     if url and isinstance(url, str):

@@ -15,16 +15,18 @@ import { TransactionStatus, type TxStatus } from '@/components/web3/TransactionS
 import { REPUTATION_REGISTRY_ABI, getReputationContract } from '@/lib/web3/contracts'
 import { uploadFeedbackToIPFS, buildFeedbackMetadata } from '@/lib/ipfs/upload'
 
-// Predefined feedback tags
+// ERC-8004 standardized feedback tags (Best Practices Jan 2026)
+// Reference: https://github.com/erc-8004/best-practices/blob/main/Reputation.md
 const FEEDBACK_TAGS = [
-  { value: 'quality', label: 'Quality' },
-  { value: 'reliability', label: 'Reliability' },
-  { value: 'speed', label: 'Speed' },
-  { value: 'accuracy', label: 'Accuracy' },
-  { value: 'value', label: 'Value' },
-  { value: 'support', label: 'Support' },
-  { value: 'security', label: 'Security' },
-  { value: 'usability', label: 'Usability' },
+  { value: 'starred', label: 'Starred (Quality Rating)' },
+  { value: 'reachable', label: 'Reachable (Availability)' },
+  { value: 'ownerVerified', label: 'Owner Verified' },
+  { value: 'uptime', label: 'Uptime (%)' },
+  { value: 'successRate', label: 'Success Rate (%)' },
+  { value: 'responseTime', label: 'Response Time (ms)' },
+  { value: 'blocktimeFreshness', label: 'Blocktime Freshness' },
+  { value: 'revenues', label: 'Revenues ($)' },
+  { value: 'tradingYield', label: 'Trading Yield (%)' },
 ]
 
 // Score mapping: 5 stars -> 0-100

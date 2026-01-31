@@ -89,14 +89,10 @@ export const IDENTITY_REGISTRY_ABI = [
 ] as const satisfies Abi
 
 // Contract addresses per chain - matches backend networks_config.py
-// Updated: Jan 2026 Test Net deployment
+// Updated: Jan 2026 Mainnet deployment
 export const IDENTITY_CONTRACTS: Record<number, Address> = {
-  11155111: '0x8004A818BFB912233c491871b3d84c89A494BD9e', // Sepolia (Jan 2026)
-  // Other networks pending deployment (Jan 2026)
-  // 84532: '', // Base Sepolia - to be deployed
-  // 59141: '', // Linea Sepolia - to be deployed
-  // 80002: '', // Polygon Amoy - to be deployed
-  // 296: '', // Hedera Testnet - to be deployed
+  1: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432', // Ethereum Mainnet (Jan 2026)
+  11155111: '0x8004A818BFB912233c491871b3d84c89A494BD9e', // Sepolia (for reference)
 }
 
 // Get contract address for a chain
@@ -105,14 +101,10 @@ export function getIdentityContract(chainId: number): Address | undefined {
 }
 
 // Block explorer URLs for transaction links
-// Updated: Jan 2026 Test Net deployment
+// Updated: Jan 2026 Mainnet deployment
 export const BLOCK_EXPLORERS: Record<number, string> = {
-  11155111: 'https://sepolia.etherscan.io',
-  // Other networks pending deployment
-  84532: 'https://sepolia.basescan.org',
-  59141: 'https://sepolia.lineascan.build',
-  80002: 'https://amoy.polygonscan.com',
-  296: 'https://hashscan.io/testnet',
+  1: 'https://etherscan.io', // Ethereum Mainnet
+  11155111: 'https://sepolia.etherscan.io', // Sepolia (for reference)
 }
 
 // Get transaction URL
@@ -222,10 +214,10 @@ export const REPUTATION_REGISTRY_ABI = [
 ] as const satisfies Abi
 
 // Reputation Registry contract addresses per chain
-// Updated: Jan 2026 Test Net deployment
+// Updated: Jan 2026 Mainnet deployment
 export const REPUTATION_CONTRACTS: Record<number, Address> = {
-  11155111: '0x8004B663056A597Dffe9eCcC1965A193B7388713', // Sepolia (Jan 2026)
-  // Other networks pending deployment
+  1: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63', // Ethereum Mainnet (Jan 2026)
+  11155111: '0x8004B663056A597Dffe9eCcC1965A193B7388713', // Sepolia (for reference)
 }
 
 // Get reputation contract address for a chain
