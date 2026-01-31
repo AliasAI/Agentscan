@@ -14,11 +14,13 @@ import httpx
 logger = structlog.get_logger(__name__)
 
 # Subgraph endpoints for different networks (The Graph Gateway)
-# Reference: https://sdk.ag0.xyz/4-subgraph/4-1-intro/
-# Updated: Jan 2026 - Schema now matches new ERC-8004 spec
+# Reference: https://github.com/agent0lab/subgraph
+# Updated: Jan 2026 - Added Ethereum Mainnet support
+# API key format: https://gateway.thegraph.com/api/<API_KEY>/subgraphs/id/<SUBGRAPH_ID>
 SUBGRAPH_URLS = {
+    "ethereum": "https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/FV6RR6y13rsnCxBAicKuQEwDp8ioEGiNaWaZUmvr1F8k",
     "sepolia": "https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/6wQRC7geo9XYAhckfmfo8kbMRLeWU8KQd3XsJqFKmZLT",
-    # base-sepolia, bsc-testnet, etc. coming soon per SDK docs
+    # base-sepolia, polygon-amoy, etc. not deployed yet
 }
 
 # Networks that have subgraph support
@@ -26,6 +28,7 @@ SUPPORTED_NETWORKS = set(SUBGRAPH_URLS.keys())
 
 # Chain IDs mapping
 CHAIN_IDS = {
+    "ethereum": 1,
     "sepolia": 11155111,
     "base-sepolia": 84532,
 }
