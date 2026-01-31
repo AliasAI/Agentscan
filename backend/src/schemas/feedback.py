@@ -19,7 +19,8 @@ class FeedbackResponse(BaseModel):
 
     id: str
     # Jan 2026 mainnet freeze: value/value_decimals replaces score
-    value: int  # int128: supports negative and large values
+    # Note: Subgraph returns BigDecimal (float), on-chain returns int128
+    value: float  # int128 on-chain, BigDecimal from subgraph
     value_decimals: int = 0  # 0-18 decimal places
     display_value: Optional[str] = None  # Pre-formatted value (e.g., "99.77%")
     client_address: str

@@ -100,10 +100,9 @@ class SubgraphService:
         agent_id = f"{chain_id}:{token_id}"
         skip = (page - 1) * page_size
 
-        # Updated: Jan 2026 - New field names per ERC-8004 spec
-        # - feedbackURI (was feedbackUri)
-        # - feedbackIndex (new)
-        # - endpoint (new)
+        # Updated: Jan 2026 - ERC-8004 mainnet freeze schema
+        # - value: BigDecimal (replaces score)
+        # - feedbackIndex, endpoint (new fields)
         query = """
         query GetAgentFeedbacks($agentId: String!, $first: Int!, $skip: Int!) {
             feedbacks(
@@ -114,7 +113,7 @@ class SubgraphService:
                 skip: $skip
             ) {
                 id
-                score
+                value
                 clientAddress
                 feedbackIndex
                 tag1
@@ -143,9 +142,17 @@ class SubgraphService:
         # Transform feedbacks to our format
         items = []
         for fb in feedbacks:
+            # Parse value from BigDecimal string (e.g., "85.5" or "9977")
+            raw_value = fb.get("value", "0")
+            try:
+                value_float = float(raw_value) if raw_value else 0
+            except (ValueError, TypeError):
+                value_float = 0
+
             items.append({
                 "id": fb.get("id"),
-                "score": fb.get("score", 0),
+                "value": value_float,
+                "value_decimals": self._infer_decimals(raw_value),
                 "client_address": fb.get("clientAddress"),
                 "feedback_index": fb.get("feedbackIndex"),
                 "tag1": self._parse_tag(fb.get("tag1")),
@@ -346,6 +353,18 @@ class SubgraphService:
             return datetime.utcfromtimestamp(ts).isoformat() + "Z"
         except (ValueError, TypeError):
             return value
+
+    def _infer_decimals(self, value: Optional[str]) -> int:
+        """Infer decimal places from BigDecimal string (e.g., '99.77' -> 2)"""
+        if not value:
+            return 0
+        try:
+            str_val = str(value)
+            if "." in str_val:
+                return len(str_val.split(".")[1])
+            return 0
+        except (ValueError, TypeError):
+            return 0
 
     async def close(self):
         """Close the HTTP client"""
