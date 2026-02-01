@@ -232,7 +232,7 @@ class OnChainValidationService:
                         "request_uri": args.get("requestUri"),
                         "validator_address": args.get("validatorAddress", ""),
                         "block_number": event["blockNumber"],
-                        "transaction_hash": event["transactionHash"].hex(),
+                        "transaction_hash": "0x" + event["transactionHash"].hex(),
                     }
 
             except Exception as e:

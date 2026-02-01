@@ -234,7 +234,7 @@ class OnChainFeedbackService:
                  string tag1, string tag2, string endpoint, string feedbackURI, bytes32 feedbackHash)
         """
         block_number = log["blockNumber"]
-        tx_hash = log["transactionHash"].hex()
+        tx_hash = "0x" + log["transactionHash"].hex()
         log_index = log.get("logIndex", 0)
 
         # Parse indexed parameters from topics

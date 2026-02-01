@@ -14,6 +14,7 @@ from src.db.migrate_multi_network import migrate as migrate_multi_network
 from src.db.migrate_network_ids import migrate as migrate_network_ids
 from src.db.migrate_add_endpoint_status import migrate as migrate_endpoint_status
 from src.db.migrate_feedback_value import migrate as migrate_feedback_value
+from src.db.migrate_tx_hash_prefix import migrate as migrate_tx_hash_prefix
 from src.db.init_networks import init_networks
 
 # Create database tables
@@ -28,6 +29,7 @@ try:
     migrate_network_ids()  # Fix orphaned network_id references
     migrate_endpoint_status()  # Add endpoint health check fields
     migrate_feedback_value()  # ERC-8004 mainnet: score → value/value_decimals
+    migrate_tx_hash_prefix()  # Fix transaction_hash missing 0x prefix
 except Exception as e:
     print(f"Migration warning: {e}")
 

@@ -438,7 +438,7 @@ class NetworkSyncService:
                 validator_address=validator_address.lower(),
                 request_uri=request_uri if request_uri else None,
                 request_block=log["blockNumber"],
-                request_tx_hash=log["transactionHash"].hex(),
+                request_tx_hash="0x" + log["transactionHash"].hex(),
                 requested_at=block_timestamp,
                 status="PENDING"
             )
@@ -507,7 +507,7 @@ class NetworkSyncService:
             validation.response_uri = response_uri if response_uri else None
             validation.response_tag = tag
             validation.response_block = log["blockNumber"]
-            validation.response_tx_hash = log["transactionHash"].hex()
+            validation.response_tx_hash = "0x" + log["transactionHash"].hex()
             validation.completed_at = block_timestamp
             validation.status = "COMPLETED"
             db.commit()
@@ -611,7 +611,7 @@ class NetworkSyncService:
                 agent_id=agent.id,
                 activity_type=ActivityType.REGISTERED,
                 description=f"Agent '{agent.name}' (#{token_id}) registered on {self.network_config['name']}",
-                tx_hash=event['transactionHash'].hex() if 'transactionHash' in event else None,
+                tx_hash="0x" + event['transactionHash'].hex() if 'transactionHash' in event else None,
                 created_at=block_timestamp
             )
             db.add(activity)
@@ -762,7 +762,7 @@ class NetworkSyncService:
                 feedback_hash=feedback_hash if feedback_hash != "0x" + "00" * 32 else None,
                 is_revoked=False,
                 block_number=log["blockNumber"],
-                transaction_hash=log["transactionHash"].hex(),
+                transaction_hash="0x" + log["transactionHash"].hex(),
                 timestamp=block_timestamp
             )
             db.add(feedback)
@@ -789,7 +789,7 @@ class NetworkSyncService:
                 "process_raw_feedback_failed",
                 network=self.network_key,
                 error=str(e),
-                log_tx=log.get("transactionHash", b"").hex() if log.get("transactionHash") else None
+                log_tx="0x" + log.get("transactionHash", b"").hex() if log.get("transactionHash") else None
             )
 
     async def _update_agent_reputation(self, db: Session, agent: Agent):
@@ -904,7 +904,7 @@ class NetworkSyncService:
                     agent_id=agent.id,
                     activity_type=ActivityType.REPUTATION_UPDATE,
                     description=f"Reputation updated: {old_score:.1f} → {actual_value:.1f} ({count} reviews)",
-                    tx_hash=event['transactionHash'].hex() if 'transactionHash' in event else None
+                    tx_hash="0x" + event['transactionHash'].hex() if 'transactionHash' in event else None
                 )
                 db.add(activity)
                 db.commit()
