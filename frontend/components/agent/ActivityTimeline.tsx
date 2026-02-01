@@ -1,13 +1,15 @@
 'use client'
 
 import { formatDate } from '@/lib/utils/format'
+import { getTxExplorerUrl } from '@/lib/utils/network'
 import type { Activity } from '@/types'
 
 interface ActivityTimelineProps {
   activities: Activity[]
+  networkName?: string
 }
 
-export function ActivityTimeline({ activities }: ActivityTimelineProps) {
+export function ActivityTimeline({ activities, networkName }: ActivityTimelineProps) {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'registered':
@@ -93,7 +95,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
 
               {activity.tx_hash && (
                 <a
-                  href={`https://sepolia.etherscan.io/tx/${activity.tx_hash}`}
+                  href={getTxExplorerUrl(networkName, activity.tx_hash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"

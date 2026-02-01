@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { feedbackService } from '@/lib/api/services'
 import { formatAddress, formatDate } from '@/lib/utils/format'
+import { getTxExplorerUrl } from '@/lib/utils/network'
 import { useToast } from '@/components/common/Toast'
 import type { Feedback, FeedbackListResponse } from '@/types'
 
 interface FeedbackListProps {
   agentId: string
+  networkName?: string
   onCountChange?: (count: number) => void
 }
 
@@ -229,7 +231,7 @@ function Pagination({
 }
 
 // Single feedback row
-function FeedbackRow({ feedback }: { feedback: Feedback }) {
+function FeedbackRow({ feedback, networkName }: { feedback: Feedback; networkName?: string }) {
   const toast = useToast()
   const [expanded, setExpanded] = useState(false)
 
@@ -308,7 +310,7 @@ function FeedbackRow({ feedback }: { feedback: Feedback }) {
           )}
           {feedback.transaction_hash && (
             <a
-              href={`https://sepolia.etherscan.io/tx/${feedback.transaction_hash}`}
+              href={getTxExplorerUrl(networkName, feedback.transaction_hash)}
               target="_blank"
               rel="noopener noreferrer"
               className="p-1.5 rounded-md hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors"
@@ -410,7 +412,7 @@ function LoadingSkeleton() {
   )
 }
 
-export function FeedbackList({ agentId, onCountChange }: FeedbackListProps) {
+export function FeedbackList({ agentId, networkName, onCountChange }: FeedbackListProps) {
   const [data, setData] = useState<FeedbackListResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -479,7 +481,7 @@ export function FeedbackList({ agentId, onCountChange }: FeedbackListProps) {
 
       <div className="divide-y divide-[#f5f5f5] dark:divide-[#1f1f1f]">
         {data.items.map((feedback) => (
-          <FeedbackRow key={feedback.id} feedback={feedback} />
+          <FeedbackRow key={feedback.id} feedback={feedback} networkName={networkName} />
         ))}
       </div>
 

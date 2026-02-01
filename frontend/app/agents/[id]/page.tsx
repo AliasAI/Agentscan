@@ -409,6 +409,7 @@ export default function AgentDetailPage() {
             {/* Trust & Reputation - Reviews and Validations */}
             <TrustTabs
               agentId={agent.id}
+              networkName={agent.network_name}
               initialFeedbackCount={agent.reputation_count || 0}
             />
           </div>

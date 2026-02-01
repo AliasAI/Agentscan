@@ -10,9 +10,13 @@ export interface NetworkConfig {
 
 // 网络配置映射（通过 network_name 索引）
 export const NETWORK_CONFIG_BY_NAME: Record<string, NetworkConfig> = {
+  'Ethereum Mainnet': {
+    explorerUrl: 'https://etherscan.io',
+    contractAddress: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
+  },
   'Sepolia': {
     explorerUrl: 'https://sepolia.etherscan.io',
-    contractAddress: '0x8004a6090Cd10A7288092483047B097295Fb8847',
+    contractAddress: '0x8004A818BFB912233c491871b3d84c89A494BD9e',
   },
   'Base Sepolia': {
     explorerUrl: 'https://sepolia.basescan.org',
@@ -53,4 +57,12 @@ export function getNftExplorerUrl(networkName: string, tokenId: number): string 
   const config = NETWORK_CONFIG_BY_NAME[networkName];
   if (!config) return '#';
   return `${config.explorerUrl}/nft/${config.contractAddress}/${tokenId}`;
+}
+
+/**
+ * 生成交易浏览器链接
+ */
+export function getTxExplorerUrl(networkName: string | undefined, txHash: string): string {
+  const explorerUrl = getExplorerUrl(networkName || '');
+  return `${explorerUrl}/tx/${txHash}`;
 }

@@ -6,6 +6,7 @@ import { ValidationList } from './ValidationList'
 
 interface TrustTabsProps {
   agentId: string
+  networkName?: string
   initialFeedbackCount?: number
   initialValidationCount?: number
 }
@@ -14,6 +15,7 @@ type TabType = 'reviews' | 'validations'
 
 export function TrustTabs({
   agentId,
+  networkName,
   initialFeedbackCount = 0,
   initialValidationCount = 0,
 }: TrustTabsProps) {
@@ -118,12 +120,14 @@ export function TrustTabs({
         <div className={activeTab === 'reviews' ? 'block' : 'hidden'}>
           <FeedbackList
             agentId={agentId}
+            networkName={networkName}
             onCountChange={handleFeedbackCountChange}
           />
         </div>
         <div className={activeTab === 'validations' ? 'block' : 'hidden'}>
           <ValidationList
             agentId={agentId}
+            networkName={networkName}
             onCountChange={handleValidationCountChange}
           />
         </div>
