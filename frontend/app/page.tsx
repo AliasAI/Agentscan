@@ -301,10 +301,20 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Featured Agents with Tabs */}
           <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-                AI Agents
-              </h2>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-[#0a0a0a] dark:text-[#fafafa]">
+                  AI Agents
+                </h2>
+                {/* Quality filter badge */}
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-medium rounded-full">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                    <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1952 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M22 4L12 14.01L9 11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Quality
+                </span>
+              </div>
               <Link
                 href="/agents"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#0a0a0a] dark:text-[#fafafa] hover:text-[#525252] dark:hover:text-[#d4d4d4] bg-[#f5f5f5] dark:bg-[#262626] hover:bg-[#e5e5e5] dark:hover:bg-[#404040] rounded-md transition-all duration-200"
@@ -315,6 +325,13 @@ export default function HomePage() {
                 </svg>
               </Link>
             </div>
+            {/* Filter explanation */}
+            <p className="text-[11px] text-[#737373] dark:text-[#525252] mb-4">
+              Showing agents with complete profiles (name + description).{' '}
+              <Link href="/agents" className="text-[#0a0a0a] dark:text-[#a3a3a3] hover:underline">
+                View all →
+              </Link>
+            </p>
 
             {/* Agent List */}
             <div className="mt-2">
