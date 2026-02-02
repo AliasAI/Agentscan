@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { AgentCard } from '@/components/agent/AgentCard'
-import Tabs from '@/components/common/Tabs'
 import { SearchBar } from '@/components/common/SearchBar'
 import { AgentCardSkeleton } from '@/components/common/Skeleton'
 import { FilterSort, type FilterOptions, type SortOption } from '@/components/common/FilterSort'
@@ -13,7 +12,6 @@ import type { Agent } from '@/types'
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([])
-  const [activeTab, setActiveTab] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedNetwork, setSelectedNetwork] = useState('all')
   const [filters, setFilters] = useState<FilterOptions>({})
@@ -40,7 +38,7 @@ export default function AgentsPage() {
       setLoading(true)
 
       const response = await agentService.getAgents({
-        tab: activeTab,
+        tab: 'all',
         page: pageNum,
         page_size: pageSize,
         search: searchQuery || undefined,
@@ -67,7 +65,7 @@ export default function AgentsPage() {
         setLoading(false)
       }
     }
-  }, [activeTab, searchQuery, selectedNetwork, filters, qualityFilter, pageSize])
+  }, [searchQuery, selectedNetwork, filters, qualityFilter, pageSize])
 
   useEffect(() => {
     fetchAgents(1)
@@ -77,26 +75,14 @@ export default function AgentsPage() {
         abortControllerRef.current.abort()
       }
     }
-  }, [activeTab, searchQuery, selectedNetwork, filters, fetchAgents])
+  }, [searchQuery, selectedNetwork, filters, fetchAgents])
 
-  const tabs = [
-    { id: 'all', label: 'All Agents' },
-    { id: 'active', label: 'Active' },
-    { id: 'top', label: 'Top Rated' },
-  ]
-
-  const handleTabChange = (tabId: string) => setActiveTab(tabId)
   const handleSearch = (query: string) => setSearchQuery(query)
   const handleNetworkChange = (networkId: string) => setSelectedNetwork(networkId)
   const handleFilterChange = (newFilters: FilterOptions) => setFilters(newFilters)
 
   const handleSortChange = (sort: SortOption) => {
     setSortOption(sort)
-    if (sort.field === 'reputation_score') {
-      setActiveTab('top')
-    } else if (activeTab === 'top') {
-      setActiveTab('all')
-    }
   }
 
   const handleNextPage = useCallback(() => {
@@ -224,7 +210,7 @@ export default function AgentsPage() {
                     : 'bg-white dark:bg-[#171717] text-[#525252] dark:text-[#a3a3a3] border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040]'
                   }
                 `}
-                title={qualityFilter !== 'all' ? 'Showing quality agents only' : 'Showing all agents'}
+                title={qualityFilter !== 'all' ? 'Showing quality agents only (real name + description)' : 'Showing all agents including incomplete ones'}
               >
                 <svg
                   width="14"
@@ -250,9 +236,6 @@ export default function AgentsPage() {
                 </svg>
                 {qualityFilter !== 'all' ? 'Quality Only' : 'Show All'}
               </button>
-              <div className="w-full sm:w-auto overflow-x-auto scrollbar-hide">
-                <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
-              </div>
             </div>
             <FilterSort onFilterChange={handleFilterChange} onSortChange={handleSortChange} />
           </div>
@@ -319,7 +302,6 @@ export default function AgentsPage() {
                 setSearchQuery('')
                 setSelectedNetwork('all')
                 setFilters({})
-                setActiveTab('all')
                 setQualityFilter('basic')
               }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] rounded-lg text-sm font-medium hover:bg-[#262626] dark:hover:bg-[#e5e5e5] transition-colors"

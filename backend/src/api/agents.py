@@ -13,7 +13,22 @@ from src.schemas.common import PaginatedResponse
 router = APIRouter()
 
 # Minimum description length to be considered "quality"
-MIN_DESCRIPTION_LENGTH = 15
+MIN_DESCRIPTION_LENGTH = 20
+
+# Names that indicate incomplete/spam agents
+INVALID_NAMES = ["Unknown Agent", "Unknown", "Untitled", "Test", "test"]
+
+# Description patterns that indicate fetch failures or placeholders
+INVALID_DESCRIPTION_PATTERNS = [
+    "fetch failed",
+    "metadata fetch",
+    "no metadata",
+    "error",
+    "failed to",
+    "not found",
+    "undefined",
+    "null",
+]
 
 
 def apply_quality_filter(query, quality: str):
@@ -21,19 +36,27 @@ def apply_quality_filter(query, quality: str):
 
     Quality levels:
     - 'all': No filtering
-    - 'basic': Has name and description (length >= 15)
+    - 'basic': Has real name (not "Unknown Agent") and meaningful description
     - 'verified': Basic + has reputation (score > 0 or count > 0)
     """
     if quality == "all":
         return query
 
     # Basic: has meaningful name and description
+    # Exclude placeholder names
     query = query.filter(
         Agent.name.isnot(None),
         Agent.name != "",
+        Agent.name.notin_(INVALID_NAMES),
         Agent.description.isnot(None),
         func.length(Agent.description) >= MIN_DESCRIPTION_LENGTH,
     )
+
+    # Exclude descriptions that indicate errors/failures
+    for pattern in INVALID_DESCRIPTION_PATTERNS:
+        query = query.filter(
+            ~func.lower(Agent.description).contains(pattern.lower())
+        )
 
     if quality == "verified":
         # Verified: also has some reputation activity
