@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 
 from src.db.database import get_db
 from src.models import Agent, AgentStatus
@@ -10,6 +11,37 @@ from src.schemas.agent import AgentResponse
 from src.schemas.common import PaginatedResponse
 
 router = APIRouter()
+
+# Minimum description length to be considered "quality"
+MIN_DESCRIPTION_LENGTH = 15
+
+
+def apply_quality_filter(query, quality: str):
+    """Apply quality filtering to agent query.
+
+    Quality levels:
+    - 'all': No filtering
+    - 'basic': Has name and description (length >= 15)
+    - 'verified': Basic + has reputation (score > 0 or count > 0)
+    """
+    if quality == "all":
+        return query
+
+    # Basic: has meaningful name and description
+    query = query.filter(
+        Agent.name.isnot(None),
+        Agent.name != "",
+        Agent.description.isnot(None),
+        func.length(Agent.description) >= MIN_DESCRIPTION_LENGTH,
+    )
+
+    if quality == "verified":
+        # Verified: also has some reputation activity
+        query = query.filter(
+            (Agent.reputation_score > 0) | (Agent.reputation_count > 0)
+        )
+
+    return query
 
 
 @router.get("/agents", response_model=PaginatedResponse[AgentResponse])
@@ -21,11 +53,15 @@ async def get_agents(
     network: str | None = Query(None, description="Filter by network ID or 'all'"),
     reputation_min: float | None = Query(None, ge=0, le=100, description="Minimum reputation score"),
     reputation_max: float | None = Query(None, ge=0, le=100, description="Maximum reputation score"),
+    quality: str = Query("all", description="Quality filter: all, basic, verified"),
     db: Session = Depends(get_db),
 ):
     """Get agent list with tab filtering, pagination, search and network filter"""
 
     query = db.query(Agent).options(joinedload(Agent.network))
+
+    # Quality filtering (applied first)
+    query = apply_quality_filter(query, quality)
 
     # Network filtering
     if network and network != "all":
@@ -93,12 +129,21 @@ async def get_trending_agents(
     limit: int = Query(5, ge=1, le=20),
     db: Session = Depends(get_db),
 ):
-    """Get trending agents for homepage: top_ranked, featured, trending"""
+    """Get trending agents for homepage: top_ranked, featured, trending.
 
-    # Top Ranked: highest reputation score
+    All lists are filtered to show only quality agents (with name + description).
+    """
+
+    # Base query with quality filter (basic level)
+    def base_query():
+        return apply_quality_filter(
+            db.query(Agent).options(joinedload(Agent.network)),
+            "basic"
+        )
+
+    # Top Ranked: highest reputation score (must have reviews)
     top_ranked = (
-        db.query(Agent)
-        .options(joinedload(Agent.network))
+        base_query()
         .filter(Agent.reputation_score > 0)
         .order_by(Agent.reputation_score.desc())
         .limit(limit)
@@ -107,18 +152,16 @@ async def get_trending_agents(
 
     # Featured: most reviews (reputation_count)
     featured = (
-        db.query(Agent)
-        .options(joinedload(Agent.network))
+        base_query()
         .filter(Agent.reputation_count > 0)
         .order_by(Agent.reputation_count.desc())
         .limit(limit)
         .all()
     )
 
-    # Trending: newest agents
+    # Trending: newest quality agents
     trending = (
-        db.query(Agent)
-        .options(joinedload(Agent.network))
+        base_query()
         .order_by(Agent.created_at.desc())
         .limit(limit)
         .all()

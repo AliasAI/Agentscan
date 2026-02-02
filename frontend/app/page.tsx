@@ -39,7 +39,7 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch agents (latest by default)
+  // Fetch agents (latest by default, quality filtered)
   useEffect(() => {
     setLoading(true)
     agentService
@@ -48,6 +48,7 @@ export default function HomePage() {
         page: 1,
         page_size: 8,
         search: searchQuery || undefined,
+        quality: 'basic', // Only show agents with name + description
       })
       .then((response) => {
         setAgents(response.items)

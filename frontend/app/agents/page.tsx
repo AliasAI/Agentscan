@@ -18,6 +18,7 @@ export default function AgentsPage() {
   const [selectedNetwork, setSelectedNetwork] = useState('all')
   const [filters, setFilters] = useState<FilterOptions>({})
   const [sortOption, setSortOption] = useState<SortOption>({ field: 'created_at', order: 'desc' })
+  const [qualityFilter, setQualityFilter] = useState<'all' | 'basic' | 'verified'>('basic') // Default: quality filtered
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -46,6 +47,7 @@ export default function AgentsPage() {
         network: selectedNetwork !== 'all' ? selectedNetwork : undefined,
         reputation_min: filters.reputationMin,
         reputation_max: filters.reputationMax,
+        quality: qualityFilter,
       }, abortController.signal)
 
       if (!abortController.signal.aborted) {
@@ -65,7 +67,7 @@ export default function AgentsPage() {
         setLoading(false)
       }
     }
-  }, [activeTab, searchQuery, selectedNetwork, filters, pageSize])
+  }, [activeTab, searchQuery, selectedNetwork, filters, qualityFilter, pageSize])
 
   useEffect(() => {
     fetchAgents(1)
@@ -211,6 +213,43 @@ export default function AgentsPage() {
                 selectedNetwork={selectedNetwork}
                 onNetworkChange={handleNetworkChange}
               />
+              {/* Quality Filter Toggle */}
+              <button
+                onClick={() => setQualityFilter(qualityFilter === 'all' ? 'basic' : 'all')}
+                className={`
+                  inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
+                  transition-all duration-200 border whitespace-nowrap
+                  ${qualityFilter !== 'all'
+                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                    : 'bg-white dark:bg-[#171717] text-[#525252] dark:text-[#a3a3a3] border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040]'
+                  }
+                `}
+                title={qualityFilter !== 'all' ? 'Showing quality agents only' : 'Showing all agents'}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className={qualityFilter !== 'all' ? 'text-emerald-500' : 'text-[#a3a3a3]'}
+                >
+                  <path
+                    d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1952 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M22 4L12 14.01L9 11.01"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                {qualityFilter !== 'all' ? 'Quality Only' : 'Show All'}
+              </button>
               <div className="w-full sm:w-auto overflow-x-auto scrollbar-hide">
                 <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
               </div>
@@ -281,6 +320,7 @@ export default function AgentsPage() {
                 setSelectedNetwork('all')
                 setFilters({})
                 setActiveTab('all')
+                setQualityFilter('basic')
               }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] rounded-lg text-sm font-medium hover:bg-[#262626] dark:hover:bg-[#e5e5e5] transition-colors"
             >

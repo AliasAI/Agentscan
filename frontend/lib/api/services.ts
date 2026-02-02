@@ -38,6 +38,7 @@ export const agentService = {
       network?: string;
       reputation_min?: number;
       reputation_max?: number;
+      quality?: 'all' | 'basic' | 'verified';
     },
     signal?: AbortSignal
   ) => {
