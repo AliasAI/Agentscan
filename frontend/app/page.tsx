@@ -8,7 +8,6 @@ import { ActivityList } from '@/components/common/ActivityList'
 import { RegistrationTrendChart } from '@/components/charts/RegistrationTrendChart'
 import { CategoryDistribution } from '@/components/charts/CategoryDistribution'
 import { MultiNetworkSyncStatus } from '@/components/common/MultiNetworkSyncStatus'
-import Tabs from '@/components/common/Tabs'
 import { formatNumber } from '@/lib/utils/format'
 import { AgentCardSkeleton, StatCardSkeleton, ActivityItemSkeleton } from '@/components/common/Skeleton'
 import { TrendingSection } from '@/components/home/TrendingSection'
@@ -23,7 +22,6 @@ export default function HomePage() {
   const [categoryData, setCategoryData] = useState<CategoryDistributionData | null>(null)
   const [trendingData, setTrendingData] = useState<TrendingAgentsResponse | null>(null)
   const [trendingLoading, setTrendingLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('all')
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -41,12 +39,12 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch agents based on tab and search
+  // Fetch agents (latest by default)
   useEffect(() => {
     setLoading(true)
     agentService
       .getAgents({
-        tab: activeTab,
+        tab: 'all',
         page: 1,
         page_size: 8,
         search: searchQuery || undefined,
@@ -56,7 +54,7 @@ export default function HomePage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [activeTab, searchQuery])
+  }, [searchQuery])
 
   // Fetch activities and refresh every 10 seconds
   useEffect(() => {
@@ -102,11 +100,6 @@ export default function HomePage() {
       .catch(console.error)
       .finally(() => setTrendingLoading(false))
   }, [])
-
-  const tabs = [
-    { id: 'all', label: 'All Agents', count: stats?.total_agents },
-    { id: 'top', label: 'Top Rated', count: undefined },
-  ]
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
@@ -322,11 +315,8 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Tabs */}
-            <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
-
             {/* Agent List */}
-            <div className="mt-4">
+            <div className="mt-2">
               {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {Array.from({ length: 8 }).map((_, i) => (
