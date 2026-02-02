@@ -19,6 +19,11 @@ class TransactionStats(BaseModel):
     """Transaction statistics"""
     total_transactions: int
     total_agents_with_tx: int
+    # Quality metrics
+    active_agents: int  # Agents with reputation or working endpoints
+    agents_with_reputation: int
+    agents_with_working_endpoints: int
+    quality_rate: float  # Percentage of truly active agents
     transactions_by_type: dict[str, int]
     avg_tx_per_agent: float
     total_gas_used: int
@@ -113,6 +118,59 @@ async def get_analytics_overview(
     total_agents = agent_query.count()
     avg_tx_per_agent = total_transactions / total_agents if total_agents > 0 else 0
 
+    # Quality metrics - agents with reputation or working endpoints
+    from sqlalchemy import text
+
+    if network:
+        agents_with_reputation = db.execute(
+            text("SELECT COUNT(*) FROM agents WHERE network_id = :network AND reputation_count > 0"),
+            {"network": network}
+        ).scalar() or 0
+        agents_with_working = db.execute(
+            text("""
+                SELECT COUNT(*) FROM agents
+                WHERE network_id = :network
+                AND endpoint_status IS NOT NULL
+                AND json_extract(endpoint_status, '$.has_working_endpoints') = 1
+            """),
+            {"network": network}
+        ).scalar() or 0
+    else:
+        agents_with_reputation = db.execute(
+            text("SELECT COUNT(*) FROM agents WHERE reputation_count > 0")
+        ).scalar() or 0
+        agents_with_working = db.execute(
+            text("""
+                SELECT COUNT(*) FROM agents
+                WHERE endpoint_status IS NOT NULL
+                AND json_extract(endpoint_status, '$.has_working_endpoints') = 1
+            """)
+        ).scalar() or 0
+
+    # Active agents = union of agents with reputation OR working endpoints
+    if network:
+        active_agents = db.execute(
+            text("""
+                SELECT COUNT(DISTINCT id) FROM agents
+                WHERE network_id = :network
+                AND (reputation_count > 0
+                    OR (endpoint_status IS NOT NULL
+                        AND json_extract(endpoint_status, '$.has_working_endpoints') = 1))
+            """),
+            {"network": network}
+        ).scalar() or 0
+    else:
+        active_agents = db.execute(
+            text("""
+                SELECT COUNT(DISTINCT id) FROM agents
+                WHERE reputation_count > 0
+                    OR (endpoint_status IS NOT NULL
+                        AND json_extract(endpoint_status, '$.has_working_endpoints') = 1)
+            """)
+        ).scalar() or 0
+
+    quality_rate = round((active_agents / total_agents * 100), 2) if total_agents > 0 else 0
+
     # Calculate gas and fee statistics
     # Use CAST to REAL to avoid integer overflow in SQLite
     fee_stats = (
@@ -132,6 +190,10 @@ async def get_analytics_overview(
     stats = TransactionStats(
         total_transactions=total_transactions,
         total_agents_with_tx=total_agents_with_tx,
+        active_agents=active_agents,
+        agents_with_reputation=agents_with_reputation,
+        agents_with_working_endpoints=agents_with_working,
+        quality_rate=quality_rate,
         transactions_by_type=transactions_by_type,
         avg_tx_per_agent=round(avg_tx_per_agent, 2),
         total_gas_used=total_gas_used,

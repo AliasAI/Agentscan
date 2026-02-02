@@ -349,6 +349,11 @@ export type TransactionStatus = 'idle' | 'uploading' | 'pending' | 'confirming' 
 export interface TransactionStats {
   total_transactions: number;
   total_agents_with_tx: number;
+  // Quality metrics
+  active_agents: number;
+  agents_with_reputation: number;
+  agents_with_working_endpoints: number;
+  quality_rate: number;
   transactions_by_type: Record<string, number>;
   avg_tx_per_agent: number;
   total_gas_used: number;
