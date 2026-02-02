@@ -102,18 +102,6 @@ export function AgentCard({ agent }: AgentCardProps) {
               )}
             </div>
 
-            {/* Validation Badge - Shows if agent has been validated */}
-            {agent.status === 'active' && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-[#f0fdf4] dark:bg-[#14532d]/30 rounded-md" title="Verified Agent">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-[#22c55e] dark:text-[#4ade80]">
-                  <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="text-[10px] font-medium text-[#22c55e] dark:text-[#4ade80]">
-                  Verified
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </div>

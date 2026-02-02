@@ -17,7 +17,6 @@ import {
   CopyButton,
   statusConfig,
   syncStatusConfig,
-  VerifiedBadge,
   StatsGrid
 } from '@/components/agent/AgentDetailComponents'
 import { MetadataViewer } from '@/components/agent/MetadataViewer'
@@ -437,9 +436,6 @@ export default function AgentDetailPage() {
                 statusLabel={status.label}
                 statusTextClass={status.text}
               />
-
-              {/* Verified Badge */}
-              {agent.status === 'active' && <VerifiedBadge />}
 
               {/* Token ID */}
               {agent.token_id !== undefined && agent.token_id !== null && (
