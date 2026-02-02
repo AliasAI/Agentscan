@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case
+from sqlalchemy import func, case, cast, Float
 from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel
@@ -114,11 +114,12 @@ async def get_analytics_overview(
     avg_tx_per_agent = total_transactions / total_agents if total_agents > 0 else 0
 
     # Calculate gas and fee statistics
+    # Use CAST to REAL to avoid integer overflow in SQLite
     fee_stats = (
         activity_query
         .with_entities(
-            func.sum(Activity.gas_used).label('total_gas'),
-            func.sum(Activity.transaction_fee).label('total_fees')
+            func.sum(cast(Activity.gas_used, Float)).label('total_gas'),
+            func.sum(cast(Activity.transaction_fee, Float)).label('total_fees')
         )
         .first()
     )

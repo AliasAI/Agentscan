@@ -24,7 +24,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         },
         "start_block": 24339871,  # Contract deployment block (Jan 29, 2026 10:20:23 UTC)
         "blocks_per_batch": 2000,  # Mainnet has faster blocks
-        "enabled": True,
+        "enabled": True,  # Keep Ethereum enabled
     },
     # === Testnets ===
     "sepolia": {
@@ -39,7 +39,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         },
         "start_block": 9989393,
         "blocks_per_batch": 10000,
-        "enabled": False,  # Disabled for mainnet testing
+        "enabled": False,  # Keep disabled for now
     },
     # === Networks pending deployment (Jan 2026) ===
     "base-sepolia": {
@@ -119,6 +119,20 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         "start_block": 0,
         "blocks_per_batch": 10000,
         "enabled": False,  # Disabled until deployed
+    },
+    # === BSC Mainnet ===
+    "bsc": {
+        "name": "BNB Smart Chain",
+        "chain_id": 56,
+        "rpc_url": os.getenv("BSC_RPC_URL", "https://bsc-dataseed.binance.org/"),
+        "explorer_url": "https://bscscan.com",
+        "contracts": {
+            "identity": os.getenv("BSC_IDENTITY_CONTRACT", "0x8004c274E3770d32dc1883ab5108b0eA28A854D5"),
+            "reputation": os.getenv("BSC_REPUTATION_CONTRACT", "0x8004e9D54904EaAFc724A743Fea4387Fa632dc2D"),
+        },
+        "start_block": 78275879,  # Vanity deployment block (Jan 30, 2026)
+        "blocks_per_batch": 5000,  # BSC has fast blocks (3s)
+        "enabled": True,
     },
 }
 
