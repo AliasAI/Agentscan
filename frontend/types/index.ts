@@ -342,6 +342,55 @@ export interface TaxonomyResponse {
 // Transaction status for UI
 export type TransactionStatus = 'idle' | 'uploading' | 'pending' | 'confirming' | 'success' | 'error';
 
+// ============================================
+// Analytics Types
+// ============================================
+
+export interface TransactionStats {
+  total_transactions: number;
+  total_agents_with_tx: number;
+  transactions_by_type: Record<string, number>;
+  avg_tx_per_agent: number;
+  total_gas_used: number;
+  total_fees_wei: number;
+  total_fees_eth: number;
+  avg_fee_per_tx_eth: number;
+}
+
+export interface AgentTxRanking {
+  agent_id: string;
+  agent_name: string;
+  token_id: number | null;
+  network_key: string;
+  total_transactions: number;
+  registered_count: number;
+  reputation_update_count: number;
+  validation_count: number;
+}
+
+export interface TxTrendData {
+  date: string;
+  total: number;
+  registered: number;
+  reputation_update: number;
+  validation_complete: number;
+}
+
+export interface NetworkTxStats {
+  network_key: string;
+  network_name: string;
+  total_transactions: number;
+  total_agents: number;
+  avg_tx_per_agent: number;
+}
+
+export interface AnalyticsResponse {
+  stats: TransactionStats;
+  top_agents: AgentTxRanking[];
+  trend_data: TxTrendData[];
+  network_stats: NetworkTxStats[];
+}
+
 // Metadata API Response (for real-time metadata fetching)
 export interface MetadataResponse {
   raw_uri: string;

@@ -606,13 +606,22 @@ class NetworkSyncService:
             db.add(agent)
             db.commit()
 
-            # Create activity record
+            # Create activity record with gas information
+            tx_hash = "0x" + event['transactionHash'].hex() if 'transactionHash' in event else None
+            gas_used, gas_price, transaction_fee = None, None, None
+
+            if tx_hash:
+                gas_used, gas_price, transaction_fee = self._get_transaction_gas_info(tx_hash)
+
             activity = Activity(
                 agent_id=agent.id,
                 activity_type=ActivityType.REGISTERED,
                 description=f"Agent '{agent.name}' (#{token_id}) registered on {self.network_config['name']}",
-                tx_hash="0x" + event['transactionHash'].hex() if 'transactionHash' in event else None,
-                created_at=block_timestamp
+                tx_hash=tx_hash,
+                created_at=block_timestamp,
+                gas_used=gas_used,
+                gas_price=gas_price,
+                transaction_fee=transaction_fee
             )
             db.add(activity)
             db.commit()
@@ -900,11 +909,20 @@ class NetworkSyncService:
 
             # Create activity record if score changed
             if old_score != float(actual_value):
+                tx_hash = "0x" + event['transactionHash'].hex() if 'transactionHash' in event else None
+                gas_used, gas_price, transaction_fee = None, None, None
+
+                if tx_hash:
+                    gas_used, gas_price, transaction_fee = self._get_transaction_gas_info(tx_hash)
+
                 activity = Activity(
                     agent_id=agent.id,
                     activity_type=ActivityType.REPUTATION_UPDATE,
                     description=f"Reputation updated: {old_score:.1f} → {actual_value:.1f} ({count} reviews)",
-                    tx_hash="0x" + event['transactionHash'].hex() if 'transactionHash' in event else None
+                    tx_hash=tx_hash,
+                    gas_used=gas_used,
+                    gas_price=gas_price,
+                    transaction_fee=transaction_fee
                 )
                 db.add(activity)
                 db.commit()
@@ -1258,6 +1276,34 @@ class NetworkSyncService:
         db.add(network)
         db.commit()
         return network.id
+
+    def _get_transaction_gas_info(self, tx_hash: str) -> tuple[Optional[int], Optional[int], Optional[int]]:
+        """Get gas information from transaction receipt
+
+        Returns:
+            tuple: (gas_used, gas_price, transaction_fee) in wei, or (None, None, None) if failed
+        """
+        try:
+            receipt = self.w3.eth.get_transaction_receipt(tx_hash)
+            transaction = self.w3.eth.get_transaction(tx_hash)
+
+            gas_used = receipt.get('gasUsed')
+            gas_price = transaction.get('gasPrice')
+
+            # Calculate transaction fee (gas_used * gas_price)
+            transaction_fee = None
+            if gas_used is not None and gas_price is not None:
+                transaction_fee = gas_used * gas_price
+
+            return (gas_used, gas_price, transaction_fee)
+        except Exception as e:
+            logger.warning(
+                "failed_to_get_gas_info",
+                network=self.network_key,
+                tx_hash=tx_hash,
+                error=str(e)
+            )
+            return (None, None, None)
 
 
 # Global instances for each enabled network
