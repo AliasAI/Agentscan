@@ -56,6 +56,31 @@ export function formatRelativeTime(date: string): string {
 }
 
 /**
+ * Format time ago in compact form (e.g., "2h ago", "3d ago")
+ * Used for trending section and compact displays
+ */
+export function formatTimeAgo(date: string): string {
+  if (!date) return 'N/A';
+
+  let utcDateStr = date;
+  if (date.includes('T') && !date.endsWith('Z') && !date.match(/[+-]\d{2}:\d{2}$/)) {
+    utcDateStr = date + 'Z';
+  }
+
+  const target = new Date(utcDateStr);
+  const diff = Date.now() - target.getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  if (minutes > 0) return `${minutes}m ago`;
+  return 'now';
+}
+
+/**
  * Resolve image URI to a displayable URL
  * Handles: IPFS URIs, data URIs, HTTP/HTTPS URLs
  */

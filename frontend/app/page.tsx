@@ -11,8 +11,9 @@ import { MultiNetworkSyncStatus } from '@/components/common/MultiNetworkSyncStat
 import Tabs from '@/components/common/Tabs'
 import { formatNumber } from '@/lib/utils/format'
 import { AgentCardSkeleton, StatCardSkeleton, ActivityItemSkeleton } from '@/components/common/Skeleton'
+import { TrendingSection } from '@/components/home/TrendingSection'
 import { statsService, agentService, activityService, taxonomyService } from '@/lib/api/services'
-import type { Agent, Activity, Stats, RegistrationTrendData, CategoryDistributionData } from '@/types'
+import type { Agent, Activity, Stats, RegistrationTrendData, CategoryDistributionData, TrendingAgentsResponse } from '@/types'
 
 export default function HomePage() {
   const [stats, setStats] = useState<Stats | null>(null)
@@ -20,6 +21,8 @@ export default function HomePage() {
   const [activities, setActivities] = useState<Activity[]>([])
   const [trendData, setTrendData] = useState<RegistrationTrendData[]>([])
   const [categoryData, setCategoryData] = useState<CategoryDistributionData | null>(null)
+  const [trendingData, setTrendingData] = useState<TrendingAgentsResponse | null>(null)
+  const [trendingLoading, setTrendingLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -90,9 +93,18 @@ export default function HomePage() {
       .catch(console.error)
   }, [])
 
+  // Fetch trending agents on mount only
+  useEffect(() => {
+    setTrendingLoading(true)
+    agentService
+      .getTrendingAgents(5)
+      .then(setTrendingData)
+      .catch(console.error)
+      .finally(() => setTrendingLoading(false))
+  }, [])
+
   const tabs = [
     { id: 'all', label: 'All Agents', count: stats?.total_agents },
-    { id: 'active', label: 'Active', count: stats?.active_agents },
     { id: 'top', label: 'Top Rated', count: undefined },
   ]
 
@@ -288,6 +300,9 @@ export default function HomePage() {
             </>
           )}
         </div>
+
+        {/* Trending Now Section */}
+        <TrendingSection data={trendingData} isLoading={trendingLoading} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Featured Agents with Tabs */}

@@ -88,6 +88,49 @@ async def get_agents(
     )
 
 
+@router.get("/agents/trending")
+async def get_trending_agents(
+    limit: int = Query(5, ge=1, le=20),
+    db: Session = Depends(get_db),
+):
+    """Get trending agents for homepage: top_ranked, featured, trending"""
+
+    # Top Ranked: highest reputation score
+    top_ranked = (
+        db.query(Agent)
+        .options(joinedload(Agent.network))
+        .filter(Agent.reputation_score > 0)
+        .order_by(Agent.reputation_score.desc())
+        .limit(limit)
+        .all()
+    )
+
+    # Featured: most reviews (reputation_count)
+    featured = (
+        db.query(Agent)
+        .options(joinedload(Agent.network))
+        .filter(Agent.reputation_count > 0)
+        .order_by(Agent.reputation_count.desc())
+        .limit(limit)
+        .all()
+    )
+
+    # Trending: newest agents
+    trending = (
+        db.query(Agent)
+        .options(joinedload(Agent.network))
+        .order_by(Agent.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "top_ranked": [AgentResponse.from_orm_with_network(a) for a in top_ranked],
+        "featured": [AgentResponse.from_orm_with_network(a) for a in featured],
+        "trending": [AgentResponse.from_orm_with_network(a) for a in trending],
+    }
+
+
 @router.get("/agents/featured", response_model=list[AgentResponse])
 async def get_featured_agents(db: Session = Depends(get_db)):
     """获取精选代理（前8个）"""

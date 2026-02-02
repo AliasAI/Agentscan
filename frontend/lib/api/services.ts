@@ -17,6 +17,7 @@ import type {
   EndpointHealthSummaryResponse,
   MetadataResponse,
   AnalyticsResponse,
+  TrendingAgentsResponse,
 } from '@/types';
 
 // 统计数据服务
@@ -53,6 +54,9 @@ export const agentService = {
 
   getFeaturedAgents: () =>
     apiGet<Agent[]>('/agents/featured'),
+
+  getTrendingAgents: (limit: number = 5) =>
+    apiGet<TrendingAgentsResponse>(`/agents/trending?limit=${limit}`),
 
   getAgentById: (id: string) =>
     apiGet<Agent>(`/agents/${id}`),

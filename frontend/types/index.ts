@@ -127,6 +127,13 @@ export interface PaginatedResponse<T> {
   total_pages: number;
 }
 
+// Trending Agents Response (for homepage)
+export interface TrendingAgentsResponse {
+  top_ranked: Agent[];
+  featured: Agent[];
+  trending: Agent[];
+}
+
 export interface RegistrationTrendData {
   date: string;
   count: number;

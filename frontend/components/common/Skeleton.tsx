@@ -80,6 +80,42 @@ export function TableRowSkeleton({ columns = 4 }: { columns?: number }) {
   );
 }
 
+export function TrendingItemSkeleton() {
+  return (
+    <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#fafafa] dark:bg-[#0a0a0a]">
+      <Skeleton className="h-5 w-5 rounded flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        <Skeleton className="h-3.5 w-24 mb-1" />
+        <Skeleton className="h-2.5 w-16" />
+      </div>
+      <Skeleton className="h-4 w-10 rounded" />
+    </div>
+  );
+}
+
+export function TrendingSectionSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {['Top Ranked', 'Featured', 'Trending'].map((title) => (
+        <div
+          key={title}
+          className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] p-4"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <TrendingItemSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function DetailPageSkeleton() {
   return (
     <div className="container mx-auto px-4 py-8">
