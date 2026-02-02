@@ -198,3 +198,24 @@ docker compose logs -f backend | grep -E "bsc|BSC"
 ---
 
 **下一步**: 使用官方合约仓库部署 Identity 和 Reputation Registry 到 BSC 主网
+
+## 2026-01-30 Update: Analytics Fix Deployed
+
+### Issue
+Analytics API endpoint returning integer overflow error when calculating gas and fee statistics.
+
+### Solution
+Modified `backend/src/api/analytics.py` to cast BigInteger fields to Float before aggregation:
+```python
+func.sum(cast(Activity.gas_used, Float))
+func.sum(cast(Activity.transaction_fee, Float))
+```
+
+### Deployment
+- Rebuilt backend Docker image
+- Recreated container with updated code
+- Verified both internal (8001) and public (8080) endpoints
+
+### Status
+✅ **Deployed and verified** - Analytics endpoint now returns correct statistics for 22,790+ transactions with ~43.36 ETH total fees.
+
