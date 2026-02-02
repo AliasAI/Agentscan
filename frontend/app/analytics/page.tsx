@@ -379,18 +379,26 @@ export default function AnalyticsPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#737373] uppercase tracking-wider">
                         Network
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-[#737373] uppercase tracking-wider">
-                        Total TX
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-[#737373] uppercase tracking-wider">
-                        Registered
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-[#737373] uppercase tracking-wider">
-                        Reputation
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-[#737373] uppercase tracking-wider">
-                        Validation
-                      </th>
+                      <TableHeader
+                        label="Total TX"
+                        tooltip="Total on-chain transactions including registration, reputation updates, and validations"
+                        align="right"
+                      />
+                      <TableHeader
+                        label="Registered"
+                        tooltip="Number of registration events (usually 1 per agent)"
+                        align="right"
+                      />
+                      <TableHeader
+                        label="Score Updates"
+                        tooltip="Number of times the reputation SCORE changed (not total feedback count). Multiple feedbacks may result in minimal score change."
+                        align="right"
+                      />
+                      <TableHeader
+                        label="Validation"
+                        tooltip="Number of validation completion events"
+                        align="right"
+                      />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e5e5e5] dark:divide-[#262626]">
@@ -469,6 +477,49 @@ export default function AnalyticsPage() {
         ) : null}
       </div>
     </div>
+  )
+}
+
+// Table Header with Tooltip
+function TableHeader({
+  label,
+  tooltip,
+  align = 'left',
+}: {
+  label: string
+  tooltip: string
+  align?: 'left' | 'right'
+}) {
+  const [showTooltip, setShowTooltip] = useState(false)
+
+  return (
+    <th className={`px-6 py-3 text-${align} text-xs font-medium text-[#737373] uppercase tracking-wider`}>
+      <div className={`flex items-center gap-1 ${align === 'right' ? 'justify-end' : ''}`}>
+        <span>{label}</span>
+        <div
+          className="relative"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="text-[#a3a3a3] hover:text-[#737373] cursor-help transition-colors flex-shrink-0"
+          >
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+            <path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          {showTooltip && (
+            <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1.5 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] text-[10px] rounded-md shadow-lg w-48 leading-relaxed text-left normal-case font-normal tracking-normal">
+              {tooltip}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0a0a0a] dark:border-t-[#fafafa]" />
+            </div>
+          )}
+        </div>
+      </div>
+    </th>
   )
 }
 
