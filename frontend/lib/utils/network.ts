@@ -1,68 +1,15 @@
 /**
- * 网络配置映射工具
- * 用于根据 network_name 获取网络配置信息
+ * Network utility functions
+ * Re-exports from the unified network configuration
+ *
+ * @deprecated Import directly from '@/lib/networks' instead
  */
 
-export interface NetworkConfig {
-  explorerUrl: string;
-  contractAddress: string;
-}
-
-// 网络配置映射（通过 network_name 索引）
-export const NETWORK_CONFIG_BY_NAME: Record<string, NetworkConfig> = {
-  'Ethereum Mainnet': {
-    explorerUrl: 'https://etherscan.io',
-    contractAddress: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
-  },
-  'Sepolia': {
-    explorerUrl: 'https://sepolia.etherscan.io',
-    contractAddress: '0x8004A818BFB912233c491871b3d84c89A494BD9e',
-  },
-  'Base Sepolia': {
-    explorerUrl: 'https://sepolia.basescan.org',
-    contractAddress: '0x8004AA63c570c570eBF15376c0dB199918BFe9Fb',
-  },
-  'BSC Testnet': {
-    explorerUrl: 'https://testnet.bscscan.com',
-    contractAddress: '0x4f8c8694eAB93bbF7616EDD522503544E61E7dB7',
-  },
-  'Linea Sepolia': {
-    explorerUrl: 'https://sepolia.lineascan.build',
-    contractAddress: '0x8004aa7C931bCE1233973a0C6A667f73F66282e7',
-  },
-  'Hedera Testnet': {
-    explorerUrl: 'https://hashscan.io/testnet',
-    contractAddress: '0x0dDaa2de07deb24D5F0288ee29c3c57c4159DcC7',
-  },
-};
-
-/**
- * 根据 network_name 获取区块浏览器 URL
- */
-export function getExplorerUrl(networkName: string): string {
-  return NETWORK_CONFIG_BY_NAME[networkName]?.explorerUrl || 'https://etherscan.io';
-}
-
-/**
- * 根据 network_name 获取合约地址
- */
-export function getContractAddress(networkName: string): string {
-  return NETWORK_CONFIG_BY_NAME[networkName]?.contractAddress || '';
-}
-
-/**
- * 生成 NFT 浏览器链接
- */
-export function getNftExplorerUrl(networkName: string, tokenId: number): string {
-  const config = NETWORK_CONFIG_BY_NAME[networkName];
-  if (!config) return '#';
-  return `${config.explorerUrl}/nft/${config.contractAddress}/${tokenId}`;
-}
-
-/**
- * 生成交易浏览器链接
- */
-export function getTxExplorerUrl(networkName: string | undefined, txHash: string): string {
-  const explorerUrl = getExplorerUrl(networkName || '');
-  return `${explorerUrl}/tx/${txHash}`;
-}
+export {
+  getExplorerUrl,
+  getContractAddress,
+  getNftExplorerUrl,
+  getTxExplorerUrl,
+  NETWORKS_BY_NAME as NETWORK_CONFIG_BY_NAME,
+  type NetworkConfig,
+} from '@/lib/networks'
