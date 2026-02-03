@@ -442,16 +442,21 @@ event NewFeedback(
 | 网络 | Chain ID | 状态 | 说明 |
 |------|----------|------|------|
 | **Ethereum Mainnet** | 1 | ✅ 启用 | 主网已上线（Jan 30, 2026） |
+| **Polygon Mainnet** | 137 | ✅ 启用 | CREATE2 确定性部署，合约地址同 Ethereum |
+| **BNB Smart Chain** | 56 | ✅ 启用 | Vanity 地址部署 |
 | Sepolia | 11155111 | 🔧 测试 | 测试网，仅供开发使用 |
 | Base Sepolia | 84532 | ❌ 禁用 | 等待新合约部署 |
 | Linea Sepolia | 59141 | ❌ 禁用 | 等待新合约部署 |
 | Hedera Testnet | 296 | ❌ 禁用 | 等待新合约部署 |
-| BSC Testnet | 97 | ❌ 禁用 | 等待新合约部署 |
 
-**Ethereum Mainnet 合约地址（Jan 2026）：**
+**Ethereum Mainnet / Polygon Mainnet 合约地址（CREATE2 确定性部署）：**
 - Identity Registry: `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`
 - Reputation Registry: `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`
 - Validation Registry: 待部署
+
+**BNB Smart Chain 合约地址（Vanity 部署）：**
+- Identity Registry: `0x8004c274E3770d32dc1883ab5108b0eA28A854D5`
+- Reputation Registry: `0x8004e9D54904EaAFc724A743Fea4387Fa632dc2D`
 
 **Sepolia 测试网合约地址（仅供开发）：**
 - Identity Registry: `0x8004A818BFB912233c491871b3d84c89A494BD9e`

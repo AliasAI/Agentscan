@@ -26,6 +26,21 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         "blocks_per_batch": 2000,  # Mainnet has faster blocks
         "enabled": True,  # Keep Ethereum enabled
     },
+    # === Polygon Mainnet ===
+    "polygon": {
+        "name": "Polygon Mainnet",
+        "chain_id": 137,
+        "rpc_url": os.getenv("POLYGON_RPC_URL", ""),
+        "explorer_url": "https://polygonscan.com",
+        "contracts": {
+            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+            # validation: to be deployed (under discussion with TEE community)
+        },
+        "start_block": 82458484,  # Contract deployment block (Feb 2, 2026)
+        "blocks_per_batch": 5000,  # Polygon has fast blocks (~2s)
+        "enabled": True,
+    },
     # === Testnets ===
     "sepolia": {
         "name": "Sepolia",
