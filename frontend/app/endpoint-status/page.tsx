@@ -179,16 +179,19 @@ export default function EndpointStatusPage() {
             </div>
           </div>
 
-          {/* Network filter */}
-          <NetworkSelector
-            selectedNetwork={selectedNetwork}
-            onNetworkChange={handleNetworkChange}
-          />
         </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Network filter - moved outside header to avoid overflow:hidden clipping */}
+        <div className="mb-6">
+          <NetworkSelector
+            selectedNetwork={selectedNetwork}
+            onNetworkChange={handleNetworkChange}
+          />
+        </div>
+
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
             {error}
