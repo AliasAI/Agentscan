@@ -15,10 +15,11 @@ logger = structlog.get_logger(__name__)
 
 # Subgraph endpoints for different networks (The Graph Gateway)
 # Reference: https://github.com/agent0lab/subgraph
-# Updated: Jan 2026 - Added Ethereum Mainnet support
+# Updated: Feb 2026 - Added Polygon Mainnet support
 # API key format: https://gateway.thegraph.com/api/<API_KEY>/subgraphs/id/<SUBGRAPH_ID>
 SUBGRAPH_URLS = {
     "ethereum": "https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/FV6RR6y13rsnCxBAicKuQEwDp8ioEGiNaWaZUmvr1F8k",
+    "polygon": "https://gateway.thegraph.com/api/subgraphs/id/9q16PZv1JudvtnCAf44cBoxg82yK9SSsFvrjCY9xnneF",
     "sepolia": "https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/6wQRC7geo9XYAhckfmfo8kbMRLeWU8KQd3XsJqFKmZLT",
     # base-sepolia, polygon-amoy, etc. not deployed yet
 }
@@ -29,6 +30,7 @@ SUPPORTED_NETWORKS = set(SUBGRAPH_URLS.keys())
 # Chain IDs mapping
 CHAIN_IDS = {
     "ethereum": 1,
+    "polygon": 137,
     "sepolia": 11155111,
     "base-sepolia": 84532,
 }

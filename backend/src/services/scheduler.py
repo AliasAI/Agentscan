@@ -5,14 +5,8 @@ from datetime import datetime, timezone
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from src.services.blockchain_sync import (
-    get_sync_service,
-    sync_ethereum,
-    sync_sepolia,
-    sync_base_sepolia,
-    sync_bsc_testnet,
-)
-from src.core.networks_config import get_enabled_networks
+from src.services.blockchain_sync import get_sync_service
+from src.core.networks_config import get_enabled_networks, get_network
 import structlog
 
 logger = structlog.get_logger()
@@ -24,40 +18,33 @@ scheduler = AsyncIOScheduler()
 ENDPOINT_SCAN_HOUR = 3  # UTC 03:00 daily
 STARTUP_SCAN_THRESHOLD = 10  # Trigger startup scan if unchecked agents >= this
 
+# Network sync intervals (minutes) - staggered to avoid RPC rate limits
+NETWORK_SYNC_INTERVALS = {
+    "ethereum": 2,    # Every 2 minutes (primary network)
+    "polygon": 2,     # Every 2 minutes (high activity)
+    "bsc": 3,         # Every 3 minutes
+    "sepolia": 5,     # Every 5 minutes (testnet, lower priority)
+}
+
+
+def _create_network_sync_task(network_key: str):
+    """Factory function to create a sync task for a specific network"""
+    async def sync_task():
+        try:
+            logger.info("scheduler_task_started", task=f"{network_key}_sync")
+            await asyncio.to_thread(_sync_network_blocking, network_key)
+            logger.info("scheduler_task_completed", task=f"{network_key}_sync")
+        except Exception as e:
+            logger.error(
+                "scheduler_task_failed",
+                task=f"{network_key}_sync",
+                error=str(e)
+            )
+    return sync_task
+
 
 def start_scheduler():
     """Start the background task scheduler with multi-network support"""
-
-    async def sync_ethereum_task():
-        """Periodic Ethereum Mainnet blockchain sync task"""
-        try:
-            logger.info("scheduler_task_started", task="ethereum_sync")
-            await asyncio.to_thread(_sync_network_blocking, "ethereum")
-            logger.info("scheduler_task_completed", task="ethereum_sync")
-        except Exception as e:
-            logger.error("scheduler_task_failed", task="ethereum_sync", error=str(e))
-
-    async def sync_base_sepolia_task():
-        """Periodic Base Sepolia blockchain sync task"""
-        try:
-            logger.info("scheduler_task_started", task="base_sepolia_sync")
-            await asyncio.to_thread(_sync_network_blocking, "base-sepolia")
-            logger.info("scheduler_task_completed", task="base_sepolia_sync")
-        except Exception as e:
-            logger.error(
-                "scheduler_task_failed", task="base_sepolia_sync", error=str(e)
-            )
-
-    async def sync_bsc_testnet_task():
-        """Periodic BSC Testnet blockchain sync task"""
-        try:
-            logger.info("scheduler_task_started", task="bsc_testnet_sync")
-            await asyncio.to_thread(_sync_network_blocking, "bsc-testnet")
-            logger.info("scheduler_task_completed", task="bsc_testnet_sync")
-        except Exception as e:
-            logger.error(
-                "scheduler_task_failed", task="bsc_testnet_sync", error=str(e)
-            )
 
     async def endpoint_scan_task():
         """Daily endpoint health scan task"""
@@ -68,28 +55,41 @@ def start_scheduler():
         except Exception as e:
             logger.error("scheduler_task_failed", task="endpoint_scan", error=str(e))
 
-    # Add Ethereum Mainnet sync job - runs every 2 minutes
-    scheduler.add_job(
-        sync_ethereum_task,
-        trigger=CronTrigger(minute='*/2'),
-        id='ethereum_sync',
-        name='Sync Ethereum Mainnet blockchain data',
-        replace_existing=True,
-        max_instances=1
-    )
+    # Dynamically add sync jobs for all enabled networks
+    enabled_networks = get_enabled_networks()
+    scheduled_networks = []
 
-    # Note: Testnet sync jobs disabled (Jan 2026)
-    # Testnets are disabled for mainnet testing
-    # Uncomment when needed:
-    #
-    # scheduler.add_job(
-    #     sync_sepolia_task,
-    #     trigger=CronTrigger(minute='1-59/2'),
-    #     id='sepolia_sync',
-    #     name='Sync Sepolia blockchain data',
-    #     replace_existing=True,
-    #     max_instances=1
-    # )
+    for network_key, config in enabled_networks.items():
+        # Skip networks without RPC URL configured
+        rpc_url = config.get("rpc_url", "")
+        if not rpc_url:
+            logger.warning(
+                "network_sync_skipped",
+                network=network_key,
+                reason="no_rpc_url_configured"
+            )
+            continue
+
+        # Get sync interval (default 5 minutes)
+        interval = NETWORK_SYNC_INTERVALS.get(network_key, 5)
+
+        # Create and add sync job
+        sync_task = _create_network_sync_task(network_key)
+        scheduler.add_job(
+            sync_task,
+            trigger=CronTrigger(minute=f'*/{interval}'),
+            id=f'{network_key}_sync',
+            name=f'Sync {config["name"]} blockchain data',
+            replace_existing=True,
+            max_instances=1
+        )
+        scheduled_networks.append(network_key)
+        logger.info(
+            "network_sync_scheduled",
+            network=network_key,
+            name=config["name"],
+            interval_minutes=interval
+        )
 
     # Add endpoint health scan job - runs daily at 03:00 UTC
     scheduler.add_job(
@@ -104,15 +104,12 @@ def start_scheduler():
     # Start scheduler
     scheduler.start()
 
-    # Get next run times for logging
-    ethereum_job = scheduler.get_job('ethereum_sync')
+    # Log summary
     endpoint_scan_job = scheduler.get_job('endpoint_scan')
-
     logger.info(
         "scheduler_started",
-        networks=["ethereum"],  # Ethereum Mainnet (Jan 2026)
-        ethereum_schedule="Every 2 minutes (:00, :02, :04, ...)",
-        ethereum_next_run=ethereum_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if ethereum_job and ethereum_job.next_run_time else 'N/A',
+        networks=scheduled_networks,
+        total_networks=len(scheduled_networks),
         endpoint_scan_schedule=f"Daily at {ENDPOINT_SCAN_HOUR:02d}:00 UTC",
         endpoint_scan_next_run=endpoint_scan_job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if endpoint_scan_job and endpoint_scan_job.next_run_time else 'N/A',
         reputation_mode="EVENT-DRIVEN (via NewFeedback/FeedbackRevoked events)"
