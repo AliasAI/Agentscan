@@ -22,7 +22,7 @@ STARTUP_SCAN_THRESHOLD = 10  # Trigger startup scan if unchecked agents >= this
 NETWORK_SYNC_INTERVALS = {
     "ethereum": 2,    # Every 2 minutes (primary network)
     "polygon": 2,     # Every 2 minutes (high activity)
-    "bsc": 3,         # Every 3 minutes
+    "bsc": 5,         # Every 5 minutes (public RPC has strict rate limits)
     "sepolia": 5,     # Every 5 minutes (testnet, lower priority)
 }
 

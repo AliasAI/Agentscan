@@ -146,7 +146,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
             "reputation": os.getenv("BSC_REPUTATION_CONTRACT", "0x8004e9D54904EaAFc724A743Fea4387Fa632dc2D"),
         },
         "start_block": 78275879,  # Vanity deployment block (Jan 30, 2026)
-        "blocks_per_batch": 5000,  # BSC has fast blocks (3s)
+        "blocks_per_batch": 1000,  # Reduced for public RPC rate limits
         "enabled": True,
     },
 }
