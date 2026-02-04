@@ -14,8 +14,8 @@ class Network(Base):
     __tablename__ = "networks"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    name = Column(String, nullable=False, unique=True, index=True)
-    chain_id = Column(Integer, nullable=False, unique=True)
+    name = Column(String, nullable=False, index=True)  # Not unique: allow multiple networks with same chain
+    chain_id = Column(Integer, nullable=False)  # Not unique: allow bsc-1 and bsc-2 with same chain_id
     rpc_url = Column(String, nullable=False)
     explorer_url = Column(String, nullable=False)
     contracts = Column(JSON, nullable=True)  # 合约地址 {identity, reputation, validation}
