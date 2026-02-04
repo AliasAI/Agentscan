@@ -149,10 +149,27 @@ export function MonadIcon({ className = 'w-5 h-5' }: IconProps) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <circle cx="50" cy="50" r="50" fill="#836EF9" />
+      <circle cx="50" cy="50" r="50" fill="#F5F5F5" />
       <path
-        d="M25 70V30L38 50L50 30L62 50L75 30V70H67V48L62 56L50 38L38 56L33 48V70H25Z"
-        fill="white"
+        d="M50 20L75 35V65L50 80L25 65V35L50 20Z"
+        fill="none"
+        stroke="#836EF9"
+        strokeWidth="4"
+      />
+      <path
+        d="M50 20L75 35L50 50L25 35L50 20Z"
+        fill="#836EF9"
+        fillOpacity="0.3"
+      />
+      <path
+        d="M50 50V80L25 65V35L50 50Z"
+        fill="#836EF9"
+        fillOpacity="0.5"
+      />
+      <path
+        d="M50 50V80L75 65V35L50 50Z"
+        fill="#836EF9"
+        fillOpacity="0.7"
       />
     </svg>
   )

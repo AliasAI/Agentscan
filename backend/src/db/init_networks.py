@@ -13,15 +13,37 @@ def init_networks():
     try:
         added_count = 0
         updated_count = 0
+        deleted_count = 0
+
+        # First, handle legacy network keys that have been renamed
+        legacy_mappings = {
+            "bsc": None,  # Old bsc should be deleted (split into bsc-1 and bsc-2)
+        }
+
+        for old_key, new_key in legacy_mappings.items():
+            old_network = db.query(Network).filter(Network.id == old_key).first()
+            if old_network:
+                if new_key:
+                    # Rename to new key
+                    old_network.id = new_key
+                    updated_count += 1
+                    print(f"✅ Renamed network: {old_key} -> {new_key}")
+                else:
+                    # Delete legacy network
+                    db.delete(old_network)
+                    deleted_count += 1
+                    print(f"🗑️ Deleted legacy network: {old_key}")
+
+        db.flush()  # Apply deletions before adding new networks
 
         # Process each network in config
         for network_key, config in NETWORKS.items():
             if not config.get("enabled", True):
                 continue
 
-            # Check if network already exists (by id or chain_id)
+            # Check if network already exists by id only (allow same chain_id for different networks)
             existing_network = db.query(Network).filter(
-                (Network.id == network_key) | (Network.chain_id == config["chain_id"])
+                Network.id == network_key
             ).first()
 
             if existing_network:
@@ -30,11 +52,11 @@ def init_networks():
                     existing_network.contracts = config["contracts"]
                     updated_count += 1
                     print(f"✅ Updated contracts for {existing_network.name}")
-                # Update id if it's a UUID (migrate from old schema)
-                if existing_network.id != network_key and len(existing_network.id) > 20:
-                    existing_network.id = network_key
+                # Update name if changed
+                if existing_network.name != config["name"]:
+                    existing_network.name = config["name"]
                     updated_count += 1
-                    print(f"✅ Updated id for {existing_network.name}: {network_key}")
+                    print(f"✅ Updated name for {network_key}: {config['name']}")
             else:
                 # Create new network with network_key as id
                 network = Network(
@@ -54,10 +76,11 @@ def init_networks():
 
         # Summary
         total_count = db.query(Network).count()
-        if added_count > 0 or updated_count > 0:
+        if added_count > 0 or updated_count > 0 or deleted_count > 0:
             print(f"\n📊 Network initialization summary:")
             print(f"   - Added: {added_count}")
             print(f"   - Updated: {updated_count}")
+            print(f"   - Deleted: {deleted_count}")
             print(f"   - Total networks: {total_count}")
         else:
             print(f"✅ All {total_count} networks already initialized")
