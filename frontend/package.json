@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
+    "@web3icons/react": "^4.1.17",
     "next": "^16.0.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
