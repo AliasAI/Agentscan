@@ -25,7 +25,6 @@ NETWORK_SYNC_INTERVALS = {
     "base": 2,        # Every 2 minutes (L2, high activity)
     "monad": 2,       # Every 2 minutes (fast L1)
     "bsc-1": 5,       # Every 5 minutes (public RPC has strict rate limits)
-    "bsc-2": 5,       # Every 5 minutes (public RPC has strict rate limits)
     "sepolia": 5,     # Every 5 minutes (testnet, lower priority)
 }
 

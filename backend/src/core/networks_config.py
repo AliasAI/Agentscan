@@ -164,7 +164,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         "blocks_per_batch": 1000,
         "enabled": True,
     },
-    # === BSC Mainnet 2 (Vanity deployment) ===
+    # === BSC Mainnet 2 (Vanity deployment) - Disabled for now ===
     "bsc-2": {
         "name": "BNB Smart Chain 2",
         "chain_id": 56,
@@ -176,7 +176,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         },
         "start_block": 79090000,  # Skip to near first registration (~79096984)
         "blocks_per_batch": 1000,
-        "enabled": True,
+        "enabled": False,
     },
     # === Monad Mainnet ===
     "monad": {

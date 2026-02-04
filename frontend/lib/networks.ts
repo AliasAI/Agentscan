@@ -75,7 +75,7 @@ export const NETWORKS: Record<string, NetworkConfig> = {
       reputation: '0x8004e9D54904EaAFc724A743Fea4387Fa632dc2D',
     },
     iconType: 'bsc',
-    enabled: true,
+    enabled: false,
   },
   base: {
     id: 'base',
