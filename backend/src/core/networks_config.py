@@ -41,6 +41,21 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         "blocks_per_batch": 5000,  # Polygon has fast blocks (~2s)
         "enabled": True,
     },
+    # === Base Mainnet ===
+    "base": {
+        "name": "Base",
+        "chain_id": 8453,
+        "rpc_url": os.getenv("BASE_RPC_URL", ""),
+        "explorer_url": "https://basescan.org",
+        "contracts": {
+            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+            # validation: to be deployed (under discussion with TEE community)
+        },
+        "start_block": 41663783,  # Contract deployment block (Feb 4, 2026)
+        "blocks_per_batch": 5000,  # Base has fast blocks (~2s, similar to Polygon)
+        "enabled": True,
+    },
     # === Testnets ===
     "sepolia": {
         "name": "Sepolia",
