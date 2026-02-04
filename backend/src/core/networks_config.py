@@ -190,7 +190,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
             # validation: to be deployed (under discussion with TEE community)
         },
         "start_block": 52952790,  # Contract deployment block (Feb 4, 2026)
-        "blocks_per_batch": 5000,  # Monad has fast blocks (~1s)
+        "blocks_per_batch": 1000,  # Reduced: Monad's fast blocks (~1s) cause 413 errors with larger batches
         "enabled": True,
     },
 }

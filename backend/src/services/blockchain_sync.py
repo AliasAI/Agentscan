@@ -32,6 +32,11 @@ logger = structlog.get_logger()
 DEFAULT_BLOCKS_PER_BATCH = 1000
 DEFAULT_MAX_BATCHES_PER_RUN = 50
 
+# SQLite INTEGER limits (64-bit signed)
+# int128 on-chain can exceed this, so we need to clamp values
+SQLITE_INT_MAX = 9223372036854775807   # 2^63 - 1
+SQLITE_INT_MIN = -9223372036854775808  # -2^63
+
 # NewFeedback event topic (Jan 2026 mainnet freeze)
 # NewFeedback(uint256,address,uint64,int128,uint8,string,string,string,string,string,bytes32)
 # Note: has indexedTag1 (string indexed) AND tag1 (string) = 2 string params for tag1
@@ -755,6 +760,27 @@ class NetworkSyncService:
             )
             block_timestamp = datetime.fromtimestamp(block["timestamp"])
 
+            # Clamp value to SQLite INTEGER range (int128 can exceed 64-bit)
+            stored_value = value
+            if value > SQLITE_INT_MAX:
+                logger.warning(
+                    "feedback_value_overflow",
+                    network=self.network_key,
+                    token_id=agent_id,
+                    original_value=str(value),
+                    clamped_to=SQLITE_INT_MAX
+                )
+                stored_value = SQLITE_INT_MAX
+            elif value < SQLITE_INT_MIN:
+                logger.warning(
+                    "feedback_value_underflow",
+                    network=self.network_key,
+                    token_id=agent_id,
+                    original_value=str(value),
+                    clamped_to=SQLITE_INT_MIN
+                )
+                stored_value = SQLITE_INT_MIN
+
             # Create feedback record (Jan 2026: value/value_decimals)
             feedback = Feedback(
                 agent_id=agent.id,
@@ -762,7 +788,7 @@ class NetworkSyncService:
                 token_id=agent_id,
                 feedback_index=feedback_index,
                 client_address=client_address.lower(),
-                value=value,
+                value=stored_value,
                 value_decimals=value_decimals,
                 tag1=tag1 if tag1 else None,
                 tag2=tag2 if tag2 else None,
