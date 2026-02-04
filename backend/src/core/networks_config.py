@@ -154,7 +154,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
     "bsc": {
         "name": "BNB Smart Chain",
         "chain_id": 56,
-        "rpc_url": os.getenv("BSC_RPC_URL", "https://bsc-dataseed.binance.org/"),
+        "rpc_url": os.getenv("BSC_RPC_URL", "https://dark-divine-pool.bsc.quiknode.pro/1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"),
         "explorer_url": "https://bscscan.com",
         "contracts": {
             "identity": os.getenv("BSC_IDENTITY_CONTRACT", "0x8004c274E3770d32dc1883ab5108b0eA28A854D5"),
