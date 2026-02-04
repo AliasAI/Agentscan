@@ -150,9 +150,23 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         "blocks_per_batch": 10000,
         "enabled": False,  # Disabled until deployed
     },
-    # === BSC Mainnet ===
-    "bsc": {
-        "name": "BNB Smart Chain",
+    # === BSC Mainnet 1 (CREATE2 deterministic deployment) ===
+    "bsc-1": {
+        "name": "BNB Smart Chain 1",
+        "chain_id": 56,
+        "rpc_url": os.getenv("BSC_RPC_URL", "https://dark-divine-pool.bsc.quiknode.pro/1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"),
+        "explorer_url": "https://bscscan.com",
+        "contracts": {
+            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+        },
+        "start_block": 49200000,  # Approximate deployment block
+        "blocks_per_batch": 1000,
+        "enabled": True,
+    },
+    # === BSC Mainnet 2 (Vanity deployment) ===
+    "bsc-2": {
+        "name": "BNB Smart Chain 2",
         "chain_id": 56,
         "rpc_url": os.getenv("BSC_RPC_URL", "https://dark-divine-pool.bsc.quiknode.pro/1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"),
         "explorer_url": "https://bscscan.com",
@@ -161,7 +175,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
             "reputation": os.getenv("BSC_REPUTATION_CONTRACT", "0x8004e9D54904EaAFc724A743Fea4387Fa632dc2D"),
         },
         "start_block": 79090000,  # Skip to near first registration (~79096984)
-        "blocks_per_batch": 1000,  # Reduced for public RPC rate limits
+        "blocks_per_batch": 1000,
         "enabled": True,
     },
     # === Monad Mainnet ===

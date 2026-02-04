@@ -51,17 +51,56 @@ export const NETWORKS: Record<string, NetworkConfig> = {
     iconType: 'polygon',
     enabled: true,
   },
-  bsc: {
-    id: 'bsc',
-    name: 'BNB Smart Chain',
+  'bsc-1': {
+    id: 'bsc-1',
+    name: 'BNB Smart Chain 1',
     chainId: 56,
     explorerUrl: 'https://bscscan.com',
     contracts: {
-      // Vanity deployment - different addresses
+      // CREATE2 deterministic deployment - same addresses as Ethereum
+      identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
+      reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
+    },
+    iconType: 'bsc',
+    enabled: true,
+  },
+  'bsc-2': {
+    id: 'bsc-2',
+    name: 'BNB Smart Chain 2',
+    chainId: 56,
+    explorerUrl: 'https://bscscan.com',
+    contracts: {
+      // Vanity deployment
       identity: '0x8004c274E3770d32dc1883ab5108b0eA28A854D5',
       reputation: '0x8004e9D54904EaAFc724A743Fea4387Fa632dc2D',
     },
     iconType: 'bsc',
+    enabled: true,
+  },
+  base: {
+    id: 'base',
+    name: 'Base',
+    chainId: 8453,
+    explorerUrl: 'https://basescan.org',
+    contracts: {
+      // CREATE2 deterministic deployment - same addresses as Ethereum
+      identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
+      reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
+    },
+    iconType: 'base',
+    enabled: true,
+  },
+  monad: {
+    id: 'monad',
+    name: 'Monad',
+    chainId: 143,
+    explorerUrl: 'https://monadscan.com',
+    contracts: {
+      // CREATE2 deterministic deployment - same addresses as Ethereum
+      identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
+      reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
+    },
+    iconType: 'monad',
     enabled: true,
   },
   // === Testnets ===

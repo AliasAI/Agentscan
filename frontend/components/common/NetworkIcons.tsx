@@ -141,6 +141,23 @@ export function HederaIcon({ className = 'w-5 h-5' }: IconProps) {
   )
 }
 
+export function MonadIcon({ className = 'w-5 h-5' }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle cx="50" cy="50" r="50" fill="#836EF9" />
+      <path
+        d="M25 70V30L38 50L50 30L62 50L75 30V70H67V48L62 56L50 38L38 56L33 48V70H25Z"
+        fill="white"
+      />
+    </svg>
+  )
+}
+
 export function DefaultNetworkIcon({ className = 'w-5 h-5' }: IconProps) {
   return (
     <svg
@@ -175,6 +192,7 @@ const ICON_COMPONENTS: Record<string, React.FC<IconProps>> = {
   base: BaseIcon,
   linea: LineaIcon,
   hedera: HederaIcon,
+  monad: MonadIcon,
   default: DefaultNetworkIcon,
 }
 
