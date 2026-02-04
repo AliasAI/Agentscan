@@ -45,7 +45,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
     "base": {
         "name": "Base",
         "chain_id": 8453,
-        "rpc_url": os.getenv("BASE_RPC_URL", ""),
+        "rpc_url": os.getenv("BASE_RPC_URL", "https://dark-divine-pool.base-mainnet.quiknode.pro/1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"),
         "explorer_url": "https://basescan.org",
         "contracts": {
             "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
