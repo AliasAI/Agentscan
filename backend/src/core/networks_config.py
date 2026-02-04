@@ -164,6 +164,21 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
         "blocks_per_batch": 1000,  # Reduced for public RPC rate limits
         "enabled": True,
     },
+    # === Monad Mainnet ===
+    "monad": {
+        "name": "Monad",
+        "chain_id": 143,
+        "rpc_url": os.getenv("MONAD_RPC_URL", "https://dark-divine-pool.monad-mainnet.quiknode.pro/1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"),
+        "explorer_url": "https://monadscan.com",
+        "contracts": {
+            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+            # validation: to be deployed (under discussion with TEE community)
+        },
+        "start_block": 52952790,  # Contract deployment block (Feb 4, 2026)
+        "blocks_per_batch": 5000,  # Monad has fast blocks (~1s)
+        "enabled": True,
+    },
 }
 
 # Get enabled networks
