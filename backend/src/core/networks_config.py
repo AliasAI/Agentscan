@@ -160,7 +160,7 @@ NETWORKS: Dict[str, Dict[str, Any]] = {
             "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
             "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
         },
-        "start_block": 49200000,  # Approximate deployment block
+        "start_block": 79027286,  # Skip to contract deployment block
         "blocks_per_batch": 1000,
         "enabled": True,
     },
