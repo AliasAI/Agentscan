@@ -18,6 +18,7 @@ import type {
   MetadataResponse,
   AnalyticsResponse,
   TrendingAgentsResponse,
+  LeaderboardResponse,
 } from '@/types';
 
 // 统计数据服务
@@ -147,10 +148,18 @@ export const endpointHealthService = {
       `/agents/${agentId}/endpoint-health?include_feedbacks=${includeFeedbacks}`
     ),
 
-  // 获取 Endpoint 健康状态摘要
+  // 获取 Endpoint 健康状态摘要 (real-time HTTP checks, slow)
   getSummary: (network?: string) => {
     const query = network ? `?network=${network}` : '';
     return apiGet<EndpointHealthSummaryResponse>(`/endpoint-health/summary${query}`);
+  },
+
+  // 获取快速统计 (pure SQL, fast)
+  getQuickStats: (network?: string) => {
+    const query = network ? `?network=${network}` : '';
+    return apiGet<{ summary: Record<string, number>; generated_at: string }>(
+      `/endpoint-health/quick-stats${query}`
+    );
   },
 
   // 获取有工作 Endpoint 的 Agent 列表
@@ -176,6 +185,25 @@ export const endpointHealthService = {
     if (onlyWithEndpoints) params.set('only_with_endpoints', 'true');
     const query = params.toString();
     return `/api/endpoint-health/stream${query ? `?${query}` : ''}`;
+  },
+};
+
+// Leaderboard 服务
+export const leaderboardService = {
+  getLeaderboard: (params?: {
+    page?: number;
+    page_size?: number;
+    network?: string;
+    sort_by?: string;
+  }) => {
+    const query = new URLSearchParams(
+      Object.entries(params || {})
+        .filter(([_, v]) => v !== undefined && v !== null)
+        .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {})
+    ).toString();
+    return apiGet<LeaderboardResponse>(
+      `/leaderboard${query ? `?${query}` : ''}`
+    );
   },
 };
 

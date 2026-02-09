@@ -403,6 +403,34 @@ export interface AnalyticsResponse {
   network_stats: NetworkTxStats[];
 }
 
+// ============================================
+// Leaderboard Types
+// ============================================
+
+export interface LeaderboardItem {
+  rank: number;
+  agent_id: string;
+  agent_name: string;
+  token_id: number | null;
+  network_key: string;
+  score: number;
+  service_score: number;
+  usage_score: number;
+  quality_score: number;
+  profile_score: number;
+  reputation_score: number;
+  reputation_count: number;
+  has_working_endpoints: boolean;
+}
+
+export interface LeaderboardResponse {
+  items: LeaderboardItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
 // Metadata API Response (for real-time metadata fetching)
 export interface MetadataResponse {
   raw_uri: string;

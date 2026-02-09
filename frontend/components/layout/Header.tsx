@@ -20,7 +20,7 @@ export function Header() {
   }, []);
 
   // SVG 图标组件 - 统一使用简洁线条风格
-  const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' | 'endpoints' | 'analytics' | 'create' }) => {
+  const NavIcon = ({ type }: { type: 'overview' | 'agents' | 'networks' | 'leaderboard' | 'insights' | 'create' }) => {
     const icons = {
       overview: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -43,12 +43,17 @@ export function Header() {
           <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" />
         </svg>
       ),
-      endpoints: (
+      leaderboard: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 12H18L15 21L9 3L6 12H2" />
+          <path d="M6 9H4.5C3.83696 9 3.20107 8.73661 2.73223 8.26777C2.26339 7.79893 2 7.16304 2 6.5C2 5.83696 2.26339 5.20107 2.73223 4.73223C3.20107 4.26339 3.83696 4 4.5 4H6" />
+          <path d="M18 9H19.5C20.163 9 20.7989 8.73661 21.2678 8.26777C21.7366 7.79893 22 7.16304 22 6.5C22 5.83696 21.7366 5.20107 21.2678 4.73223C20.7989 4.26339 20.163 4 19.5 4H18" />
+          <path d="M4 22H20" />
+          <path d="M10 14.66V17C10 17.55 9.55 18 9 18H8C7.45 18 7 18.45 7 19V22" />
+          <path d="M14 14.66V17C14 17.55 14.45 18 15 18H16C16.55 18 17 18.45 17 19V22" />
+          <path d="M18 2H6V9C6 12.314 8.686 15 12 15C15.314 15 18 12.314 18 9V2Z" />
         </svg>
       ),
-      analytics: (
+      insights: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 20V10M18 20V4M6 20V16" />
         </svg>
@@ -68,8 +73,8 @@ export function Header() {
     { href: '/', label: 'Overview', iconType: 'overview' as const },
     { href: '/agents', label: 'Agents', iconType: 'agents' as const },
     { href: '/networks', label: 'Networks', iconType: 'networks' as const },
-    { href: '/endpoint-status', label: 'Endpoints', iconType: 'endpoints' as const },
-    { href: '/analytics', label: 'Analytics', iconType: 'analytics' as const },
+    { href: '/leaderboard', label: 'Leaderboard', iconType: 'leaderboard' as const },
+    { href: '/insights', label: 'Insights', iconType: 'insights' as const },
     { href: '/create', label: 'Create', iconType: 'create' as const },
   ];
 
