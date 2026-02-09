@@ -1,8 +1,8 @@
 """Agent scoring service for Leaderboard
 
 Calculates a composite AgentScore (0-100) from four dimensions:
-  - Service  (30%): endpoint reachability
-  - Usage    (40%): feedback volume + reputation score
+  - Service  (20%): endpoint reachability
+  - Usage    (50%): feedback volume + reputation score
   - Quality  (20%): feedback freshness (recency)
   - Profile  (10%): metadata completeness
 """
@@ -11,9 +11,9 @@ import math
 from datetime import datetime, timedelta
 from typing import Optional
 
-# Weights
-W_SERVICE = 0.30
-W_USAGE = 0.40
+# Weights (adjusted from real data: service was too binary at 30%)
+W_SERVICE = 0.20
+W_USAGE = 0.50
 W_QUALITY = 0.20
 W_PROFILE = 0.10
 
@@ -22,7 +22,8 @@ USAGE_FEEDBACK_W = 0.60
 USAGE_REPUTATION_W = 0.40
 
 # For log normalization: agents with this many feedbacks get ~100
-FEEDBACK_LOG_CAP = 50
+# Raised from 50 to 500 — with cap=50, agents at 50 fb scored same as 1500 fb
+FEEDBACK_LOG_CAP = 500
 
 
 def calc_service_score(endpoint_status: Optional[dict]) -> float:

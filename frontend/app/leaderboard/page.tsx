@@ -109,10 +109,10 @@ export default function LeaderboardPage() {
       <div className="flex flex-wrap items-center gap-4 mb-6 text-[11px] text-[#737373]">
         <span className="font-medium text-[#525252] dark:text-[#a3a3a3]">Score Dimensions:</span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-green-500" /> Service (30%)
+          <span className="w-2 h-2 rounded-full bg-green-500" /> Service (20%)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-blue-500" /> Usage (40%)
+          <span className="w-2 h-2 rounded-full bg-blue-500" /> Usage (50%)
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-purple-500" /> Quality (20%)

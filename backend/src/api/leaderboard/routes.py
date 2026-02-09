@@ -50,8 +50,11 @@ class LeaderboardResponse(BaseModel):
 SORT_FIELDS = {"score", "service", "usage", "quality", "profile"}
 
 
+MIN_SCORE_THRESHOLD = 10  # Hide empty-shell agents (name-only, score ~5)
+
+
 def _build_scored_list(db: Session, network: Optional[str]) -> list[dict]:
-    """Compute scores for all agents. Result is cached at the route level."""
+    """Compute scores for all agents, filtering out empties. Cached at route level."""
     query = db.query(Agent)
     if network:
         query = query.filter(Agent.network_id == network)
@@ -74,16 +77,17 @@ def _build_scored_list(db: Session, network: Optional[str]) -> list[dict]:
             skills=agent.skills,
             domains=agent.domains,
         )
-        scored.append({
-            "id": agent.id,
-            "name": agent.name or "Unknown Agent",
-            "token_id": agent.token_id,
-            "network_id": agent.network_id,
-            "reputation_score": agent.reputation_score or 0.0,
-            "reputation_count": agent.reputation_count or 0,
-            "has_working": has_working,
-            **scores,
-        })
+        if scores["score"] >= MIN_SCORE_THRESHOLD:
+            scored.append({
+                "id": agent.id,
+                "name": agent.name or "Unknown Agent",
+                "token_id": agent.token_id,
+                "network_id": agent.network_id,
+                "reputation_score": agent.reputation_score or 0.0,
+                "reputation_count": agent.reputation_count or 0,
+                "has_working": has_working,
+                **scores,
+            })
 
     return scored
 
