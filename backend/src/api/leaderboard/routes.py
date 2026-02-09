@@ -1,11 +1,12 @@
 """Leaderboard API routes
 
 Provides ranked agent listings with composite scoring.
+Uses in-memory cache (5 min TTL) to avoid re-computing 40K+ scores per request.
 """
 
+import time
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
 from typing import Optional
 from pydantic import BaseModel
 
@@ -14,6 +15,10 @@ from src.models import Agent
 from src.services.scoring import calc_agent_score
 
 router = APIRouter()
+
+# --- Cache ---
+CACHE_TTL = 300  # 5 minutes
+_score_cache: dict[str, dict] = {}  # network_key -> {ts, items}
 
 
 class LeaderboardItem(BaseModel):
@@ -45,6 +50,57 @@ class LeaderboardResponse(BaseModel):
 SORT_FIELDS = {"score", "service", "usage", "quality", "profile"}
 
 
+def _build_scored_list(db: Session, network: Optional[str]) -> list[dict]:
+    """Compute scores for all agents. Result is cached at the route level."""
+    query = db.query(Agent)
+    if network:
+        query = query.filter(Agent.network_id == network)
+
+    agents = query.all()
+
+    scored = []
+    for agent in agents:
+        has_working = bool(
+            agent.endpoint_status
+            and agent.endpoint_status.get("has_working_endpoints")
+        )
+        scores = calc_agent_score(
+            endpoint_status=agent.endpoint_status,
+            feedback_count=agent.reputation_count or 0,
+            reputation_score=agent.reputation_score or 0.0,
+            reputation_last_updated=agent.reputation_last_updated,
+            name=agent.name or "",
+            description=agent.description or "",
+            skills=agent.skills,
+            domains=agent.domains,
+        )
+        scored.append({
+            "id": agent.id,
+            "name": agent.name or "Unknown Agent",
+            "token_id": agent.token_id,
+            "network_id": agent.network_id,
+            "reputation_score": agent.reputation_score or 0.0,
+            "reputation_count": agent.reputation_count or 0,
+            "has_working": has_working,
+            **scores,
+        })
+
+    return scored
+
+
+def _get_scored_list(db: Session, network: Optional[str]) -> list[dict]:
+    """Return cached scored list, rebuilding if expired."""
+    cache_key = network or "__all__"
+    entry = _score_cache.get(cache_key)
+
+    if entry and (time.time() - entry["ts"]) < CACHE_TTL:
+        return entry["items"]
+
+    items = _build_scored_list(db, network)
+    _score_cache[cache_key] = {"ts": time.time(), "items": items}
+    return items
+
+
 @router.get("/leaderboard", response_model=LeaderboardResponse)
 async def get_leaderboard(
     page: int = Query(default=1, ge=1),
@@ -58,63 +114,32 @@ async def get_leaderboard(
     if sort_by not in SORT_FIELDS:
         sort_by = "score"
 
-    # Query all agents (with optional network filter)
-    query = db.query(Agent)
-    if network:
-        query = query.filter(Agent.network_id == network)
-
-    agents = query.all()
-
-    # Calculate scores for each agent
-    scored = []
-    for agent in agents:
-        has_working = bool(
-            agent.endpoint_status
-            and agent.endpoint_status.get("has_working_endpoints")
-        )
-
-        scores = calc_agent_score(
-            endpoint_status=agent.endpoint_status,
-            feedback_count=agent.reputation_count or 0,
-            reputation_score=agent.reputation_score or 0.0,
-            reputation_last_updated=agent.reputation_last_updated,
-            name=agent.name or "",
-            description=agent.description or "",
-            skills=agent.skills,
-            domains=agent.domains,
-        )
-
-        scored.append({
-            "agent": agent,
-            "has_working": has_working,
-            **scores,
-        })
+    scored = _get_scored_list(db, network)
 
     # Sort by requested field
     sort_key = f"{sort_by}_score" if sort_by != "score" else "score"
-    scored.sort(key=lambda x: x[sort_key], reverse=True)
+    scored_sorted = sorted(scored, key=lambda x: x[sort_key], reverse=True)
 
     # Paginate
-    total = len(scored)
+    total = len(scored_sorted)
     total_pages = max(1, (total + page_size - 1) // page_size)
     start = (page - 1) * page_size
-    end = start + page_size
-    page_items = scored[start:end]
+    page_items = scored_sorted[start:start + page_size]
 
     items = [
         LeaderboardItem(
             rank=start + i + 1,
-            agent_id=item["agent"].id,
-            agent_name=item["agent"].name or "Unknown Agent",
-            token_id=item["agent"].token_id,
-            network_key=item["agent"].network_id,
+            agent_id=item["id"],
+            agent_name=item["name"],
+            token_id=item["token_id"],
+            network_key=item["network_id"],
             score=item["score"],
             service_score=item["service_score"],
             usage_score=item["usage_score"],
             quality_score=item["quality_score"],
             profile_score=item["profile_score"],
-            reputation_score=item["agent"].reputation_score or 0.0,
-            reputation_count=item["agent"].reputation_count or 0,
+            reputation_score=item["reputation_score"],
+            reputation_count=item["reputation_count"],
             has_working_endpoints=item["has_working"],
         )
         for i, item in enumerate(page_items)

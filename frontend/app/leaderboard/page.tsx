@@ -72,7 +72,11 @@ export default function LeaderboardPage() {
             Leaderboard
           </h1>
           <p className="text-sm text-[#737373] mt-1">
-            {total} agents ranked by composite score
+            {loading ? (
+              <span className="inline-block w-32 h-4 bg-[#e5e5e5] dark:bg-[#262626] rounded animate-pulse" />
+            ) : (
+              `${total.toLocaleString()} agents ranked by composite score`
+            )}
           </p>
         </div>
 
