@@ -11,7 +11,7 @@ const SORT_OPTIONS = [
   { value: 'score', label: 'Overall' },
   { value: 'service', label: 'Service' },
   { value: 'usage', label: 'Usage' },
-  { value: 'quality', label: 'Quality' },
+  { value: 'freshness', label: 'Freshness' },
   { value: 'profile', label: 'Profile' },
 ]
 
@@ -108,18 +108,25 @@ export default function LeaderboardPage() {
       {/* Score legend */}
       <div className="flex flex-wrap items-center gap-4 mb-6 text-[11px] text-[#737373]">
         <span className="font-medium text-[#525252] dark:text-[#a3a3a3]">Score Dimensions:</span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-green-500" /> Service (20%)
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-blue-500" /> Usage (50%)
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-purple-500" /> Quality (20%)
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-orange-500" /> Profile (10%)
-        </span>
+        {[
+          { color: 'bg-green-500', label: 'Service (20%)', tip: 'Ratio of healthy endpoints' },
+          { color: 'bg-blue-500', label: 'Usage (50%)', tip: 'Feedback count + reputation score' },
+          { color: 'bg-purple-500', label: 'Freshness (20%)', tip: 'Recency of last feedback (30-90d decay)' },
+          { color: 'bg-orange-500', label: 'Profile (10%)', tip: 'Name, description, skills & domains' },
+        ].map((d) => (
+          <span key={d.label} className="relative group flex items-center gap-1.5 cursor-default">
+            <span className={`w-2 h-2 rounded-full ${d.color}`} />
+            {d.label}
+            <span className="
+              pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+              px-2.5 py-1.5 rounded-lg text-[11px] text-white bg-[#0a0a0a] dark:bg-[#fafafa] dark:text-[#0a0a0a]
+              whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150
+              shadow-lg
+            ">
+              {d.tip}
+            </span>
+          </span>
+        ))}
       </div>
 
       {loading ? (

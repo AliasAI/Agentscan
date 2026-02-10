@@ -31,7 +31,7 @@ class LeaderboardItem(BaseModel):
     score: float
     service_score: float
     usage_score: float
-    quality_score: float
+    freshness_score: float
     profile_score: float
     reputation_score: float
     reputation_count: int
@@ -47,7 +47,7 @@ class LeaderboardResponse(BaseModel):
     total_pages: int
 
 
-SORT_FIELDS = {"score", "service", "usage", "quality", "profile"}
+SORT_FIELDS = {"score", "service", "usage", "freshness", "profile"}
 
 
 MIN_SCORE_THRESHOLD = 10  # Hide empty-shell agents (name-only, score ~5)
@@ -140,7 +140,7 @@ async def get_leaderboard(
             score=item["score"],
             service_score=item["service_score"],
             usage_score=item["usage_score"],
-            quality_score=item["quality_score"],
+            freshness_score=item["freshness_score"],
             profile_score=item["profile_score"],
             reputation_score=item["reputation_score"],
             reputation_count=item["reputation_count"],

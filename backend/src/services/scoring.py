@@ -1,10 +1,10 @@
 """Agent scoring service for Leaderboard
 
 Calculates a composite AgentScore (0-100) from four dimensions:
-  - Service  (20%): endpoint reachability
-  - Usage    (50%): feedback volume + reputation score
-  - Quality  (20%): feedback freshness (recency)
-  - Profile  (10%): metadata completeness
+  - Service   (20%): endpoint reachability
+  - Usage     (50%): feedback volume + reputation score
+  - Freshness (20%): feedback recency (linear decay 30-90 days)
+  - Profile   (10%): metadata completeness
 """
 
 import math
@@ -14,7 +14,7 @@ from typing import Optional
 # Weights (adjusted from real data: service was too binary at 30%)
 W_SERVICE = 0.20
 W_USAGE = 0.50
-W_QUALITY = 0.20
+W_FRESHNESS = 0.20
 W_PROFILE = 0.10
 
 # Usage sub-weights
@@ -61,10 +61,10 @@ def calc_usage_score(
     return round(score, 1)
 
 
-def calc_quality_score(
+def calc_freshness_score(
     reputation_last_updated: Optional[datetime],
 ) -> float:
-    """Quality score: feedback freshness, linear decay over 30-90 days."""
+    """Freshness score: feedback recency, linear decay over 30-90 days."""
     if not reputation_last_updated:
         return 0.0
 
@@ -113,17 +113,17 @@ def calc_agent_score(
 ) -> dict:
     """Calculate composite AgentScore and all sub-scores.
 
-    Returns dict with score, service_score, usage_score, quality_score, profile_score.
+    Returns dict with score, service_score, usage_score, freshness_score, profile_score.
     """
     service = calc_service_score(endpoint_status)
     usage = calc_usage_score(feedback_count, reputation_score)
-    quality = calc_quality_score(reputation_last_updated)
+    freshness = calc_freshness_score(reputation_last_updated)
     profile = calc_profile_score(name, description, skills, domains)
 
     total = (
         W_SERVICE * service
         + W_USAGE * usage
-        + W_QUALITY * quality
+        + W_FRESHNESS * freshness
         + W_PROFILE * profile
     )
 
@@ -131,6 +131,6 @@ def calc_agent_score(
         "score": round(total, 1),
         "service_score": service,
         "usage_score": usage,
-        "quality_score": quality,
+        "freshness_score": freshness,
         "profile_score": profile,
     }

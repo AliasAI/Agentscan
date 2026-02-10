@@ -69,7 +69,7 @@ export function TopPodium({ items }: TopPodiumProps) {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <ScorePill label="Service" value={item.service_score} />
               <ScorePill label="Usage" value={item.usage_score} />
-              <ScorePill label="Quality" value={item.quality_score} />
+              <ScorePill label="Freshness" value={item.freshness_score} />
               <ScorePill label="Profile" value={item.profile_score} />
             </div>
 

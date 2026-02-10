@@ -416,7 +416,7 @@ export interface LeaderboardItem {
   score: number;
   service_score: number;
   usage_score: number;
-  quality_score: number;
+  freshness_score: number;
   profile_score: number;
   reputation_score: number;
   reputation_count: number;

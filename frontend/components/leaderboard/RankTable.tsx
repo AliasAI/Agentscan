@@ -45,7 +45,7 @@ export function RankTable({ items, page, totalPages, onPageChange }: RankTablePr
               <th className="text-center text-[10px] font-medium text-[#737373] uppercase tracking-wider py-3 px-3 w-20">Score</th>
               <th className="text-left text-[10px] font-medium text-[#737373] uppercase tracking-wider py-3 px-3 w-24 hidden md:table-cell">Service</th>
               <th className="text-left text-[10px] font-medium text-[#737373] uppercase tracking-wider py-3 px-3 w-24 hidden md:table-cell">Usage</th>
-              <th className="text-left text-[10px] font-medium text-[#737373] uppercase tracking-wider py-3 px-3 w-24 hidden lg:table-cell">Quality</th>
+              <th className="text-left text-[10px] font-medium text-[#737373] uppercase tracking-wider py-3 px-3 w-24 hidden lg:table-cell">Freshness</th>
               <th className="text-left text-[10px] font-medium text-[#737373] uppercase tracking-wider py-3 px-3 w-24 hidden lg:table-cell">Profile</th>
             </tr>
           </thead>
@@ -104,7 +104,7 @@ export function RankTable({ items, page, totalPages, onPageChange }: RankTablePr
                   <ScoreCell label="" value={item.usage_score} color="blue" />
                 </td>
                 <td className="py-3 px-3 hidden lg:table-cell">
-                  <ScoreCell label="" value={item.quality_score} color="purple" />
+                  <ScoreCell label="" value={item.freshness_score} color="purple" />
                 </td>
                 <td className="py-3 px-3 hidden lg:table-cell">
                   <ScoreCell label="" value={item.profile_score} color="orange" />
