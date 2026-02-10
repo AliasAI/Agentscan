@@ -32,14 +32,16 @@ export const statsService = {
 export const agentService = {
   getAgents: (
     params?: {
-      tab?: string;
       page?: number;
       page_size?: number;
       search?: string;
       network?: string;
       reputation_min?: number;
       reputation_max?: number;
+      has_reputation?: boolean;
       quality?: 'all' | 'basic' | 'verified';
+      sort_field?: string;
+      sort_order?: 'asc' | 'desc';
     },
     signal?: AbortSignal
   ) => {

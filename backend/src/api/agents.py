@@ -1,12 +1,11 @@
 """Agent API"""
 
-from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from src.db.database import get_db
-from src.models import Agent, AgentStatus
+from src.models import Agent
 from src.schemas.agent import AgentResponse
 from src.schemas.common import PaginatedResponse
 
@@ -67,19 +66,24 @@ def apply_quality_filter(query, quality: str):
     return query
 
 
+ALLOWED_SORT_FIELDS = {"created_at", "name", "reputation_score"}
+
+
 @router.get("/agents", response_model=PaginatedResponse[AgentResponse])
 async def get_agents(
-    tab: str = Query("all", description="Filter tab: all, active, top"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     search: str | None = None,
     network: str | None = Query(None, description="Filter by network ID or 'all'"),
-    reputation_min: float | None = Query(None, ge=0, le=100, description="Minimum reputation score"),
-    reputation_max: float | None = Query(None, ge=0, le=100, description="Maximum reputation score"),
+    reputation_min: float | None = Query(None, ge=0, le=100),
+    reputation_max: float | None = Query(None, ge=0, le=100),
+    has_reputation: bool | None = Query(None, description="Filter agents with reputation activity"),
     quality: str = Query("all", description="Quality filter: all, basic, verified"),
+    sort_field: str = Query("created_at", description="Sort field: created_at, name, reputation_score"),
+    sort_order: str = Query("desc", description="Sort order: asc, desc"),
     db: Session = Depends(get_db),
 ):
-    """Get agent list with tab filtering, pagination, search and network filter"""
+    """Get agent list with sorting, filtering, pagination and search"""
 
     query = db.query(Agent).options(joinedload(Agent.network))
 
@@ -89,25 +93,6 @@ async def get_agents(
     # Network filtering
     if network and network != "all":
         query = query.filter(Agent.network_id == network)
-
-    # Tab filtering
-    if tab == "active":
-        # Active: has reputation activity in the last 7 days OR created recently
-        # Priority: reputation_last_updated > created_at (for new agents without reviews)
-        seven_days_ago = datetime.utcnow() - timedelta(days=7)
-        query = query.filter(
-            Agent.status == AgentStatus.ACTIVE,
-            (
-                (Agent.reputation_last_updated >= seven_days_ago) |
-                (
-                    (Agent.reputation_last_updated.is_(None)) &
-                    (Agent.created_at >= seven_days_ago)
-                )
-            )
-        )
-    elif tab == "top":
-        # Top rated agents
-        query = query.order_by(Agent.reputation_score.desc())
 
     # Search functionality
     if search:
@@ -123,10 +108,16 @@ async def get_agents(
     if reputation_max is not None:
         query = query.filter(Agent.reputation_score <= reputation_max)
 
-    # Default ordering: newest first (descending by created_at)
-    # Only apply if "top" tab hasn't already set ordering
-    if tab != "top":
-        query = query.order_by(Agent.created_at.desc())
+    # Has reputation filter (agents with any feedback activity)
+    if has_reputation is True:
+        query = query.filter(
+            (Agent.reputation_score > 0) | (Agent.reputation_count > 0)
+        )
+
+    # Sorting
+    field = sort_field if sort_field in ALLOWED_SORT_FIELDS else "created_at"
+    column = getattr(Agent, field)
+    query = query.order_by(column.asc() if sort_order == "asc" else column.desc())
 
     # Get total count before pagination
     total = query.count()

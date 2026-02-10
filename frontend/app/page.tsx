@@ -44,7 +44,6 @@ export default function HomePage() {
     setLoading(true)
     agentService
       .getAgents({
-        tab: 'all',
         page: 1,
         page_size: 8,
         search: searchQuery || undefined,

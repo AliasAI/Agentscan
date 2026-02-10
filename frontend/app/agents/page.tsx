@@ -38,14 +38,16 @@ export default function AgentsPage() {
       setLoading(true)
 
       const response = await agentService.getAgents({
-        tab: 'all',
         page: pageNum,
         page_size: pageSize,
         search: searchQuery || undefined,
         network: selectedNetwork !== 'all' ? selectedNetwork : undefined,
         reputation_min: filters.reputationMin,
         reputation_max: filters.reputationMax,
+        has_reputation: filters.hasReputation || undefined,
         quality: qualityFilter,
+        sort_field: sortOption.field,
+        sort_order: sortOption.order,
       }, abortController.signal)
 
       if (!abortController.signal.aborted) {
@@ -65,7 +67,7 @@ export default function AgentsPage() {
         setLoading(false)
       }
     }
-  }, [searchQuery, selectedNetwork, filters, qualityFilter, pageSize])
+  }, [searchQuery, selectedNetwork, filters, qualityFilter, sortOption, pageSize])
 
   useEffect(() => {
     fetchAgents(1)
@@ -75,7 +77,7 @@ export default function AgentsPage() {
         abortControllerRef.current.abort()
       }
     }
-  }, [searchQuery, selectedNetwork, filters, fetchAgents])
+  }, [fetchAgents])
 
   const handleSearch = (query: string) => setSearchQuery(query)
   const handleNetworkChange = (networkId: string) => setSelectedNetwork(networkId)
@@ -237,7 +239,12 @@ export default function AgentsPage() {
                 {qualityFilter !== 'all' ? 'Quality Only' : 'Show All'}
               </button>
             </div>
-            <FilterSort onFilterChange={handleFilterChange} onSortChange={handleSortChange} />
+            <FilterSort
+              filters={filters}
+              sort={sortOption}
+              onFilterChange={handleFilterChange}
+              onSortChange={handleSortChange}
+            />
           </div>
         </div>
       </div>
@@ -302,6 +309,7 @@ export default function AgentsPage() {
                 setSearchQuery('')
                 setSelectedNetwork('all')
                 setFilters({})
+                setSortOption({ field: 'created_at', order: 'desc' })
                 setQualityFilter('basic')
               }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a] rounded-lg text-sm font-medium hover:bg-[#262626] dark:hover:bg-[#e5e5e5] transition-colors"
