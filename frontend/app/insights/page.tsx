@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { NetworkSelector } from '@/components/common/NetworkSelector'
 import { StatsCards, StatIcons } from '@/components/insights/StatsCards'
 import { TrendCharts } from '@/components/insights/TrendCharts'
-import { TopAgentsTable } from '@/components/insights/TopAgentsTable'
+import { RecentActivity } from '@/components/insights/RecentActivity'
 import { analyticsService, endpointHealthService } from '@/lib/api/services'
 import type { AnalyticsResponse } from '@/types'
 
@@ -104,7 +104,7 @@ export default function InsightsPage() {
                 Network Insights
               </h1>
               <p className="text-sm text-[#525252] dark:text-[#a3a3a3] mt-1">
-                Key metrics, trends, and top agents across the ecosystem
+                Key metrics, trends, and recent activity across the ecosystem
               </p>
             </div>
           </div>
@@ -139,7 +139,7 @@ export default function InsightsPage() {
               onDaysChange={setDays}
             />
 
-            <TopAgentsTable agents={analyticsData.top_agents} />
+            <RecentActivity activities={analyticsData.recent_activities} />
           </>
         ) : null}
       </div>

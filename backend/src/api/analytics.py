@@ -32,16 +32,17 @@ class TransactionStats(BaseModel):
     avg_fee_per_tx_eth: float
 
 
-class AgentTxRanking(BaseModel):
-    """Agent transaction ranking"""
+class RecentActivityItem(BaseModel):
+    """Recent on-chain activity item"""
+    id: str
     agent_id: str
     agent_name: str
     token_id: Optional[int]
     network_key: str
-    total_transactions: int
-    registered_count: int
-    reputation_update_count: int
-    validation_count: int
+    activity_type: str
+    description: str
+    tx_hash: Optional[str]
+    created_at: str
 
 
 class TxTrendData(BaseModel):
@@ -65,7 +66,7 @@ class NetworkTxStats(BaseModel):
 class AnalyticsResponse(BaseModel):
     """Analytics overview response"""
     stats: TransactionStats
-    top_agents: list[AgentTxRanking]
+    recent_activities: list[RecentActivityItem]
     trend_data: list[TxTrendData]
     network_stats: list[NetworkTxStats]
 
@@ -202,37 +203,30 @@ async def get_analytics_overview(
         avg_fee_per_tx_eth=round(avg_fee_per_tx_eth, 8)
     )
 
-    # 2. Top agents by transaction count
-    agent_tx_stats = (
-        db.query(
-            Agent.id,
-            Agent.name,
-            Agent.token_id,
-            Agent.network_id,
-            func.count(Activity.id).label('total_tx'),
-            func.sum(case((Activity.activity_type == ActivityType.REGISTERED, 1), else_=0)).label('registered'),
-            func.sum(case((Activity.activity_type == ActivityType.REPUTATION_UPDATE, 1), else_=0)).label('reputation'),
-            func.sum(case((Activity.activity_type == ActivityType.VALIDATION_COMPLETE, 1), else_=0)).label('validation')
-        )
-        .join(Activity, Agent.id == Activity.agent_id)
-        .group_by(Agent.id, Agent.name, Agent.token_id, Agent.network_id)
-        .order_by(func.count(Activity.id).desc())
-        .limit(limit)
-        .all()
+    # 2. Recent activities
+    recent_query = (
+        db.query(Activity, Agent.name, Agent.token_id, Agent.network_id)
+        .join(Agent, Activity.agent_id == Agent.id)
     )
 
-    top_agents = [
-        AgentTxRanking(
-            agent_id=row.id,
-            agent_name=row.name,
-            token_id=row.token_id,
-            network_key=row.network_id,
-            total_transactions=row.total_tx,
-            registered_count=row.registered or 0,
-            reputation_update_count=row.reputation or 0,
-            validation_count=row.validation or 0
+    if network:
+        recent_query = recent_query.filter(Agent.network_id == network)
+
+    recent_query = recent_query.order_by(Activity.created_at.desc()).limit(limit)
+
+    recent_activities = [
+        RecentActivityItem(
+            id=activity.id,
+            agent_id=activity.agent_id,
+            agent_name=agent_name or "Unknown Agent",
+            token_id=token_id,
+            network_key=network_id or "",
+            activity_type=activity.activity_type.value,
+            description=activity.description,
+            tx_hash=activity.tx_hash,
+            created_at=activity.created_at.isoformat(),
         )
-        for row in agent_tx_stats
+        for activity, agent_name, token_id, network_id in recent_query.all()
     ]
 
     # 3. Transaction trend over time
@@ -304,7 +298,7 @@ async def get_analytics_overview(
 
     return AnalyticsResponse(
         stats=stats,
-        top_agents=top_agents,
+        recent_activities=recent_activities,
         trend_data=trend_data,
         network_stats=network_stats
     )

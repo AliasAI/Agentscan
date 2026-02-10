@@ -369,15 +369,16 @@ export interface TransactionStats {
   avg_fee_per_tx_eth: number;
 }
 
-export interface AgentTxRanking {
+export interface RecentActivityItem {
+  id: string;
   agent_id: string;
   agent_name: string;
   token_id: number | null;
   network_key: string;
-  total_transactions: number;
-  registered_count: number;
-  reputation_update_count: number;
-  validation_count: number;
+  activity_type: string;
+  description: string;
+  tx_hash: string | null;
+  created_at: string;
 }
 
 export interface TxTrendData {
@@ -398,7 +399,7 @@ export interface NetworkTxStats {
 
 export interface AnalyticsResponse {
   stats: TransactionStats;
-  top_agents: AgentTxRanking[];
+  recent_activities: RecentActivityItem[];
   trend_data: TxTrendData[];
   network_stats: NetworkTxStats[];
 }
