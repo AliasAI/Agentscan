@@ -56,7 +56,7 @@ export default function CreateAgentPage() {
                 Connect Your Wallet
               </h3>
               <p className="text-sm text-[#6e6e73] dark:text-[#86868b] mb-4">
-                Connect your wallet to create an agent. You&apos;ll need some testnet ETH for gas fees.
+                Connect your wallet to create an agent. You&apos;ll need some ETH for gas fees.
               </p>
               <WalletButton />
             </div>

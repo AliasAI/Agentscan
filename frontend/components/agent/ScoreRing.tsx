@@ -14,11 +14,12 @@ function getScoreColor(score: number) {
 
 // Small score ring for cards (36px default)
 export function ScoreRing({ score, size = 36 }: ScoreRingProps) {
+  const displayScore = Math.min(Math.max(score, 0), 100); // clamp for visual
   const strokeWidth = 3;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const progress = (score / 100) * circumference;
-  const colors = getScoreColor(score);
+  const progress = (displayScore / 100) * circumference;
+  const colors = getScoreColor(displayScore);
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -70,11 +71,12 @@ export function ScoreRing({ score, size = 36 }: ScoreRingProps) {
 
 // Large score ring for detail pages (120px default)
 export function LargeScoreRing({ score, size = 120 }: ScoreRingProps) {
+  const displayScore = Math.min(Math.max(score, 0), 100); // clamp for visual
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const progress = (score / 100) * circumference;
-  const colors = getScoreColor(score);
+  const progress = (displayScore / 100) * circumference;
+  const colors = getScoreColor(displayScore);
 
   return (
     <div className="relative flex flex-col items-center">
@@ -122,9 +124,11 @@ export function LargeScoreRing({ score, size = 120 }: ScoreRingProps) {
           <span className="text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
             {score.toFixed(0)}
           </span>
-          <span className="text-[10px] text-[#737373] uppercase tracking-wide">
-            / 100
-          </span>
+          {score <= 100 && (
+            <span className="text-[10px] text-[#737373] uppercase tracking-wide">
+              / 100
+            </span>
+          )}
         </div>
       </div>
       <span className="mt-2 text-xs font-medium" style={{ color: colors.stroke }}>

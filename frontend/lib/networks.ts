@@ -20,137 +20,97 @@ export interface NetworkConfig {
   enabled: boolean
 }
 
+// Shared contract addresses (CREATE2 deterministic deployment)
+const MAINNET_CONTRACTS = {
+  identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
+  reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
+}
+const TESTNET_CONTRACTS = {
+  identity: '0x8004A818BFB912233c491871b3d84c89A494BD9e',
+  reputation: '0x8004B663056A597Dffe9eCcC1965A193B7388713',
+}
+
 /**
  * All supported networks
  * Keep in sync with backend/src/core/networks_config.py
  */
 export const NETWORKS: Record<string, NetworkConfig> = {
-  // === Mainnets ===
+  // === Mainnets (14 networks) ===
   ethereum: {
-    id: 'ethereum',
-    name: 'Ethereum Mainnet',
-    chainId: 1,
+    id: 'ethereum', name: 'Ethereum', chainId: 1,
     explorerUrl: 'https://etherscan.io',
-    contracts: {
-      identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
-      reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
-    },
-    iconType: 'ethereum',
-    enabled: true,
+    contracts: MAINNET_CONTRACTS, iconType: 'ethereum', enabled: true,
   },
   polygon: {
-    id: 'polygon',
-    name: 'Polygon Mainnet',
-    chainId: 137,
+    id: 'polygon', name: 'Polygon', chainId: 137,
     explorerUrl: 'https://polygonscan.com',
-    contracts: {
-      // CREATE2 deterministic deployment - same addresses as Ethereum
-      identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
-      reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
-    },
-    iconType: 'polygon',
-    enabled: true,
-  },
-  'bsc-1': {
-    id: 'bsc-1',
-    name: 'BNB Smart Chain 1',
-    chainId: 56,
-    explorerUrl: 'https://bscscan.com',
-    contracts: {
-      // CREATE2 deterministic deployment - same addresses as Ethereum
-      identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
-      reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
-    },
-    iconType: 'bsc',
-    enabled: true,
-  },
-  'bsc-2': {
-    id: 'bsc-2',
-    name: 'BNB Smart Chain 2',
-    chainId: 56,
-    explorerUrl: 'https://bscscan.com',
-    contracts: {
-      // Vanity deployment
-      identity: '0x8004c274E3770d32dc1883ab5108b0eA28A854D5',
-      reputation: '0x8004e9D54904EaAFc724A743Fea4387Fa632dc2D',
-    },
-    iconType: 'bsc',
-    enabled: false,
+    contracts: MAINNET_CONTRACTS, iconType: 'polygon', enabled: true,
   },
   base: {
-    id: 'base',
-    name: 'Base',
-    chainId: 8453,
+    id: 'base', name: 'Base', chainId: 8453,
     explorerUrl: 'https://basescan.org',
-    contracts: {
-      // CREATE2 deterministic deployment - same addresses as Ethereum
-      identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
-      reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
-    },
-    iconType: 'base',
-    enabled: true,
+    contracts: MAINNET_CONTRACTS, iconType: 'base', enabled: true,
+  },
+  arbitrum: {
+    id: 'arbitrum', name: 'Arbitrum', chainId: 42161,
+    explorerUrl: 'https://arbiscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'arbitrum', enabled: true,
+  },
+  optimism: {
+    id: 'optimism', name: 'Optimism', chainId: 10,
+    explorerUrl: 'https://optimistic.etherscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'optimism', enabled: true,
+  },
+  linea: {
+    id: 'linea', name: 'Linea', chainId: 59144,
+    explorerUrl: 'https://lineascan.build',
+    contracts: MAINNET_CONTRACTS, iconType: 'linea', enabled: true,
+  },
+  scroll: {
+    id: 'scroll', name: 'Scroll', chainId: 534352,
+    explorerUrl: 'https://scrollscan.com',
+    contracts: MAINNET_CONTRACTS, iconType: 'scroll', enabled: true,
+  },
+  avalanche: {
+    id: 'avalanche', name: 'Avalanche', chainId: 43114,
+    explorerUrl: 'https://snowscan.xyz',
+    contracts: MAINNET_CONTRACTS, iconType: 'avalanche', enabled: true,
+  },
+  celo: {
+    id: 'celo', name: 'Celo', chainId: 42220,
+    explorerUrl: 'https://celoscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'celo', enabled: true,
+  },
+  gnosis: {
+    id: 'gnosis', name: 'Gnosis', chainId: 100,
+    explorerUrl: 'https://gnosisscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'gnosis', enabled: true,
+  },
+  taiko: {
+    id: 'taiko', name: 'Taiko', chainId: 167000,
+    explorerUrl: 'https://taikoscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'taiko', enabled: true,
+  },
+  megaeth: {
+    id: 'megaeth', name: 'MegaETH', chainId: 4326,
+    explorerUrl: 'https://megaeth.blockscout.com',
+    contracts: MAINNET_CONTRACTS, iconType: 'megaeth', enabled: true,
+  },
+  'bsc-1': {
+    id: 'bsc-1', name: 'BNB Smart Chain', chainId: 56,
+    explorerUrl: 'https://bscscan.com',
+    contracts: MAINNET_CONTRACTS, iconType: 'bsc', enabled: true,
   },
   monad: {
-    id: 'monad',
-    name: 'Monad',
-    chainId: 143,
+    id: 'monad', name: 'Monad', chainId: 143,
     explorerUrl: 'https://monadscan.com',
-    contracts: {
-      // CREATE2 deterministic deployment - same addresses as Ethereum
-      identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
-      reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
-    },
-    iconType: 'monad',
-    enabled: true,
+    contracts: MAINNET_CONTRACTS, iconType: 'monad', enabled: true,
   },
-  // === Testnets ===
+  // === Testnet (disabled) ===
   sepolia: {
-    id: 'sepolia',
-    name: 'Sepolia',
-    chainId: 11155111,
+    id: 'sepolia', name: 'Sepolia', chainId: 11155111,
     explorerUrl: 'https://sepolia.etherscan.io',
-    contracts: {
-      identity: '0x8004A818BFB912233c491871b3d84c89A494BD9e',
-      reputation: '0x8004B663056A597Dffe9eCcC1965A193B7388713',
-    },
-    iconType: 'ethereum', // Use Ethereum icon for Sepolia testnet
-    enabled: false,
-  },
-  'base-sepolia': {
-    id: 'base-sepolia',
-    name: 'Base Sepolia',
-    chainId: 84532,
-    explorerUrl: 'https://sepolia.basescan.org',
-    contracts: {
-      identity: '0x8004AA63c570c570eBF15376c0dB199918BFe9Fb',
-      reputation: '',
-    },
-    iconType: 'base',
-    enabled: false,
-  },
-  'linea-sepolia': {
-    id: 'linea-sepolia',
-    name: 'Linea Sepolia',
-    chainId: 59141,
-    explorerUrl: 'https://sepolia.lineascan.build',
-    contracts: {
-      identity: '0x8004aa7C931bCE1233973a0C6A667f73F66282e7',
-      reputation: '',
-    },
-    iconType: 'linea',
-    enabled: false,
-  },
-  'hedera-testnet': {
-    id: 'hedera-testnet',
-    name: 'Hedera Testnet',
-    chainId: 296,
-    explorerUrl: 'https://hashscan.io/testnet',
-    contracts: {
-      identity: '0x0dDaa2de07deb24D5F0288ee29c3c57c4159DcC7',
-      reputation: '',
-    },
-    iconType: 'hedera',
-    enabled: false,
+    contracts: TESTNET_CONTRACTS, iconType: 'ethereum', enabled: false,
   },
 }
 

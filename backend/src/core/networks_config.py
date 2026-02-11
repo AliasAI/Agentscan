@@ -4,203 +4,160 @@ import os
 from typing import Dict, Any
 from dotenv import load_dotenv
 
-# 加载 .env 文件
 load_dotenv()
 
-# Network configurations
-# RPC URLs are loaded from environment variables to prevent exposure
-# Updated: Jan 2026 Mainnet deployment
+
+# === Shared contract addresses (CREATE2 deterministic deployment) ===
+_MAINNET_CONTRACTS = {
+    "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+}
+_TESTNET_CONTRACTS = {
+    "identity": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    "reputation": "0x8004B663056A597Dffe9eCcC1965A193B7388713",
+}
+
+
+# === QuikNode multi-chain RPC ===
+_QN_POOL = "dark-divine-pool"
+_QN_KEY = "1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"
+
+
+def _qn(slug: str = "") -> str:
+    """Build QuikNode endpoint URL from network slug"""
+    host = f"{_QN_POOL}.{slug}.quiknode.pro" if slug else f"{_QN_POOL}.quiknode.pro"
+    return f"https://{host}/{_QN_KEY}"
+
+
+def _rpc(env: str, slug: str | None = None) -> str:
+    """Get RPC URL: env var > QuikNode fallback > empty string"""
+    url = os.getenv(env, "")
+    if url:
+        return url
+    if slug is not None:
+        return _qn(slug)
+    return ""
+
+
+# === Network configurations ===
+# All mainnet networks use CREATE2 deterministic deployment (same contract addresses)
+# QuikNode multi-chain RPC: same pool/key, different network slugs
 NETWORKS: Dict[str, Dict[str, Any]] = {
-    # === Ethereum Mainnet (Production) ===
+    # --- Mainnet networks (14) ---
     "ethereum": {
-        "name": "Ethereum Mainnet",
-        "chain_id": 1,
-        "rpc_url": os.getenv("ETHEREUM_RPC_URL", ""),
+        "name": "Ethereum", "chain_id": 1,
+        "rpc_url": _rpc("ETHEREUM_RPC_URL", ""),
         "explorer_url": "https://etherscan.io",
-        "contracts": {
-            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
-            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
-            # validation: to be deployed (under discussion with TEE community)
-        },
-        "start_block": 24339871,  # Contract deployment block (Jan 29, 2026 10:20:23 UTC)
-        "blocks_per_batch": 2000,  # Mainnet has faster blocks
-        "enabled": True,  # Keep Ethereum enabled
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 24339871, "blocks_per_batch": 2000, "enabled": True,
     },
-    # === Polygon Mainnet ===
     "polygon": {
-        "name": "Polygon Mainnet",
-        "chain_id": 137,
-        "rpc_url": os.getenv("POLYGON_RPC_URL", ""),
+        "name": "Polygon", "chain_id": 137,
+        "rpc_url": _rpc("POLYGON_RPC_URL", "matic"),
         "explorer_url": "https://polygonscan.com",
-        "contracts": {
-            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
-            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
-            # validation: to be deployed (under discussion with TEE community)
-        },
-        "start_block": 82458484,  # Contract deployment block (Feb 2, 2026)
-        "blocks_per_batch": 5000,  # Polygon has fast blocks (~2s)
-        "enabled": True,
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 82458484, "blocks_per_batch": 5000, "enabled": True,
     },
-    # === Base Mainnet ===
     "base": {
-        "name": "Base",
-        "chain_id": 8453,
-        "rpc_url": os.getenv("BASE_RPC_URL", "https://dark-divine-pool.base-mainnet.quiknode.pro/1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"),
+        "name": "Base", "chain_id": 8453,
+        "rpc_url": _rpc("BASE_RPC_URL", "base-mainnet"),
         "explorer_url": "https://basescan.org",
-        "contracts": {
-            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
-            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
-            # validation: to be deployed (under discussion with TEE community)
-        },
-        "start_block": 41663783,  # Contract deployment block (Feb 4, 2026)
-        "blocks_per_batch": 5000,  # Base has fast blocks (~2s, similar to Polygon)
-        "enabled": True,
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 41663783, "blocks_per_batch": 5000, "enabled": True,
     },
-    # === Testnets ===
-    "sepolia": {
-        "name": "Sepolia",
-        "chain_id": 11155111,
-        "rpc_url": os.getenv("SEPOLIA_RPC_URL", ""),
-        "explorer_url": "https://sepolia.etherscan.io",
-        "contracts": {
-            "identity": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
-            "reputation": "0x8004B663056A597Dffe9eCcC1965A193B7388713",
-            # validation: to be deployed (under discussion with TEE community)
-        },
-        "start_block": 9989393,
-        "blocks_per_batch": 10000,
-        "enabled": False,  # Keep disabled for now
+    "arbitrum": {
+        "name": "Arbitrum", "chain_id": 42161,
+        "rpc_url": _rpc("ARBITRUM_RPC_URL", "arbitrum-mainnet"),
+        "explorer_url": "https://arbiscan.io",
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 428895443, "blocks_per_batch": 5000, "enabled": True,
     },
-    # === Networks pending deployment (Jan 2026) ===
-    "base-sepolia": {
-        "name": "Base Sepolia",
-        "chain_id": 84532,
-        "rpc_url": os.getenv("BASE_SEPOLIA_RPC_URL", ""),
-        "explorer_url": "https://sepolia.basescan.org",
-        "contracts": {
-            "identity": "",  # to be deployed
-            "reputation": "",  # to be deployed
-        },
-        "start_block": 0,
-        "blocks_per_batch": 10000,
-        "enabled": False,  # Disabled until deployed
+    "optimism": {
+        "name": "Optimism", "chain_id": 10,
+        "rpc_url": _rpc("OPTIMISM_RPC_URL", "optimism-mainnet"),
+        "explorer_url": "https://optimistic.etherscan.io",
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 147514947, "blocks_per_batch": 5000, "enabled": True,
     },
-    "linea-sepolia": {
-        "name": "Linea Sepolia",
-        "chain_id": 59141,
-        "rpc_url": "https://rpc.sepolia.linea.build",
-        "explorer_url": "https://sepolia.lineascan.build",
-        "contracts": {
-            "identity": "",  # to be deployed
-            "reputation": "",  # to be deployed
-        },
-        "start_block": 0,
-        "blocks_per_batch": 10000,
-        "enabled": False,  # Disabled until deployed
+    "linea": {
+        "name": "Linea", "chain_id": 59144,
+        "rpc_url": _rpc("LINEA_RPC_URL", "linea-mainnet"),
+        "explorer_url": "https://lineascan.build",
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 28662553, "blocks_per_batch": 2000, "enabled": True,
     },
-    "polygon-amoy": {
-        "name": "Polygon Amoy",
-        "chain_id": 80002,
-        "rpc_url": os.getenv("POLYGON_AMOY_RPC_URL", ""),
-        "explorer_url": "https://amoy.polygonscan.com",
-        "contracts": {
-            "identity": "",  # to be deployed
-            "reputation": "",  # to be deployed
-        },
-        "start_block": 0,
-        "blocks_per_batch": 10000,
-        "enabled": False,  # Disabled until deployed
+    "scroll": {
+        "name": "Scroll", "chain_id": 534352,
+        "rpc_url": _rpc("SCROLL_RPC_URL", "scroll-mainnet"),
+        "explorer_url": "https://scrollscan.com",
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 29432417, "blocks_per_batch": 2000, "enabled": True,
     },
-    "hedera-testnet": {
-        "name": "Hedera Testnet",
-        "chain_id": 296,
-        "rpc_url": "https://testnet.hashio.io/api",
-        "explorer_url": "https://hashscan.io/testnet",
-        "contracts": {
-            "identity": "",  # to be deployed
-            "reputation": "",  # to be deployed
-        },
-        "start_block": 0,
-        "blocks_per_batch": 10000,
-        "enabled": False,  # Disabled until deployed
+    "avalanche": {
+        "name": "Avalanche", "chain_id": 43114,
+        "rpc_url": _rpc("AVALANCHE_RPC_URL", "avalanche-mainnet"),
+        "explorer_url": "https://snowscan.xyz",
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 77389000, "blocks_per_batch": 2000, "enabled": True,
     },
-    "hyperevm-testnet": {
-        "name": "HyperEVM Testnet",
-        "chain_id": 998,  # Placeholder - need actual chain ID
-        "rpc_url": os.getenv("HYPEREVM_TESTNET_RPC_URL", ""),
-        "explorer_url": "",
-        "contracts": {
-            "identity": "",  # to be deployed
-            "reputation": "",  # to be deployed
-        },
-        "start_block": 0,
-        "blocks_per_batch": 10000,
-        "enabled": False,  # Disabled until deployed
+    "celo": {
+        "name": "Celo", "chain_id": 42220,
+        "rpc_url": _rpc("CELO_RPC_URL", "celo-mainnet"),
+        "explorer_url": "https://celoscan.io",
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 58396724, "blocks_per_batch": 2000, "enabled": True,
     },
-    "skale-testnet": {
-        "name": "SKALE Testnet",
-        "chain_id": 0,  # Placeholder - need actual chain ID
-        "rpc_url": os.getenv("SKALE_TESTNET_RPC_URL", ""),
-        "explorer_url": "",
-        "contracts": {
-            "identity": "",  # to be deployed
-            "reputation": "",  # to be deployed
-        },
-        "start_block": 0,
-        "blocks_per_batch": 10000,
-        "enabled": False,  # Disabled until deployed
+    "gnosis": {
+        "name": "Gnosis", "chain_id": 100,
+        "rpc_url": _rpc("GNOSIS_RPC_URL", "gnosis"),
+        "explorer_url": "https://gnosisscan.io",
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 44505010, "blocks_per_batch": 2000, "enabled": True,
     },
-    # === BSC Mainnet 1 (CREATE2 deterministic deployment) ===
+    "taiko": {
+        "name": "Taiko", "chain_id": 167000,
+        "rpc_url": _rpc("TAIKO_RPC_URL", "taiko-mainnet"),
+        "explorer_url": "https://taikoscan.io",
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 4305747, "blocks_per_batch": 2000, "enabled": True,
+    },
+    "megaeth": {
+        "name": "MegaETH", "chain_id": 4326,
+        "rpc_url": _rpc("MEGAETH_RPC_URL", "megaeth-mainnet"),
+        "explorer_url": "https://megaeth.blockscout.com",
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 7833805, "blocks_per_batch": 2000, "enabled": True,
+    },
     "bsc-1": {
-        "name": "BNB Smart Chain 1",
-        "chain_id": 56,
-        "rpc_url": os.getenv("BSC_RPC_URL", "https://dark-divine-pool.bsc.quiknode.pro/1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"),
+        "name": "BNB Smart Chain", "chain_id": 56,
+        "rpc_url": _rpc("BSC_RPC_URL", "bsc"),
         "explorer_url": "https://bscscan.com",
-        "contracts": {
-            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
-            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
-        },
-        "start_block": 79027286,  # Skip to contract deployment block
-        "blocks_per_batch": 1000,
-        "enabled": True,
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 79027286, "blocks_per_batch": 1000, "enabled": True,
     },
-    # === BSC Mainnet 2 (Vanity deployment) - Disabled for now ===
-    "bsc-2": {
-        "name": "BNB Smart Chain 2",
-        "chain_id": 56,
-        "rpc_url": os.getenv("BSC_RPC_URL", "https://dark-divine-pool.bsc.quiknode.pro/1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"),
-        "explorer_url": "https://bscscan.com",
-        "contracts": {
-            "identity": os.getenv("BSC_IDENTITY_CONTRACT", "0x8004c274E3770d32dc1883ab5108b0eA28A854D5"),
-            "reputation": os.getenv("BSC_REPUTATION_CONTRACT", "0x8004e9D54904EaAFc724A743Fea4387Fa632dc2D"),
-        },
-        "start_block": 79090000,  # Skip to near first registration (~79096984)
-        "blocks_per_batch": 1000,
-        "enabled": False,
-    },
-    # === Monad Mainnet ===
     "monad": {
-        "name": "Monad",
-        "chain_id": 143,
-        "rpc_url": os.getenv("MONAD_RPC_URL", "https://dark-divine-pool.monad-mainnet.quiknode.pro/1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"),
+        "name": "Monad", "chain_id": 143,
+        "rpc_url": _rpc("MONAD_RPC_URL", "monad-mainnet"),
         "explorer_url": "https://monadscan.com",
-        "contracts": {
-            "identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
-            "reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
-            # validation: to be deployed (under discussion with TEE community)
-        },
-        "start_block": 52952790,  # Contract deployment block (Feb 4, 2026)
-        "blocks_per_batch": 1000,  # Reduced: Monad's fast blocks (~1s) cause 413 errors with larger batches
-        "enabled": True,
+        "contracts": _MAINNET_CONTRACTS,
+        "start_block": 52952790, "blocks_per_batch": 1000, "enabled": True,
+    },
+    # --- Testnet (disabled, kept for historical data) ---
+    "sepolia": {
+        "name": "Sepolia", "chain_id": 11155111,
+        "rpc_url": _rpc("SEPOLIA_RPC_URL", "ethereum-sepolia"),
+        "explorer_url": "https://sepolia.etherscan.io",
+        "contracts": _TESTNET_CONTRACTS,
+        "start_block": 9989393, "blocks_per_batch": 10000, "enabled": False,
     },
 }
 
-# Get enabled networks
-def get_enabled_networks():
+
+def get_enabled_networks() -> Dict[str, Dict[str, Any]]:
     """Get all enabled networks"""
     return {k: v for k, v in NETWORKS.items() if v.get("enabled", True)}
 
-# Get network by key
-def get_network(network_key: str):
+
+def get_network(network_key: str) -> Dict[str, Any] | None:
     """Get network configuration by key"""
     return NETWORKS.get(network_key)

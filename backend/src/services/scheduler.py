@@ -20,12 +20,14 @@ STARTUP_SCAN_THRESHOLD = 10  # Trigger startup scan if unchecked agents >= this
 
 # Network sync intervals (minutes) - staggered to avoid RPC rate limits
 NETWORK_SYNC_INTERVALS = {
-    "ethereum": 2,    # Every 2 minutes (primary network)
-    "polygon": 2,     # Every 2 minutes (high activity)
-    "base": 2,        # Every 2 minutes (L2, high activity)
-    "monad": 2,       # Every 2 minutes (fast L1)
-    "bsc-1": 5,       # Every 5 minutes (public RPC has strict rate limits)
-    "sepolia": 5,     # Every 5 minutes (testnet, lower priority)
+    # Primary networks (high activity)
+    "ethereum": 2, "polygon": 2, "base": 2, "monad": 2,
+    # L2 networks
+    "arbitrum": 3, "optimism": 3, "linea": 5, "scroll": 5,
+    # Other mainnets
+    "avalanche": 5, "celo": 5, "gnosis": 5, "taiko": 5, "megaeth": 5,
+    # Rate-limited / lower priority
+    "bsc-1": 5, "sepolia": 5,
 }
 
 

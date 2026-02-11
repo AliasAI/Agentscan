@@ -1,51 +1,29 @@
 'use client'
 
 /**
- * MetadataPreview - Real-time JSON preview of agent metadata
+ * MetadataPreview - Real-time JSON preview of ERC-8004 Registration metadata
  *
- * Shows the OASF-compliant metadata that will be uploaded to IPFS
+ * Calls buildMetadata() to generate the exact JSON that will be uploaded to IPFS.
  */
 
 import { useMemo, useState } from 'react'
-import type { EndpointInput } from './EndpointEditor'
-
-interface AgentMetadata {
-  name: string
-  description: string
-  // ERC-8004 Jan 2026 主网格式: use "services" instead of "endpoints"
-  services: Array<{
-    url: string
-    skills: string[]
-    domains: string[]
-  }>
-  version: string
-  created_at: string
-}
+import { buildMetadata } from '@/lib/ipfs/upload'
+import type { CreateAgentForm } from '@/types'
 
 interface MetadataPreviewProps {
-  name: string
-  description: string
-  endpoints: EndpointInput[]
+  form: CreateAgentForm
 }
 
-export function MetadataPreview({ name, description, endpoints }: MetadataPreviewProps) {
+export function MetadataPreview({ form }: MetadataPreviewProps) {
   const [copied, setCopied] = useState(false)
 
-  const metadata: AgentMetadata = useMemo(
-    () => ({
-      name: name || 'Agent Name',
-      description: description || 'Agent description...',
-      services: endpoints
-        .filter((e) => e.url.trim())
-        .map((e) => ({
-          url: e.url,
-          skills: e.skills,
-          domains: e.domains,
-        })),
-      version: '1.0.0',
-      created_at: new Date().toISOString(),
+  const metadata = useMemo(
+    () => buildMetadata({
+      ...form,
+      name: form.name || 'Agent Name',
+      description: form.description || 'Agent description...',
     }),
-    [name, description, endpoints]
+    [form]
   )
 
   const jsonString = useMemo(() => JSON.stringify(metadata, null, 2), [metadata])
@@ -65,7 +43,7 @@ export function MetadataPreview({ name, description, endpoints }: MetadataPrevie
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 bg-[#f5f5f5] dark:bg-[#1a1a1a] border-b border-[#e5e5e5] dark:border-[#333]">
         <span className="text-xs font-medium text-[#6e6e73] dark:text-[#86868b]">
-          Metadata Preview
+          Registration JSON Preview
         </span>
         <button
           type="button"

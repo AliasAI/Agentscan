@@ -44,8 +44,15 @@ def calc_usage_score(
     feedback_count: int,
     reputation_score: float,
 ) -> float:
-    """Usage score: log-normalized feedback count + reputation score."""
-    # Log normalization: log(1 + count) / log(1 + cap) * 100, capped at 100
+    """Usage score: log-normalized feedback count + reputation score.
+
+    reputation_score may exceed 100 (e.g. revenues=590, responseTime=560)
+    due to ERC-8004 value/valueDecimals format. We normalize it:
+    - Values 0-100: kept as-is (standard 'starred' ratings)
+    - Values > 100: log-compressed toward 100 (gives ranking boost)
+    - Negative values: treated as 0
+    """
+    # Feedback: log normalization
     if feedback_count > 0:
         feedback_norm = min(
             math.log(1 + feedback_count) / math.log(1 + FEEDBACK_LOG_CAP) * 100,
@@ -54,8 +61,18 @@ def calc_usage_score(
     else:
         feedback_norm = 0.0
 
-    # Reputation score is already 0-100 range
-    rep_norm = min(max(reputation_score, 0), 100)
+    # Reputation: piecewise normalization
+    # 0-100 linear (starred ratings), >100 log compression
+    if reputation_score <= 0:
+        rep_norm = 0.0
+    elif reputation_score <= 100:
+        rep_norm = reputation_score
+    else:
+        # log compression: 200→~87, 500→~93, 1000→~96
+        rep_norm = min(
+            100.0,
+            100.0 * math.log(1 + reputation_score) / math.log(1 + 1000),
+        )
 
     score = USAGE_FEEDBACK_W * feedback_norm + USAGE_REPUTATION_W * rep_norm
     return round(score, 1)

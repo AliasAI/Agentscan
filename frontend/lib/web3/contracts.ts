@@ -88,10 +88,13 @@ export const IDENTITY_REGISTRY_ABI = [
   },
 ] as const satisfies Abi
 
+// All CREATE2 mainnet chains share the same contract address
+const MAINNET_IDENTITY: Address = '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432'
+const MAINNET_CHAIN_IDS = [1, 137, 8453, 42161, 10, 59144, 534352, 43114, 42220, 100, 167000, 4326, 56, 143]
+
 // Contract addresses per chain - matches backend networks_config.py
-// Updated: Jan 2026 Mainnet deployment
 export const IDENTITY_CONTRACTS: Record<number, Address> = {
-  1: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432', // Ethereum Mainnet (Jan 2026)
+  ...Object.fromEntries(MAINNET_CHAIN_IDS.map(id => [id, MAINNET_IDENTITY])),
   11155111: '0x8004A818BFB912233c491871b3d84c89A494BD9e', // Sepolia (for reference)
 }
 
@@ -101,10 +104,15 @@ export function getIdentityContract(chainId: number): Address | undefined {
 }
 
 // Block explorer URLs for transaction links
-// Updated: Jan 2026 Mainnet deployment
 export const BLOCK_EXPLORERS: Record<number, string> = {
-  1: 'https://etherscan.io', // Ethereum Mainnet
-  11155111: 'https://sepolia.etherscan.io', // Sepolia (for reference)
+  1: 'https://etherscan.io', 137: 'https://polygonscan.com',
+  8453: 'https://basescan.org', 42161: 'https://arbiscan.io',
+  10: 'https://optimistic.etherscan.io', 59144: 'https://lineascan.build',
+  534352: 'https://scrollscan.com', 43114: 'https://snowscan.xyz',
+  42220: 'https://celoscan.io', 100: 'https://gnosisscan.io',
+  167000: 'https://taikoscan.io', 4326: 'https://megaeth.blockscout.com',
+  56: 'https://bscscan.com', 143: 'https://monadscan.com',
+  11155111: 'https://sepolia.etherscan.io',
 }
 
 // Get transaction URL
@@ -213,10 +221,12 @@ export const REPUTATION_REGISTRY_ABI = [
   },
 ] as const satisfies Abi
 
+// All CREATE2 mainnet chains share the same reputation contract address
+const MAINNET_REPUTATION: Address = '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63'
+
 // Reputation Registry contract addresses per chain
-// Updated: Jan 2026 Mainnet deployment
 export const REPUTATION_CONTRACTS: Record<number, Address> = {
-  1: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63', // Ethereum Mainnet (Jan 2026)
+  ...Object.fromEntries(MAINNET_CHAIN_IDS.map(id => [id, MAINNET_REPUTATION])),
   11155111: '0x8004B663056A597Dffe9eCcC1965A193B7388713', // Sepolia (for reference)
 }
 

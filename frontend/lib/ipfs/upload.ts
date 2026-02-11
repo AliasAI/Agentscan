@@ -1,21 +1,16 @@
 /**
  * IPFS upload utility using Pinata
  *
- * Uploads JSON metadata to IPFS and returns the IPFS URI
+ * Builds ERC-8004 Registration Best Practices compliant JSON
+ * and uploads to IPFS via Pinata API.
  */
 
-interface AgentMetadata {
-  name: string
-  description: string
-  // ERC-8004 Jan 2026 主网格式: use "services" instead of "endpoints"
-  services: Array<{
-    url: string
-    skills: string[]
-    domains: string[]
-  }>
-  version: string
-  created_at: string
-}
+import type {
+  CreateAgentForm,
+  RegistrationMetadata,
+  RegistrationService,
+  ServiceInput,
+} from '@/types'
 
 interface PinataResponse {
   IpfsHash: string
@@ -23,49 +18,26 @@ interface PinataResponse {
   Timestamp: string
 }
 
-/**
- * Get Pinata authentication headers
- *
- * Supports two authentication methods:
- * 1. JWT (recommended): Set NEXT_PUBLIC_PINATA_JWT
- * 2. API Key + Secret: Set NEXT_PUBLIC_PINATA_API_KEY and NEXT_PUBLIC_PINATA_SECRET_API_KEY
- */
 function getPinataHeaders(): Record<string, string> {
   const jwt = process.env.NEXT_PUBLIC_PINATA_JWT
   const apiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY
   const secretKey = process.env.NEXT_PUBLIC_PINATA_SECRET_API_KEY
 
-  // Prefer JWT if available
   if (jwt) {
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${jwt}`,
-    }
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` }
   }
-
-  // Fall back to API Key + Secret
   if (apiKey && secretKey) {
-    return {
-      'Content-Type': 'application/json',
-      pinata_api_key: apiKey,
-      pinata_secret_api_key: secretKey,
-    }
+    return { 'Content-Type': 'application/json', pinata_api_key: apiKey, pinata_secret_api_key: secretKey }
   }
-
   throw new Error(
-    'Pinata credentials not configured. Please set either:\n' +
-      '- NEXT_PUBLIC_PINATA_JWT (recommended), or\n' +
-      '- NEXT_PUBLIC_PINATA_API_KEY and NEXT_PUBLIC_PINATA_SECRET_API_KEY'
+    'Pinata credentials not configured. Set NEXT_PUBLIC_PINATA_JWT or API key pair.'
   )
 }
 
 /**
- * Upload metadata JSON to IPFS via Pinata
- *
- * @param metadata - Agent metadata object
- * @returns IPFS URI (ipfs://...)
+ * Upload Registration JSON to IPFS via Pinata
  */
-export async function uploadToIPFS(metadata: AgentMetadata): Promise<string> {
+export async function uploadToIPFS(metadata: RegistrationMetadata): Promise<string> {
   const headers = getPinataHeaders()
 
   const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
@@ -88,32 +60,56 @@ export async function uploadToIPFS(metadata: AgentMetadata): Promise<string> {
   return `ipfs://${data.IpfsHash}`
 }
 
-/**
- * Build metadata object from form data
- */
-export function buildMetadata(
-  name: string,
-  description: string,
-  endpoints: Array<{ url: string; skills: string[]; domains: string[] }>
-): AgentMetadata {
-  return {
-    name,
-    description,
-    // ERC-8004 Jan 2026 主网格式: use "services" instead of "endpoints"
-    services: endpoints.filter((e) => e.url.trim()).map((e) => ({
-      url: e.url.trim(),
-      skills: e.skills,
-      domains: e.domains,
-    })),
-    version: '1.0.0',
-    created_at: new Date().toISOString(),
+/** Convert a form ServiceInput to the Registration JSON output format */
+function toRegistrationService(s: ServiceInput): RegistrationService | null {
+  switch (s.name) {
+    case 'MCP':
+      if (!s.endpoint.trim()) return null
+      return { name: 'MCP', endpoint: s.endpoint.trim(), version: s.version, capabilities: s.mcpTools.filter(Boolean) }
+    case 'A2A':
+      if (!s.endpoint.trim()) return null
+      return { name: 'A2A', endpoint: s.endpoint.trim(), version: s.version }
+    case 'OASF':
+      if (s.skills.length === 0 && s.domains.length === 0) return null
+      return { name: 'OASF', endpoint: s.endpoint || '', version: s.version, skills: s.skills, domains: s.domains }
+    case 'ENS':
+      if (!s.endpoint.trim()) return null
+      return { name: 'ENS', endpoint: s.endpoint.trim(), version: s.version }
+    case 'DID':
+      if (!s.endpoint.trim()) return null
+      return { name: 'DID', endpoint: s.endpoint.trim(), version: s.version }
+    case 'agentWallet':
+      if (!s.endpoint.trim()) return null
+      return { name: 'agentWallet', endpoint: s.endpoint.trim() }
   }
 }
 
 /**
- * Validate metadata before upload
+ * Build ERC-8004 Registration JSON from form data
  */
-export function validateMetadata(metadata: AgentMetadata): string | null {
+export function buildMetadata(form: CreateAgentForm): RegistrationMetadata {
+  const services = form.services
+    .map(toRegistrationService)
+    .filter((s): s is RegistrationService => s !== null)
+
+  const metadata: RegistrationMetadata = {
+    type: 'https://eips.ethereum.org/EIPS/eip-8004#registration-v1',
+    name: form.name,
+    description: form.description,
+  }
+
+  if (form.image.trim()) metadata.image = form.image.trim()
+  if (services.length > 0) metadata.services = services
+  if (!form.active) metadata.active = false
+  if (form.x402Support) metadata.x402Support = true
+
+  return metadata
+}
+
+/**
+ * Validate Registration metadata before upload
+ */
+export function validateMetadata(metadata: RegistrationMetadata): string | null {
   if (!metadata.name || metadata.name.length < 2) {
     return 'Name must be at least 2 characters'
   }
@@ -123,18 +119,35 @@ export function validateMetadata(metadata: AgentMetadata): string | null {
   if (!metadata.description || metadata.description.length < 20) {
     return 'Description must be at least 20 characters'
   }
-  if (metadata.services.length === 0) {
-    return 'At least one service is required'
-  }
-  for (let i = 0; i < metadata.services.length; i++) {
-    const ep = metadata.services[i]
-    if (!ep.url) {
-      return `Endpoint ${i + 1}: URL is required`
+  if (metadata.image) {
+    try { new URL(metadata.image) } catch {
+      return 'Image must be a valid URL (https:// or ipfs://)'
     }
-    try {
-      new URL(ep.url)
-    } catch {
-      return `Endpoint ${i + 1}: Invalid URL format`
+  }
+  if (metadata.services) {
+    for (let i = 0; i < metadata.services.length; i++) {
+      const svc = metadata.services[i]
+      const label = `Service ${i + 1} (${svc.name})`
+      switch (svc.name) {
+        case 'MCP':
+        case 'A2A':
+          try { new URL(svc.endpoint) } catch { return `${label}: Invalid endpoint URL` }
+          break
+        case 'ENS':
+          if (!svc.endpoint.endsWith('.eth')) return `${label}: Must be a .eth name`
+          break
+        case 'DID':
+          if (!svc.endpoint.startsWith('did:')) return `${label}: Must start with did:`
+          break
+        case 'agentWallet':
+          if (!svc.endpoint.startsWith('eip155:')) return `${label}: Must use eip155: format`
+          break
+        case 'OASF':
+          if (svc.skills.length === 0 && svc.domains.length === 0) {
+            return `${label}: Select at least 1 skill or domain`
+          }
+          break
+      }
     }
   }
   return null

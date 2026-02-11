@@ -18,8 +18,16 @@ def init_networks():
 
         # Legacy network mappings: old_key -> new_key
         # Used to migrate agents from deprecated networks to new ones
+        # Set new_key to None to delete without migration
         legacy_mappings = {
             "bsc": "bsc-1",  # Old bsc migrates to bsc-1 (CREATE2 deployment)
+            "bsc-2": None,   # Vanity deployment, no longer used
+            "hedera-testnet": None,
+            "hyperevm-testnet": None,
+            "skale-testnet": None,
+            "base-sepolia": None,
+            "linea-sepolia": None,
+            "polygon-amoy": None,
         }
 
         # STEP 1: Create/update all networks from config FIRST

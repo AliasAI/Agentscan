@@ -4,30 +4,24 @@
  * AgentForm - Main form for creating ERC-8004 agents
  *
  * Integrates:
- * - Basic info (name, description)
- * - Endpoints with OASF taxonomy
+ * - Basic info (name, description, image)
+ * - Services with protocol-specific editors
+ * - Options (active, x402Support)
  * - Metadata preview
- * - IPFS upload
- * - Contract interaction
- * - Wallet change detection (resets tx state on account change)
+ * - IPFS upload + on-chain registration
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAccount, useChainId, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { EndpointEditor, type EndpointInput } from './EndpointEditor'
+import { ServiceEditor } from './ServiceEditor'
 import { MetadataPreview } from './MetadataPreview'
 import { TransactionStatus, type TxStatus } from '../web3/TransactionStatus'
 import { NetworkWarning } from '../web3/NetworkSwitcher'
 import { uploadToIPFS, buildMetadata, validateMetadata } from '@/lib/ipfs/upload'
 import { IDENTITY_REGISTRY_ABI, getIdentityContract } from '@/lib/web3/contracts'
 import { isSupportedChain, chainNames } from '@/lib/web3/config'
-
-const defaultEndpoint: EndpointInput = {
-  url: '',
-  skills: [],
-  domains: [],
-}
+import type { ServiceInput, CreateAgentForm as FormState } from '@/types'
 
 export function AgentForm() {
   const router = useRouter()
@@ -37,14 +31,15 @@ export function AgentForm() {
   // Form state
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [endpoints, setEndpoints] = useState<EndpointInput[]>([{ ...defaultEndpoint }])
+  const [image, setImage] = useState('')
+  const [services, setServices] = useState<ServiceInput[]>([])
+  const [active, setActive] = useState(true)
+  const [x402Support, setX402Support] = useState(false)
 
   // Transaction state
   const [txStatus, setTxStatus] = useState<TxStatus>('idle')
   const [txError, setTxError] = useState<string>('')
   const [ipfsUri, setIpfsUri] = useState<string>('')
-
-  // Track the address that initiated the transaction
   const txInitiatorRef = useRef<string | undefined>(undefined)
 
   // Contract interaction
@@ -60,11 +55,15 @@ export function AgentForm() {
     hash: txHash,
   })
 
+  // Memoize form object for MetadataPreview
+  const form = useMemo<FormState>(
+    () => ({ name, description, image, services, active, x402Support }),
+    [name, description, image, services, active, x402Support]
+  )
+
   // Detect wallet/account change during pending transaction
   useEffect(() => {
-    // If we have a pending transaction and the address changed
     if (txInitiatorRef.current && address !== txInitiatorRef.current) {
-      // Reset everything - the old tx is no longer valid for this account
       resetWrite()
       setTxStatus('idle')
       setTxError('')
@@ -73,10 +72,9 @@ export function AgentForm() {
     }
   }, [address, resetWrite])
 
-  // Handle wallet rejection or write errors (e.g., user clicked "Cancel" in MetaMask)
+  // Handle wallet rejection or write errors
   useEffect(() => {
     if (isWriteError && writeError && txStatus === 'pending') {
-      // Check if user rejected the transaction
       const errorMessage = writeError.message || 'Transaction failed'
       const isUserRejection =
         errorMessage.includes('User rejected') ||
@@ -85,12 +83,10 @@ export function AgentForm() {
         errorMessage.includes('ACTION_REJECTED')
 
       if (isUserRejection) {
-        // User cancelled in wallet - just reset to idle (no error message needed)
         resetWrite()
         setTxStatus('idle')
         txInitiatorRef.current = undefined
       } else {
-        // Actual error - show error state
         setTxError(errorMessage)
         setTxStatus('error')
         txInitiatorRef.current = undefined
@@ -107,7 +103,7 @@ export function AgentForm() {
   }
   if (isConfirmed && txStatus === 'confirming') {
     setTxStatus('success')
-    txInitiatorRef.current = undefined // Clear initiator on success
+    txInitiatorRef.current = undefined
   }
 
   const handleSubmit = useCallback(
@@ -115,8 +111,7 @@ export function AgentForm() {
       e.preventDefault()
       setTxError('')
 
-      // Build and validate metadata
-      const metadata = buildMetadata(name, description, endpoints)
+      const metadata = buildMetadata(form)
       const validationError = validateMetadata(metadata)
       if (validationError) {
         setTxError(validationError)
@@ -124,7 +119,6 @@ export function AgentForm() {
         return
       }
 
-      // Check network
       const contractAddress = getIdentityContract(chainId)
       if (!contractAddress) {
         setTxError(`Network ${chainNames[chainId] || chainId} is not supported`)
@@ -133,15 +127,12 @@ export function AgentForm() {
       }
 
       try {
-        // Upload to IPFS
         setTxStatus('uploading')
         const uri = await uploadToIPFS(metadata)
         setIpfsUri(uri)
 
-        // Record who is initiating this transaction
         txInitiatorRef.current = address
 
-        // Call contract
         setTxStatus('pending')
         writeContract({
           address: contractAddress,
@@ -156,7 +147,7 @@ export function AgentForm() {
         txInitiatorRef.current = undefined
       }
     },
-    [name, description, endpoints, chainId, writeContract, address]
+    [form, chainId, writeContract, address]
   )
 
   const resetForm = () => {
@@ -167,34 +158,23 @@ export function AgentForm() {
     txInitiatorRef.current = undefined
   }
 
-  // Cancel pending transaction (user can manually reset)
-  const cancelTransaction = () => {
-    resetForm()
-  }
-
   const isFormDisabled = !isConnected || !isSupportedChain(chainId) || txStatus !== 'idle'
-  const isSubmitDisabled =
-    isFormDisabled ||
-    !name.trim() ||
-    !description.trim() ||
-    endpoints.every((e) => !e.url.trim())
+  const isSubmitDisabled = isFormDisabled || !name.trim() || !description.trim()
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Network warning */}
       <NetworkWarning />
 
-      {/* Transaction status */}
       <TransactionStatus
         status={txStatus}
         txHash={txHash}
         chainId={chainId}
         error={txError}
         onReset={resetForm}
-        onCancel={cancelTransaction}
+        onCancel={resetForm}
       />
 
-      {/* Success message with navigation */}
+      {/* Success actions */}
       {txStatus === 'success' && (
         <div className="flex gap-3">
           <button
@@ -211,7 +191,10 @@ export function AgentForm() {
               resetForm()
               setName('')
               setDescription('')
-              setEndpoints([{ ...defaultEndpoint }])
+              setImage('')
+              setServices([])
+              setActive(true)
+              setX402Support(false)
             }}
             className="flex-1 py-2 text-sm font-medium border border-[#e5e5e5] dark:border-[#333]
                      rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a]"
@@ -269,20 +252,66 @@ export function AgentForm() {
             </p>
           </div>
 
-          {/* Endpoints */}
+          {/* Image URL */}
+          <div>
+            <label className="block text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa] mb-1">
+              Image URL
+              <span className="font-normal text-[#a3a3a3] text-xs ml-2">(optional)</span>
+            </label>
+            <input
+              type="url"
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="https://example.com/avatar.png or ipfs://..."
+              disabled={isFormDisabled}
+              className="w-full px-4 py-2.5 text-sm border border-[#e5e5e5] dark:border-[#333] rounded-lg
+                       bg-white dark:bg-[#0a0a0a] text-[#0a0a0a] dark:text-[#fafafa]
+                       focus:outline-none focus:ring-2 focus:ring-[#0a0a0a] dark:focus:ring-[#fafafa]
+                       disabled:bg-[#f5f5f5] dark:disabled:bg-[#1a1a1a] disabled:cursor-not-allowed
+                       placeholder:text-[#a3a3a3]"
+            />
+          </div>
+
+          {/* Services */}
           <div>
             <label className="block text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa] mb-2">
-              Endpoints <span className="text-red-500">*</span>
+              Services
+              <span className="font-normal text-[#a3a3a3] text-xs ml-2">(optional)</span>
             </label>
             <p className="text-xs text-[#6e6e73] dark:text-[#86868b] mb-3">
-              Add API endpoints where your agent can be accessed. Include OASF skills and domains
-              for better discoverability.
+              Add protocol services your agent supports. You can register with just a name and description, then add services later.
             </p>
-            <EndpointEditor
-              endpoints={endpoints}
-              onChange={setEndpoints}
+            <ServiceEditor
+              services={services}
+              onChange={setServices}
               disabled={isFormDisabled}
             />
+          </div>
+
+          {/* Options row */}
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={active}
+                onChange={(e) => setActive(e.target.checked)}
+                disabled={isFormDisabled}
+                className="w-4 h-4 rounded border-[#d4d4d4] text-[#0a0a0a] focus:ring-[#0a0a0a]
+                         dark:border-[#525252] dark:bg-[#1a1a1a]"
+              />
+              <span className="text-sm text-[#0a0a0a] dark:text-[#fafafa]">Active</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={x402Support}
+                onChange={(e) => setX402Support(e.target.checked)}
+                disabled={isFormDisabled}
+                className="w-4 h-4 rounded border-[#d4d4d4] text-[#0a0a0a] focus:ring-[#0a0a0a]
+                         dark:border-[#525252] dark:bg-[#1a1a1a]"
+              />
+              <span className="text-sm text-[#0a0a0a] dark:text-[#fafafa]">x402 Payment Support</span>
+            </label>
           </div>
 
           {/* Metadata preview */}
@@ -290,7 +319,7 @@ export function AgentForm() {
             <label className="block text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa] mb-2">
               Preview
             </label>
-            <MetadataPreview name={name} description={description} endpoints={endpoints} />
+            <MetadataPreview form={form} />
           </div>
 
           {/* Submit button */}

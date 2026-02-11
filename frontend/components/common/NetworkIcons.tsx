@@ -7,7 +7,14 @@ import {
   NetworkBase,
   NetworkMonad,
   NetworkLinea,
-  NetworkHederaHashgraph,
+  NetworkArbitrumOne,
+  NetworkOptimism,
+  NetworkScroll,
+  NetworkAvalanche,
+  NetworkCelo,
+  NetworkGnosis,
+  NetworkTaiko,
+  NetworkMegaEth,
 } from '@web3icons/react'
 import type { IconComponent } from '@web3icons/react'
 import { getNetworkIconType } from '@/lib/networks'
@@ -52,7 +59,14 @@ const ICON_COMPONENTS: Record<string, IconComponent> = {
   base: NetworkBase,
   monad: NetworkMonad,
   linea: NetworkLinea,
-  hedera: NetworkHederaHashgraph,
+  arbitrum: NetworkArbitrumOne,
+  optimism: NetworkOptimism,
+  scroll: NetworkScroll,
+  avalanche: NetworkAvalanche,
+  celo: NetworkCelo,
+  gnosis: NetworkGnosis,
+  taiko: NetworkTaiko,
+  megaeth: NetworkMegaEth,
 }
 
 interface NetworkIconProps {
@@ -104,7 +118,4 @@ export const MonadIcon = (props: IconProps) => (
 )
 export const LineaIcon = (props: IconProps) => (
   <NetworkLinea size={props.size || 20} variant="branded" />
-)
-export const HederaIcon = (props: IconProps) => (
-  <NetworkHederaHashgraph size={props.size || 20} variant="branded" />
 )
