@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { WalletButton } from '@/components/web3/WalletButton';
+import { MobileDrawer } from './MobileDrawer';
 
 export function Header() {
   const [mounted, setMounted] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
 
   // Initialize theme on mount
@@ -119,6 +121,8 @@ export function Header() {
                 ))}
               </nav>
             </div>
+            {/* Hamburger placeholder for SSR */}
+            <div className="md:hidden w-9 h-9" />
           </div>
         </div>
       </header>
@@ -126,73 +130,90 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#fafafa]/90 dark:bg-[#0a0a0a]/90 border-b border-[#e5e5e5] dark:border-[#262626] transition-all">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 lg:h-16">
-          <div className="flex items-center space-x-8 lg:space-x-12">
-            {/* Logo - 黑白风格 */}
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="relative bg-[#0a0a0a] dark:bg-[#fafafa] p-2 rounded-lg transform group-hover:scale-105 transition-transform duration-200">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white dark:text-[#0a0a0a]">
-                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-lg lg:text-xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-                  Agentscan
-                </span>
-                <span className="text-xs font-medium text-[#a3a3a3] dark:text-[#525252] hidden sm:inline">
-                  by alias
-                </span>
-              </div>
-            </Link>
+    <>
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#fafafa]/90 dark:bg-[#0a0a0a]/90 border-b border-[#e5e5e5] dark:border-[#262626] transition-all">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 lg:h-16">
+            <div className="flex items-center space-x-8 lg:space-x-12">
+              {/* Logo */}
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <div className="relative bg-[#0a0a0a] dark:bg-[#fafafa] p-2 rounded-lg transform group-hover:scale-105 transition-transform duration-200">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white dark:text-[#0a0a0a]">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg lg:text-xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
+                    Agentscan
+                  </span>
+                  <span className="text-xs font-medium text-[#a3a3a3] dark:text-[#525252] hidden sm:inline">
+                    by alias
+                  </span>
+                </div>
+              </Link>
 
-            {/* Navigation - Apple 风格 + 底部线条指示器 */}
-            <nav className="hidden md:flex items-center">
-              {navLinks.map((link) => {
-                const active = isActive(link.href);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`
-                      group relative px-4 py-3 text-[13px] font-normal
-                      transition-colors duration-200 flex items-center gap-1.5
-                      focus-visible:outline-none
-                      ${active
-                        ? 'text-[#0a0a0a] dark:text-[#fafafa]'
-                        : 'text-[#6e6e73] dark:text-[#86868b] hover:text-[#0a0a0a] dark:hover:text-[#fafafa]'
-                      }
-                    `}
-                  >
-                    <NavIcon type={link.iconType} />
-                    <span>{link.label}</span>
-
-                    {/* 底部线条指示器 */}
-                    <span
+              {/* Navigation - Desktop */}
+              <nav className="hidden md:flex items-center">
+                {navLinks.map((link) => {
+                  const active = isActive(link.href);
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
                       className={`
-                        absolute bottom-0 left-4 right-4 h-[2px] rounded-full
-                        transition-opacity duration-200
+                        group relative px-4 py-3 text-[13px] font-normal
+                        transition-colors duration-200 flex items-center gap-1.5
+                        focus-visible:outline-none
                         ${active
-                          ? 'bg-[#0a0a0a] dark:bg-[#fafafa] opacity-100'
-                          : 'bg-[#0a0a0a] dark:bg-[#fafafa] opacity-0 group-hover:opacity-30'
+                          ? 'text-[#0a0a0a] dark:text-[#fafafa]'
+                          : 'text-[#6e6e73] dark:text-[#86868b] hover:text-[#0a0a0a] dark:hover:text-[#fafafa]'
                         }
                       `}
-                    />
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
+                    >
+                      <NavIcon type={link.iconType} />
+                      <span>{link.label}</span>
 
-          {/* Wallet Button - Right side */}
-          <div className="hidden md:flex items-center">
-            <WalletButton />
+                      <span
+                        className={`
+                          absolute bottom-0 left-4 right-4 h-[2px] rounded-full
+                          transition-opacity duration-200
+                          ${active
+                            ? 'bg-[#0a0a0a] dark:bg-[#fafafa] opacity-100'
+                            : 'bg-[#0a0a0a] dark:bg-[#fafafa] opacity-0 group-hover:opacity-30'
+                          }
+                        `}
+                      />
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Wallet Button - Desktop */}
+            <div className="hidden md:flex items-center">
+              <WalletButton />
+            </div>
+
+            {/* Hamburger - Mobile */}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="md:hidden p-2 rounded-lg text-[#525252] dark:text-[#a3a3a3] hover:bg-[#e5e5e5]/50 dark:hover:bg-[#262626]/50 transition-colors"
+              aria-label="Open menu"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M4 7H20" />
+                <path d="M4 12H20" />
+                <path d="M4 17H20" />
+              </svg>
+            </button>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Mobile drawer - outside header to avoid stacking context issues */}
+      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+    </>
   );
 }

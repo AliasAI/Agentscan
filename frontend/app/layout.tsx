@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+
 import { ToastProvider } from "@/components/common/Toast";
 import { Web3Provider } from "@/components/web3/Web3Provider";
 import { Inter } from 'next/font/google';
