@@ -333,7 +333,10 @@ export default function AgentDetailPage() {
                   value={
                     agent.reputation_count && agent.reputation_count > 0 ? (
                       <span className="font-semibold">
-                        {agent.reputation_score.toFixed(0)}/100
+                        {agent.reputation_score.toFixed(0)}
+                        {agent.reputation_score <= 100 && (
+                          <span className="text-xs text-[#737373]">/100</span>
+                        )}
                         <span className="text-xs text-[#737373] font-normal ml-1">
                           ({agent.reputation_count} {agent.reputation_count === 1 ? 'review' : 'reviews'})
                         </span>
@@ -343,8 +346,40 @@ export default function AgentDetailPage() {
                     )
                   }
                 />
+                {agent.is_active !== undefined && agent.is_active !== null && (
+                  <InfoRow
+                    label="Active"
+                    value={
+                      <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                        agent.is_active
+                          ? 'text-[#16a34a]'
+                          : 'text-[#dc2626]'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          agent.is_active ? 'bg-[#16a34a]' : 'bg-[#dc2626]'
+                        }`} />
+                        {agent.is_active ? 'Yes' : 'No'}
+                      </span>
+                    }
+                  />
+                )}
                 <InfoRow label="Created" value={formatDate(agent.created_at)} />
-                <InfoRow label="Last Updated" value={formatDate(agent.updated_at)} isLast />
+                <InfoRow
+                  label="Last Updated"
+                  value={formatDate(agent.updated_at)}
+                  isLast={!agent.metadata_refreshed_at}
+                />
+                {agent.metadata_refreshed_at && (
+                  <InfoRow
+                    label="Metadata Refreshed"
+                    value={
+                      <span className="text-xs text-[#737373]">
+                        {formatDate(agent.metadata_refreshed_at)}
+                      </span>
+                    }
+                    isLast
+                  />
+                )}
               </div>
             </div>
 

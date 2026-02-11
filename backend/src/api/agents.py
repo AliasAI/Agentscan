@@ -1,5 +1,7 @@
 """Agent API"""
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
@@ -8,6 +10,7 @@ from src.db.database import get_db
 from src.models import Agent
 from src.schemas.agent import AgentResponse
 from src.schemas.common import PaginatedResponse
+from src.services.metadata_processor import refresh_agent_metadata
 
 router = APIRouter()
 
@@ -66,6 +69,9 @@ def apply_quality_filter(query, quality: str):
     return query
 
 
+# If metadata was refreshed more than this many seconds ago, refresh on detail view
+METADATA_STALE_SECONDS = 3600  # 1 hour
+
 ALLOWED_SORT_FIELDS = {"created_at", "name", "reputation_score"}
 
 
@@ -75,8 +81,8 @@ async def get_agents(
     page_size: int = Query(20, ge=1, le=100),
     search: str | None = None,
     network: str | None = Query(None, description="Filter by network ID or 'all'"),
-    reputation_min: float | None = Query(None, ge=0, le=100),
-    reputation_max: float | None = Query(None, ge=0, le=100),
+    reputation_min: float | None = Query(None, ge=0),
+    reputation_max: float | None = Query(None, ge=0),
     has_reputation: bool | None = Query(None, description="Filter agents with reputation activity"),
     quality: str = Query("all", description="Quality filter: all, basic, verified"),
     sort_field: str = Query("created_at", description="Sort field: created_at, name, reputation_score"),
@@ -204,7 +210,7 @@ async def get_featured_agents(db: Session = Depends(get_db)):
 
 @router.get("/agents/{agent_id}", response_model=AgentResponse)
 async def get_agent(agent_id: str, db: Session = Depends(get_db)):
-    """获取代理详情"""
+    """获取代理详情 (triggers on-demand metadata refresh if stale)"""
 
     agent = (
         db.query(Agent)
@@ -214,4 +220,17 @@ async def get_agent(agent_id: str, db: Session = Depends(get_db)):
     )
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
+
+    # On-demand metadata refresh if stale
+    needs_refresh = (
+        agent.metadata_uri
+        and (
+            agent.metadata_refreshed_at is None
+            or (datetime.utcnow() - agent.metadata_refreshed_at).total_seconds()
+            > METADATA_STALE_SECONDS
+        )
+    )
+    if needs_refresh:
+        await refresh_agent_metadata(db, agent)
+
     return AgentResponse.from_orm_with_network(agent)

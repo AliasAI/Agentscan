@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Float, Enum, DateTime, ForeignKey, Integer, JSON, Text, UniqueConstraint
+from sqlalchemy import Column, String, Float, Enum, DateTime, ForeignKey, Integer, JSON, Text, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 import enum
 
@@ -58,6 +58,10 @@ class Agent(Base):
     skills = Column(JSON, nullable=True)  # List of skill slugs: ["skill_category/skill_name"]
     domains = Column(JSON, nullable=True)  # List of domain slugs: ["domain_category/domain_name"]
     classification_source = Column(String(20), nullable=True)  # 'metadata' or 'ai' - indicates source of classification
+
+    # ERC-8004 off-chain active field (from Registration JSON)
+    is_active = Column(Boolean, nullable=True)  # None = unknown, True/False from metadata
+    metadata_refreshed_at = Column(DateTime, nullable=True)  # Last metadata refresh time
 
     # Endpoint health check results (stored for fast retrieval)
     endpoint_status = Column(JSON, nullable=True)  # {endpoints: [...], has_working: bool, checked_at: str}

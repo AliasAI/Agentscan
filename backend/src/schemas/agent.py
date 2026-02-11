@@ -13,7 +13,7 @@ class AgentBase(BaseModel):
     name: str
     address: str
     description: str
-    reputation_score: float = Field(ge=0.0, le=100.0)
+    reputation_score: float = 0.0
     status: AgentStatus
     network_id: str
 
@@ -29,7 +29,7 @@ class AgentUpdate(BaseModel):
 
     name: str | None = None
     description: str | None = None
-    reputation_score: float | None = Field(None, ge=0.0, le=100.0)
+    reputation_score: float | None = None
     status: AgentStatus | None = None
 
 
@@ -62,6 +62,10 @@ class AgentResponse(AgentBase):
     skills: list[str] | None = None
     domains: list[str] | None = None
     classification_source: str | None = None  # "metadata" or "ai"
+
+    # ERC-8004 active field and metadata refresh
+    is_active: bool | None = None
+    metadata_refreshed_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
@@ -96,5 +100,7 @@ class AgentResponse(AgentBase):
             "skills": agent.skills,
             "domains": agent.domains,
             "classification_source": agent.classification_source,
+            "is_active": agent.is_active,
+            "metadata_refreshed_at": agent.metadata_refreshed_at,
         }
         return cls(**data)

@@ -49,6 +49,10 @@ export interface Agent {
   skills?: string[];
   domains?: string[];
   classification_source?: string | null;  // "metadata" or "ai"
+
+  // ERC-8004 active field and metadata refresh
+  is_active?: boolean | null;
+  metadata_refreshed_at?: string | null;
 }
 
 export interface Contracts {
@@ -305,33 +309,47 @@ export interface SupportedNetwork {
   contractAddress: `0x${string}`;
 }
 
-// Form input for creating agent endpoints
-export interface EndpointInput {
-  url: string;
-  skills: string[];
-  domains: string[];
-}
+// Service protocol types for ERC-8004 Registration
+export type ServiceType = 'MCP' | 'A2A' | 'OASF' | 'ENS' | 'DID' | 'agentWallet';
+
+// Service entry (discriminated union on name)
+export type ServiceInput =
+  | { name: 'MCP'; endpoint: string; version: string; mcpTools: string[] }
+  | { name: 'A2A'; endpoint: string; version: string }
+  | { name: 'OASF'; endpoint: string; version: string; skills: string[]; domains: string[] }
+  | { name: 'ENS'; endpoint: string; version: string }
+  | { name: 'DID'; endpoint: string; version: string }
+  | { name: 'agentWallet'; endpoint: string };
 
 // Form state for creating an agent
 export interface CreateAgentForm {
   name: string;
   description: string;
-  endpoints: EndpointInput[];
+  image: string;
+  services: ServiceInput[];
+  active: boolean;
+  x402Support: boolean;
 }
 
-// Agent metadata (OASF compliant, ERC-8004 Jan 2026 主网格式)
-export interface AgentMetadata {
+// ERC-8004 Registration JSON (final format uploaded to IPFS)
+export interface RegistrationMetadata {
+  type: 'https://eips.ethereum.org/EIPS/eip-8004#registration-v1';
   name: string;
   description: string;
-  // ERC-8004 Jan 2026: renamed from "endpoints" to "services"
-  services: Array<{
-    url: string;
-    skills: string[];
-    domains: string[];
-  }>;
-  version: string;
-  created_at: string;
+  image?: string;
+  services?: RegistrationService[];
+  active?: boolean;
+  x402Support?: boolean;
 }
+
+// Service entry in Registration JSON (cleaned output format)
+export type RegistrationService =
+  | { name: 'MCP'; endpoint: string; version: string; capabilities: string[] }
+  | { name: 'A2A'; endpoint: string; version: string }
+  | { name: 'OASF'; endpoint: string; version: string; skills: string[]; domains: string[] }
+  | { name: 'ENS'; endpoint: string; version: string }
+  | { name: 'DID'; endpoint: string; version: string }
+  | { name: 'agentWallet'; endpoint: string };
 
 // OASF Taxonomy item from API
 export interface TaxonomyItem {

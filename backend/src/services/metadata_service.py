@@ -1,9 +1,10 @@
-"""Metadata fetching service - provides real-time metadata resolution"""
+"""Metadata fetching service - provides real-time metadata resolution with TTL cache"""
 
 import asyncio
 import base64
 import json
 import time
+from collections import OrderedDict
 from urllib.parse import unquote
 
 import httpx
@@ -13,9 +14,54 @@ from src.core.blockchain_config import IPFS_GATEWAY
 
 logger = structlog.get_logger()
 
+# Default fallback metadata when fetch fails
+DEFAULT_METADATA = {
+    "name": "Unknown Agent",
+    "description": "Metadata fetch failed",
+}
+
+
+class TTLCache:
+    """LRU cache with TTL expiration, based on OrderedDict"""
+
+    def __init__(self, max_size: int = 500, ttl_seconds: int = 300):
+        self._cache: OrderedDict[str, tuple[float, dict]] = OrderedDict()
+        self._max_size = max_size
+        self._ttl_seconds = ttl_seconds
+
+    def get(self, key: str) -> dict | None:
+        """Get value if exists and not expired, returns None otherwise"""
+        if key not in self._cache:
+            return None
+
+        timestamp, value = self._cache[key]
+        if time.time() - timestamp > self._ttl_seconds:
+            del self._cache[key]
+            return None
+
+        # Move to end (most recently used)
+        self._cache.move_to_end(key)
+        return value
+
+    def set(self, key: str, value: dict) -> None:
+        """Set value with current timestamp, evict LRU if at capacity"""
+        if key in self._cache:
+            self._cache.move_to_end(key)
+        elif len(self._cache) >= self._max_size:
+            self._cache.popitem(last=False)  # Evict oldest (LRU)
+
+        self._cache[key] = (time.time(), value)
+
+    @property
+    def size(self) -> int:
+        return len(self._cache)
+
 
 class MetadataService:
     """Service for fetching and parsing agent metadata from various URI formats"""
+
+    def __init__(self):
+        self._cache = TTLCache(max_size=500, ttl_seconds=300)
 
     def _detect_uri_type(self, uri: str) -> str:
         """Detect the type of metadata URI"""
@@ -38,10 +84,11 @@ class MetadataService:
         return ""
 
     async def fetch_and_parse(
-        self, uri: str, timeout: float = 10.0, retries: int = 1
+        self, uri: str, timeout: float = 10.0, retries: int = 1,
+        use_cache: bool = True,
     ) -> dict:
         """
-        Fetch and parse metadata from URI.
+        Fetch and parse metadata from URI (with optional caching).
 
         Returns:
             dict with keys:
@@ -67,10 +114,22 @@ class MetadataService:
             "fetch_time_ms": 0,
         }
 
+        # Check cache first
+        if use_cache:
+            cached = self._cache.get(uri or "")
+            if cached is not None:
+                result["metadata"] = cached
+                result["success"] = True
+                result["fetch_time_ms"] = 0
+                return result
+
         try:
             metadata = await self._fetch_metadata(uri, timeout, retries)
             result["metadata"] = metadata
             result["success"] = True
+            # Store in cache
+            if use_cache and uri:
+                self._cache.set(uri, metadata)
         except Exception as e:
             result["error"] = str(e)
             logger.warning("metadata_service_error", uri=uri[:100] if uri else "", error=str(e))
@@ -78,6 +137,19 @@ class MetadataService:
             result["fetch_time_ms"] = int((time.time() - start_time) * 1000)
 
         return result
+
+    async def fetch_metadata_safe(
+        self, uri: str, timeout: float = 10.0, retries: int = 1,
+    ) -> dict:
+        """
+        Fetch metadata with graceful degradation — never raises exceptions.
+        Returns parsed metadata dict on success, or DEFAULT_METADATA on failure.
+        Used by blockchain_sync to match its original error-tolerant behavior.
+        """
+        result = await self.fetch_and_parse(uri, timeout, retries)
+        if result["success"] and result["metadata"]:
+            return result["metadata"]
+        return {**DEFAULT_METADATA}
 
     async def _fetch_metadata(
         self, uri: str, timeout: float = 10.0, retries: int = 1

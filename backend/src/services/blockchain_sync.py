@@ -1,7 +1,6 @@
 """Blockchain synchronization service - Multi-network support"""
 
 import asyncio
-import httpx
 from datetime import datetime
 from typing import Optional
 from web3 import Web3
@@ -12,7 +11,6 @@ from src.core.blockchain_config import (
     MAX_RETRIES,
     RETRY_DELAY_SECONDS,
     REQUEST_DELAY_SECONDS,
-    IPFS_GATEWAY,
 )
 from src.core.reputation_config import REPUTATION_REGISTRY_ABI
 from src.core.networks_config import NETWORKS, get_network
@@ -21,8 +19,8 @@ from src.models import (
     AgentStatus, Activity, ActivityType, Network, Feedback, Validation
 )
 from src.db.database import SessionLocal
-from src.services.ai_classifier import ai_classifier_service
-from src.taxonomies.oasf_taxonomy import OASF_SKILLS, OASF_DOMAINS
+from src.services.metadata_service import metadata_service
+from src.services.metadata_processor import extract_oasf_data
 import structlog
 from eth_abi import decode
 
@@ -566,8 +564,8 @@ class NetworkSyncService:
             )
             return
 
-        # Fetch metadata
-        metadata = await self._fetch_metadata(metadata_uri)
+        # Fetch metadata (safe — never raises)
+        metadata = await metadata_service.fetch_metadata_safe(metadata_uri)
 
         try:
             # Double-check before insert
@@ -586,9 +584,15 @@ class NetworkSyncService:
             # Extract or classify OASF skills and domains
             name = metadata.get('name', f'Agent #{token_id}')
             description = metadata.get('description', 'No description')
-            oasf_data = await self._extract_oasf_data(metadata, name, description)
+            oasf_data = await extract_oasf_data(
+                metadata, name, description, network_key=self.network_key
+            )
+
+            # Extract active field (ERC-8004 off-chain field)
+            active_value = metadata.get("active")
 
             # Create agent with blockchain timestamp
+            now = datetime.utcnow()
             agent = Agent(
                 token_id=token_id,
                 name=name,
@@ -601,11 +605,13 @@ class NetworkSyncService:
                 metadata_uri=metadata_uri,
                 on_chain_data=dict(event['args']),
                 sync_status=SyncStatus.SYNCED,
-                last_synced_at=datetime.utcnow(),
+                last_synced_at=now,
                 created_at=block_timestamp,
                 skills=oasf_data.get('skills'),
                 domains=oasf_data.get('domains'),
-                classification_source=oasf_data.get('source')
+                classification_source=oasf_data.get('source'),
+                is_active=bool(active_value) if active_value is not None else None,
+                metadata_refreshed_at=now,
             )
 
             db.add(agent)
@@ -667,22 +673,31 @@ class NetworkSyncService:
             )
             return
 
-        # Fetch updated metadata
-        metadata = await self._fetch_metadata(metadata_uri)
+        # Fetch updated metadata (safe — never raises)
+        metadata = await metadata_service.fetch_metadata_safe(metadata_uri)
 
         # Update agent
         name = metadata.get('name', agent.name)
         description = metadata.get('description', agent.description)
-        oasf_data = await self._extract_oasf_data(metadata, name, description)
+        oasf_data = await extract_oasf_data(
+            metadata, name, description, network_key=self.network_key
+        )
 
+        now = datetime.utcnow()
         agent.name = name
         agent.description = description
         agent.metadata_uri = metadata_uri
-        agent.last_synced_at = datetime.utcnow()
+        agent.last_synced_at = now
         agent.sync_status = SyncStatus.SYNCED
         agent.skills = oasf_data.get('skills')
         agent.domains = oasf_data.get('domains')
         agent.classification_source = oasf_data.get('source')
+
+        # Update active field
+        active_value = metadata.get("active")
+        if active_value is not None:
+            agent.is_active = bool(active_value)
+        agent.metadata_refreshed_at = now
 
         db.commit()
 
@@ -972,294 +987,6 @@ class NetworkSyncService:
                 agent_name=agent.name,
                 error=str(e)
             )
-
-    async def _fetch_metadata(self, uri: str, retries: int = MAX_RETRIES) -> dict:
-        """Fetch metadata from URI with retry logic"""
-        import base64
-        import json
-
-        # Handle empty URI
-        if not uri or uri.strip() == '':
-            logger.debug("empty_metadata_uri", network=self.network_key)
-            return {
-                'name': 'Unknown Agent',
-                'description': 'No metadata URI provided'
-            }
-
-        # Handle direct JSON string (object or array)
-        if uri.startswith('{') or uri.startswith('['):
-            try:
-                metadata = json.loads(uri)
-                # Handle list case
-                if isinstance(metadata, list):
-                    logger.warning(
-                        "direct_json_is_list",
-                        network=self.network_key,
-                        list_length=len(metadata)
-                    )
-                    if len(metadata) > 0 and isinstance(metadata[0], dict):
-                        metadata = metadata[0]
-                    else:
-                        return {
-                            'name': 'Unknown Agent',
-                            'description': 'Direct JSON is a list',
-                            'raw_data': metadata
-                        }
-                if not isinstance(metadata, dict):
-                    return {
-                        'name': 'Unknown Agent',
-                        'description': f'Direct JSON has unexpected type: {type(metadata).__name__}'
-                    }
-                logger.info(
-                    "direct_json_parsed",
-                    network=self.network_key,
-                    agent_id=metadata.get('agent_id', 'Unknown')
-                )
-                if 'name' not in metadata and 'agent_id' in metadata:
-                    metadata['name'] = metadata['agent_id']
-                if 'description' not in metadata:
-                    metadata['description'] = 'Agent from direct JSON'
-                return metadata
-            except Exception as e:
-                logger.warning(
-                    "direct_json_parse_failed",
-                    network=self.network_key,
-                    error=str(e),
-                    uri=uri[:100]
-                )
-
-        # Handle data URI
-        if uri.startswith('data:'):
-            try:
-                if 'base64,' in uri:
-                    base64_data = uri.split('base64,')[1]
-                    json_data = base64.b64decode(base64_data).decode('utf-8')
-                    metadata = json.loads(json_data)
-                elif ',' in uri:
-                    json_data = uri.split(',', 1)[1]
-                    from urllib.parse import unquote
-                    json_data = unquote(json_data)
-                    metadata = json.loads(json_data)
-                else:
-                    logger.warning(
-                        "unsupported_data_uri_format",
-                        network=self.network_key,
-                        uri=uri[:100]
-                    )
-                    return {
-                        'name': 'Unknown Agent',
-                        'description': 'Unsupported data URI format'
-                    }
-
-                # Ensure metadata is a dict
-                if isinstance(metadata, list):
-                    logger.warning(
-                        "data_uri_is_list",
-                        network=self.network_key,
-                        list_length=len(metadata)
-                    )
-                    if len(metadata) > 0 and isinstance(metadata[0], dict):
-                        metadata = metadata[0]
-                    else:
-                        return {
-                            'name': 'Unknown Agent',
-                            'description': 'Data URI contains a list',
-                            'raw_data': metadata
-                        }
-                if not isinstance(metadata, dict):
-                    return {
-                        'name': 'Unknown Agent',
-                        'description': f'Data URI has unexpected type: {type(metadata).__name__}'
-                    }
-
-                logger.info(
-                    "data_uri_parsed",
-                    network=self.network_key,
-                    format="base64" if 'base64,' in uri else "plain",
-                    name=metadata.get('name', 'Unknown')
-                )
-                return metadata
-            except Exception as e:
-                logger.warning(
-                    "data_uri_parse_failed",
-                    network=self.network_key,
-                    error=str(e),
-                    uri=uri[:100]
-                )
-                return {
-                    'name': 'Unknown Agent',
-                    'description': 'Data URI parse failed'
-                }
-
-        # Handle IPFS URI
-        if uri.startswith('ipfs://'):
-            url = f"{IPFS_GATEWAY}{uri[7:]}"
-        else:
-            url = uri
-
-        # Fetch from HTTP/HTTPS URL
-        for attempt in range(retries):
-            try:
-                async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
-                    response = await client.get(url)
-                    response.raise_for_status()
-                    data = response.json()
-                    # Ensure we always return a dict, not a list
-                    if isinstance(data, list):
-                        logger.warning(
-                            "metadata_is_list",
-                            network=self.network_key,
-                            url=url,
-                            list_length=len(data)
-                        )
-                        # If it's a list, try to use first item or wrap it
-                        if len(data) > 0 and isinstance(data[0], dict):
-                            return data[0]
-                        return {
-                            'name': 'Unknown Agent',
-                            'description': 'Metadata is a list, not an object',
-                            'raw_data': data
-                        }
-                    if not isinstance(data, dict):
-                        logger.warning(
-                            "metadata_unexpected_type",
-                            network=self.network_key,
-                            url=url,
-                            type=type(data).__name__
-                        )
-                        return {
-                            'name': 'Unknown Agent',
-                            'description': f'Metadata has unexpected type: {type(data).__name__}'
-                        }
-                    return data
-            except Exception as e:
-                logger.warning(
-                    "metadata_fetch_failed",
-                    network=self.network_key,
-                    url=url,
-                    attempt=attempt + 1,
-                    error=str(e)
-                )
-                if attempt < retries - 1:
-                    await asyncio.sleep(RETRY_DELAY_SECONDS)
-
-        return {
-            'name': 'Unknown Agent',
-            'description': 'Metadata fetch failed'
-        }
-
-    def _is_valid_description(self, description: str) -> bool:
-        """Check if description is valid for AI classification"""
-        if not description or not isinstance(description, str):
-            return False
-
-        description = description.strip()
-
-        MIN_DESCRIPTION_LENGTH = 20
-        if len(description) < MIN_DESCRIPTION_LENGTH:
-            return False
-
-        invalid_patterns = [
-            'no metadata', 'metadata fetch failed', 'no description',
-            'unknown agent', 'agent from direct json', 'no metadata uri provided',
-            'failed to fetch', 'error fetching', 'not available', 'n/a',
-            'test agent', 'created at', 'updated', 'lorem ipsum',
-            'todo', 'placeholder', 'example', 'demo agent',
-        ]
-
-        description_lower = description.lower()
-        for pattern in invalid_patterns:
-            if pattern in description_lower:
-                return False
-
-        digit_count = sum(c.isdigit() for c in description)
-        if digit_count / len(description) > 0.5:
-            return False
-
-        return True
-
-    async def _extract_oasf_data(
-        self, metadata: dict, name: str, description: str
-    ) -> dict:
-        """Extract or auto-classify OASF skills and domains"""
-        raw_skills = []
-        raw_domains = []
-
-        # Try to extract from metadata services (Jan 2026 主网格式)
-        # Also check endpoints for backward compatibility
-        services_list = metadata.get('services') or metadata.get('endpoints') or []
-        if isinstance(services_list, list):
-            for service in services_list:
-                if isinstance(service, dict):
-                    if 'skills' in service and isinstance(service['skills'], list):
-                        raw_skills.extend(service['skills'])
-                    if 'domains' in service and isinstance(service['domains'], list):
-                        raw_domains.extend(service['domains'])
-
-        # Validate extracted skills/domains against OASF standard
-        # Only include values that are in the official OASF taxonomy
-        valid_skills = [s for s in raw_skills if s in OASF_SKILLS]
-        valid_domains = [d for d in raw_domains if d in OASF_DOMAINS]
-
-        # Log invalid entries for debugging
-        invalid_skills = [s for s in raw_skills if s not in OASF_SKILLS]
-        invalid_domains = [d for d in raw_domains if d not in OASF_DOMAINS]
-        if invalid_skills or invalid_domains:
-            logger.debug(
-                "oasf_invalid_entries_filtered",
-                network=self.network_key,
-                name=name,
-                invalid_skills=invalid_skills[:3],
-                invalid_domains=invalid_domains[:3]
-            )
-
-        # Only set source="metadata" if we have valid OASF entries
-        if valid_skills or valid_domains:
-            logger.info(
-                "oasf_extracted_from_services",
-                network=self.network_key,
-                name=name,
-                skills_count=len(valid_skills),
-                domains_count=len(valid_domains)
-            )
-            return {
-                "skills": list(set(valid_skills))[:5],
-                "domains": list(set(valid_domains))[:3],
-                "source": "metadata"
-            }
-
-        # Use AI classification if description is valid
-        if not self._is_valid_description(description):
-            logger.info(
-                "oasf_classification_skipped",
-                network=self.network_key,
-                name=name,
-                reason="insufficient_description",
-                description_preview=description[:50] if description else None
-            )
-            return {"skills": [], "domains": [], "source": None}
-
-        try:
-            classification = await ai_classifier_service.classify_agent(
-                name, description
-            )
-            logger.info(
-                "oasf_auto_classified",
-                network=self.network_key,
-                name=name,
-                skills_count=len(classification.get('skills', [])),
-                domains_count=len(classification.get('domains', []))
-            )
-            classification["source"] = "ai"
-            return classification
-        except Exception as e:
-            logger.warning(
-                "oasf_classification_failed",
-                network=self.network_key,
-                name=name,
-                error=str(e)
-            )
-            return {"skills": [], "domains": [], "source": None}
 
     def _get_sync_tracker(self, db: Session) -> BlockchainSync:
         """Get or create blockchain sync tracker for this network"""
