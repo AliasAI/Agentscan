@@ -11,7 +11,6 @@ import { MultiNetworkSyncStatus } from '@/components/common/MultiNetworkSyncStat
 import { formatNumber } from '@/lib/utils/format'
 import { AgentCardSkeleton, StatCardSkeleton, ActivityItemSkeleton } from '@/components/common/Skeleton'
 import { TrendingSection } from '@/components/home/TrendingSection'
-import { ScrambleText } from '@/components/home/ScrambleText'
 import { statsService, agentService, activityService, taxonomyService } from '@/lib/api/services'
 import type { Agent, Activity, Stats, RegistrationTrendData, CategoryDistributionData, TrendingAgentsResponse } from '@/types'
 
@@ -123,11 +122,7 @@ export default function HomePage() {
             <div className="max-w-3xl mx-auto">
               {/* 标题使用纯黑 */}
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 leading-tight text-[#0a0a0a] dark:text-[#fafafa] tracking-tight">
-                <ScrambleText
-                  text="ERC-8004 AI Agent Explorer"
-                  scrambleSpeed={30}
-                  revealDelay={2}
-                />
+                ERC-8004 AI Agent Explorer
               </h1>
 
               <p className="text-sm md:text-base text-[#525252] dark:text-[#a3a3a3] mb-6 max-w-xl mx-auto leading-relaxed">

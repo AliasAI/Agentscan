@@ -6,187 +6,127 @@ import { networkService } from '@/lib/api/services'
 import { NetworkIcon } from '@/components/common/NetworkIcons'
 import type { Network, NetworkWithStats } from '@/types'
 
-// Network card skeleton
-function NetworkCardSkeleton() {
+// CREATE2 shared contract addresses (all mainnets)
+const SHARED_CONTRACTS = {
+  identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
+  reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
+}
+
+function CopyableAddress({ label, address }: { label: string; address: string }) {
+  const [copied, setCopied] = useState(false)
   return (
-    <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-6 animate-pulse">
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#f5f5f5] dark:bg-[#262626]" />
-          <div>
-            <div className="h-5 w-32 bg-[#f5f5f5] dark:bg-[#262626] rounded mb-2" />
+    <div className="group/addr flex items-center gap-3 py-2">
+      <span className="text-[11px] font-medium text-[#737373] w-36 shrink-0">{label}</span>
+      <code className="font-mono text-[11px] text-[#525252] dark:text-[#a3a3a3] truncate flex-1 min-w-0">
+        {address}
+      </code>
+      <button
+        onClick={async () => {
+          await navigator.clipboard.writeText(address)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
+        }}
+        className="opacity-0 group-hover/addr:opacity-100 p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded transition-all shrink-0"
+        title="Copy address"
+      >
+        {copied ? (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-[#22c55e]">
+            <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        ) : (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-[#737373]">
+            <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/>
+            <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" strokeWidth="2"/>
+          </svg>
+        )}
+      </button>
+    </div>
+  )
+}
+
+function ListSkeleton() {
+  return (
+    <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden animate-pulse">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-4 px-5 py-3.5 border-b border-[#f5f5f5] dark:border-[#1a1a1a] last:border-b-0">
+          <div className="flex items-center gap-3 w-40 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-[#f5f5f5] dark:bg-[#262626]" />
             <div className="h-4 w-20 bg-[#f5f5f5] dark:bg-[#262626] rounded" />
           </div>
+          <div className="hidden md:block w-20 shrink-0">
+            <div className="h-3 w-10 bg-[#f5f5f5] dark:bg-[#262626] rounded" />
+          </div>
+          <div className="flex-1 flex items-center gap-3">
+            <div className="flex-1 h-1.5 bg-[#f5f5f5] dark:bg-[#262626] rounded-full" />
+            <div className="h-4 w-12 bg-[#f5f5f5] dark:bg-[#262626] rounded" />
+          </div>
+          <div className="w-8 h-8 rounded-lg bg-[#f5f5f5] dark:bg-[#262626]" />
         </div>
-        <div className="h-6 w-16 bg-[#f5f5f5] dark:bg-[#262626] rounded-full" />
-      </div>
-      <div className="space-y-4">
-        <div className="h-4 w-full bg-[#f5f5f5] dark:bg-[#262626] rounded" />
-        <div className="h-4 w-3/4 bg-[#f5f5f5] dark:bg-[#262626] rounded" />
-      </div>
+      ))}
     </div>
   )
 }
 
-// Contract address display component
-function ContractAddress({
-  label,
-  address,
-  explorerUrl,
-}: {
-  label: string
-  address: string
-  explorerUrl: string
-}) {
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(address)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <div className="group">
-      <div className="text-[10px] uppercase tracking-wider text-[#a3a3a3] dark:text-[#525252] mb-1.5 font-medium">
-        {label}
-      </div>
-      <div className="flex items-center gap-2">
-        <a
-          href={`${explorerUrl}/address/${address}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-mono text-xs text-[#525252] dark:text-[#a3a3a3] hover:text-[#0a0a0a] dark:hover:text-[#fafafa] transition-colors truncate flex-1"
-        >
-          {address}
-        </a>
-        <button
-          onClick={handleCopy}
-          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded transition-all"
-          title="Copy address"
-        >
-          {copied ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#22c55e]">
-              <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#737373]">
-              <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/>
-              <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" strokeWidth="2"/>
-            </svg>
-          )}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// Network card component
-function NetworkCard({
+function NetworkRow({
   network,
-  stats,
-  index,
+  agentCount,
+  maxAgents,
 }: {
   network: Network
-  stats?: NetworkWithStats
-  index: number
+  agentCount: number
+  maxAgents: number
 }) {
-  const agentCount = stats?.agent_count ?? 0
+  const barPercent = maxAgents > 0 ? (agentCount / maxAgents) * 100 : 0
 
   return (
-    <div
-      className="group bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-6 hover:border-[#d4d4d4] dark:hover:border-[#404040] hover:shadow-lg transition-all duration-300 animate-fade-in"
-      style={{ animationDelay: `${index * 100}ms` }}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-3">
-          {/* Network icon with glow effect on hover */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-[#0a0a0a] dark:bg-[#fafafa] rounded-xl opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-300" />
-            <div className="relative w-12 h-12 bg-[#f5f5f5] dark:bg-[#262626] rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-              <NetworkIcon networkName={network.name} className="w-6 h-6" />
-            </div>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
-              {network.name}
-            </h2>
-            <div className="flex items-center gap-2 text-xs text-[#737373] dark:text-[#737373]">
-              <span>Chain ID: {network.chain_id}</span>
-            </div>
-          </div>
+    <div className="group flex items-center gap-4 px-5 py-3 hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a]/50 transition-colors border-b border-[#f5f5f5] dark:border-[#1a1a1a] last:border-b-0">
+      {/* Icon + Name */}
+      <div className="flex items-center gap-3 w-40 md:w-44 shrink-0">
+        <div className="w-8 h-8 bg-[#f5f5f5] dark:bg-[#262626] rounded-lg flex items-center justify-center shrink-0">
+          <NetworkIcon networkName={network.name} className="w-4 h-4" />
         </div>
-
-        {/* Status badge */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#f0fdf4] dark:bg-[#14532d]/30 rounded-full">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
-          <span className="text-[10px] font-medium text-[#22c55e] dark:text-[#4ade80] uppercase tracking-wider">
-            Active
-          </span>
+        <div className="min-w-0">
+          <div className="text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa] truncate">
+            {network.name}
+          </div>
+          <div className="text-[11px] text-[#a3a3a3] md:hidden">Chain {network.chain_id}</div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="p-3 bg-[#fafafa] dark:bg-[#0a0a0a] rounded-lg">
-          <div className="text-[10px] uppercase tracking-wider text-[#a3a3a3] dark:text-[#525252] mb-1">
-            Agents
-          </div>
-          <div className="text-xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-            {agentCount.toLocaleString()}
-          </div>
-        </div>
-        <div className="p-3 bg-[#fafafa] dark:bg-[#0a0a0a] rounded-lg">
-          <div className="text-[10px] uppercase tracking-wider text-[#a3a3a3] dark:text-[#525252] mb-1">
-            Explorer
-          </div>
-          <a
-            href={network.explorer_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa] hover:text-[#525252] dark:hover:text-[#a3a3a3] transition-colors inline-flex items-center gap-1"
-          >
-            View
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="opacity-50">
-              <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </a>
-        </div>
+      {/* Chain ID - desktop only */}
+      <div className="hidden md:block text-xs text-[#737373] w-20 shrink-0 tabular-nums">
+        {network.chain_id}
       </div>
 
-      {/* Contracts section */}
-      {network.contracts && (
-        <div className="pt-5 border-t border-[#e5e5e5] dark:border-[#262626]">
-          <div className="flex items-center gap-2 mb-4">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#737373]">
-              <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="text-xs font-semibold text-[#525252] dark:text-[#a3a3a3] uppercase tracking-wider">
-              Smart Contracts
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            <ContractAddress
-              label="Identity Registry"
-              address={network.contracts.identity}
-              explorerUrl={network.explorer_url}
+      {/* Agent bar + count */}
+      <div className="flex-1 flex items-center gap-3 min-w-0">
+        <div className="flex-1 h-1.5 bg-[#f5f5f5] dark:bg-[#262626] rounded-full overflow-hidden">
+          {barPercent > 0 && (
+            <div
+              className="h-full bg-[#0a0a0a] dark:bg-[#fafafa] rounded-full transition-all duration-700 opacity-[0.15]"
+              style={{ width: `${barPercent}%` }}
             />
-            <ContractAddress
-              label="Reputation Registry"
-              address={network.contracts.reputation}
-              explorerUrl={network.explorer_url}
-            />
-            <ContractAddress
-              label="Validation Registry"
-              address={network.contracts.validation}
-              explorerUrl={network.explorer_url}
-            />
-          </div>
+          )}
         </div>
-      )}
+        <span className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] w-16 text-right tabular-nums shrink-0">
+          {agentCount.toLocaleString()}
+        </span>
+      </div>
+
+      {/* Explorer link */}
+      <a
+        href={network.explorer_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-1.5 text-[#d4d4d4] dark:text-[#404040] hover:text-[#0a0a0a] dark:hover:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-all shrink-0"
+        title={`View on ${network.name} explorer`}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M18 13V19C18 20.1046 17.1046 21 16 21H5C3.89543 21 3 20.1046 3 19V8C3 6.89543 3.89543 6 5 6H11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M15 3H21V9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M10 14L21 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </a>
     </div>
   )
 }
@@ -212,41 +152,22 @@ export default function NetworksPage() {
       })
   }, [])
 
-  const getNetworkStats = (networkId: string) => {
-    return networkStats.find(s => s.id === networkId)
-  }
+  // Merge & sort by agent count (descending)
+  const mergedNetworks = networks
+    .map(n => ({
+      network: n,
+      agentCount: networkStats.find(s => s.id === n.id)?.agent_count ?? 0,
+    }))
+    .sort((a, b) => b.agentCount - a.agentCount)
 
   const totalAgents = networkStats.reduce((sum, s) => sum + s.agent_count, 0)
+  const maxAgents = mergedNetworks.length > 0 ? mergedNetworks[0].agentCount : 0
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
       {/* Page Header */}
-      <div className="relative border-b border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Grid pattern */}
-          <div
-            className="absolute inset-0 opacity-[0.015] dark:opacity-[0.02]"
-            style={{
-              backgroundImage: `
-                linear-gradient(to right, #0a0a0a 1px, transparent 1px),
-                linear-gradient(to bottom, #0a0a0a 1px, transparent 1px)
-              `,
-              backgroundSize: '40px 40px',
-            }}
-          />
-          {/* Radial gradient overlay */}
-          <div
-            className="absolute top-0 right-0 w-[600px] h-[600px] opacity-[0.03]"
-            style={{
-              background: 'radial-gradient(circle at center, #0a0a0a 0%, transparent 70%)',
-              transform: 'translate(30%, -30%)',
-            }}
-          />
-        </div>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 relative">
-          {/* Breadcrumb */}
+      <div className="border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
           <nav className="flex items-center gap-2 text-xs text-[#737373] mb-4">
             <Link href="/" className="hover:text-[#0a0a0a] dark:hover:text-[#fafafa] transition-colors">
               Home
@@ -257,13 +178,12 @@ export default function NetworksPage() {
             <span className="text-[#0a0a0a] dark:text-[#fafafa] font-medium">Networks</span>
           </nav>
 
-          {/* Title section */}
           <div className="max-w-3xl">
             <h1 className="text-2xl lg:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] mb-3 tracking-tight">
               Supported Networks
             </h1>
             <p className="text-sm text-[#525252] dark:text-[#a3a3a3] mb-6 leading-relaxed">
-              ERC-8004 AI Agents are deployed across multiple blockchain networks. Each network has its own set of registry contracts for identity, reputation, and validation.
+              ERC-8004 registry contracts are deployed across multiple networks via CREATE2 deterministic deployment, sharing the same contract addresses on every chain.
             </p>
 
             {/* Quick stats */}
@@ -292,16 +212,34 @@ export default function NetworksPage() {
         </div>
       </div>
 
-      {/* Networks grid */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <NetworkCardSkeleton key={i} />
-            ))}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Shared Contracts */}
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#737373]">
+              <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+              ERC-8004 Registry Contracts
+            </h2>
+            <span className="text-[10px] font-medium text-[#22c55e] bg-[#f0fdf4] dark:bg-[#14532d]/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              CREATE2
+            </span>
           </div>
+          <p className="text-xs text-[#737373] mb-4">
+            All networks share the same contract addresses via CREATE2 deterministic deployment.
+          </p>
+          <div className="divide-y divide-[#f5f5f5] dark:divide-[#262626]">
+            <CopyableAddress label="Identity Registry" address={SHARED_CONTRACTS.identity} />
+            <CopyableAddress label="Reputation Registry" address={SHARED_CONTRACTS.reputation} />
+          </div>
+        </div>
+
+        {/* Network List */}
+        {loading ? (
+          <ListSkeleton />
         ) : networks.length === 0 ? (
-          /* Empty state */
           <div className="flex flex-col items-center justify-center py-16 px-4">
             <div className="w-16 h-16 bg-[#f5f5f5] dark:bg-[#171717] rounded-2xl flex items-center justify-center mb-4">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-[#a3a3a3] dark:text-[#525252]">
@@ -313,18 +251,33 @@ export default function NetworksPage() {
             <h3 className="text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-2">
               No networks available
             </h3>
-            <p className="text-sm text-[#737373] dark:text-[#737373] text-center max-w-md">
+            <p className="text-sm text-[#737373] text-center max-w-md">
               Network data is currently unavailable. Please try again later.
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {networks.map((network, index) => (
-              <NetworkCard
+          <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
+            {/* Column header */}
+            <div className="flex items-center gap-4 px-5 py-2.5 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#0a0a0a]/50">
+              <div className="w-40 md:w-44 shrink-0 text-[10px] uppercase tracking-wider text-[#a3a3a3] font-medium">
+                Network
+              </div>
+              <div className="hidden md:block w-20 shrink-0 text-[10px] uppercase tracking-wider text-[#a3a3a3] font-medium">
+                Chain ID
+              </div>
+              <div className="flex-1 text-[10px] uppercase tracking-wider text-[#a3a3a3] font-medium text-right">
+                Agents
+              </div>
+              <div className="w-9 shrink-0" />
+            </div>
+
+            {/* Rows */}
+            {mergedNetworks.map(({ network, agentCount }) => (
+              <NetworkRow
                 key={network.id}
                 network={network}
-                stats={getNetworkStats(network.id)}
-                index={index}
+                agentCount={agentCount}
+                maxAgents={maxAgents}
               />
             ))}
           </div>
