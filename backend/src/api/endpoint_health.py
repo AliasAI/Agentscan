@@ -116,16 +116,11 @@ async def get_quick_stats(
             text("SELECT COUNT(*) FROM agents WHERE network_id = :network AND reputation_count > 0"),
             {"network": network}
         ).scalar()
-        # Reputation stats
-        rep_stats = db.execute(
-            text("""
-                SELECT
-                    COALESCE(SUM(reputation_count), 0) as total_feedbacks,
-                    COALESCE(AVG(CASE WHEN reputation_count > 0 THEN reputation_score END), 0) as avg_score
-                FROM agents WHERE network_id = :network
-            """),
+        # Total feedbacks count
+        total_feedbacks_result = db.execute(
+            text("SELECT COALESCE(SUM(reputation_count), 0) FROM agents WHERE network_id = :network"),
             {"network": network}
-        ).fetchone()
+        ).scalar()
     else:
         count_result = db.execute(text("SELECT COUNT(*) FROM agents")).scalar()
         scanned_result = db.execute(
@@ -142,22 +137,16 @@ async def get_quick_stats(
         feedback_result = db.execute(
             text("SELECT COUNT(*) FROM agents WHERE reputation_count > 0")
         ).scalar()
-        # Reputation stats
-        rep_stats = db.execute(
-            text("""
-                SELECT
-                    COALESCE(SUM(reputation_count), 0) as total_feedbacks,
-                    COALESCE(AVG(CASE WHEN reputation_count > 0 THEN reputation_score END), 0) as avg_score
-                FROM agents
-            """)
-        ).fetchone()
+        # Total feedbacks count
+        total_feedbacks_result = db.execute(
+            text("SELECT COALESCE(SUM(reputation_count), 0) FROM agents")
+        ).scalar()
 
     total_agents = count_result or 0
     agents_scanned = scanned_result or 0
     agents_with_working = working_result or 0
     agents_with_feedbacks = feedback_result or 0
-    total_feedbacks = int(rep_stats[0]) if rep_stats else 0
-    avg_reputation_score = round(float(rep_stats[1]), 1) if rep_stats and rep_stats[1] else 0
+    total_feedbacks = int(total_feedbacks_result) if total_feedbacks_result else 0
 
     # Get top 20 agents with WORKING endpoints (fixed: query working agents directly)
     if network:
@@ -239,7 +228,6 @@ async def get_quick_stats(
             ),
             # Reputation stats
             "total_feedbacks": total_feedbacks,
-            "avg_reputation_score": avg_reputation_score,
         },
         "working_agents": [
             {

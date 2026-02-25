@@ -268,7 +268,6 @@ export interface EndpointSummary {
   endpoint_health_rate: number;
   // Reputation stats
   total_feedbacks?: number;
-  avg_reputation_score?: number;
 }
 
 // Agent with reputation info (for top reputation list)

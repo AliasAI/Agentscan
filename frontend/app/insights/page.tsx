@@ -76,13 +76,6 @@ export default function InsightsPage() {
       color: 'purple' as const,
       tooltip: 'Total on-chain feedback submissions',
     },
-    {
-      label: 'Avg Score',
-      value: (quickStats.avg_reputation_score || 0).toFixed(1),
-      icon: StatIcons.avgScore,
-      color: 'orange' as const,
-      tooltip: 'Average reputation score of agents with feedback',
-    },
   ] : []
 
   return (
