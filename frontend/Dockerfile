@@ -1,5 +1,5 @@
 # 构建阶段
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
 # 运行阶段
-FROM node:20-slim
+FROM node:22-slim
 
 WORKDIR /app
 
