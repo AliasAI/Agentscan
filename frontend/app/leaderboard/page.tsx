@@ -109,9 +109,9 @@ export default function LeaderboardPage() {
       <div className="flex flex-wrap items-center gap-4 mb-6 text-[11px] text-[#737373]">
         <span className="font-medium text-[#525252] dark:text-[#a3a3a3]">Score Dimensions:</span>
         {[
-          { color: 'bg-green-500', label: 'Service (20%)', tip: 'Ratio of healthy endpoints' },
-          { color: 'bg-blue-500', label: 'Usage (50%)', tip: 'Feedback count + reputation score' },
-          { color: 'bg-purple-500', label: 'Freshness (20%)', tip: 'Recency of last feedback (30-90d decay)' },
+          { color: 'bg-green-500', label: 'Service (15%)', tip: 'Ratio of healthy endpoints' },
+          { color: 'bg-blue-500', label: 'Usage (60%)', tip: 'Feedback count + reputation score' },
+          { color: 'bg-purple-500', label: 'Freshness (15%)', tip: 'Recency of last feedback (30-90d decay)' },
           { color: 'bg-orange-500', label: 'Profile (10%)', tip: 'Name, description, skills & domains' },
         ].map((d) => (
           <span key={d.label} className="relative group flex items-center gap-1.5 cursor-default">

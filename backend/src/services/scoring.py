@@ -1,25 +1,27 @@
 """Agent scoring service for Leaderboard
 
 Calculates a composite AgentScore (0-100) from four dimensions:
-  - Service   (20%): endpoint reachability
-  - Usage     (50%): feedback volume + reputation score
-  - Freshness (20%): feedback recency (linear decay 30-90 days)
+  - Service   (15%): endpoint reachability
+  - Usage     (60%): feedback volume + reputation score
+  - Freshness (15%): feedback recency (linear decay 30-90 days)
   - Profile   (10%): metadata completeness
+
+Feedback effective weight = W_USAGE × USAGE_FEEDBACK_W = 0.60 × 0.70 = 42%
 """
 
 import math
 from datetime import datetime, timedelta
 from typing import Optional
 
-# Weights (adjusted from real data: service was too binary at 30%)
-W_SERVICE = 0.20
-W_USAGE = 0.50
-W_FRESHNESS = 0.20
+# Weights — feedback provenance is the highest-weight single signal
+W_SERVICE = 0.15
+W_USAGE = 0.60
+W_FRESHNESS = 0.15
 W_PROFILE = 0.10
 
-# Usage sub-weights
-USAGE_FEEDBACK_W = 0.60
-USAGE_REPUTATION_W = 0.40
+# Usage sub-weights (feedback volume dominates over reputation score)
+USAGE_FEEDBACK_W = 0.70
+USAGE_REPUTATION_W = 0.30
 
 # For log normalization: agents with this many feedbacks get ~100
 # Raised from 50 to 500 — with cap=50, agents at 50 fb scored same as 1500 fb
