@@ -6,8 +6,8 @@ WORKDIR /app
 # 复制依赖文件
 COPY package.json package-lock.json* ./
 
-# 安装依赖
-RUN npm ci
+# 安装依赖（npm install 兼容跨版本 lock file）
+RUN npm install
 
 # 复制应用代码
 COPY . .
