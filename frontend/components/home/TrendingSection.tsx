@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import type { Agent, TrendingAgentsResponse } from '@/types'
 import { TrendingSectionSkeleton } from '@/components/common/Skeleton'
-import { formatTimeAgo } from '@/lib/utils/format'
+import { formatTimeAgo, formatReputationScore } from '@/lib/utils/format'
 
 interface TrendingSectionProps {
   data: TrendingAgentsResponse | null
@@ -142,7 +142,7 @@ export function TrendingSection({ data, isLoading }: TrendingSectionProps) {
           agents={data.top_ranked}
           formatValue={(agent) =>
             agent.reputation_score > 0
-              ? agent.reputation_score.toFixed(1)
+              ? formatReputationScore(agent.reputation_score, 1)
               : '-'
           }
           accentColor="gold"

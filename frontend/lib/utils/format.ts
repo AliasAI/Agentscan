@@ -84,6 +84,25 @@ export function formatTimeAgo(date: string): string {
  * Resolve image URI to a displayable URL
  * Handles: IPFS URIs, data URIs, HTTP/HTTPS URLs
  */
+/**
+ * 格式化 reputation score 的显示
+ * ERC-8004 value/valueDecimals 格式下，分数不再局限于 0-100：
+ * - starred: 0-100（标准评分）
+ * - revenues: 可达数十万（累计收入）
+ * - responseTime: 几百毫秒
+ * - 极大值: 链上 getSummary 混入异常 feedback 后的结果
+ */
+export function formatReputationScore(score: number, decimals: number = 0): string {
+  if (!isFinite(score)) return 'N/A';
+  const abs = Math.abs(score);
+  const sign = score < 0 ? '-' : '';
+  if (abs < 10_000) return score.toFixed(decimals);
+  if (abs < 1_000_000) return `${sign}${(abs / 1_000).toFixed(1)}K`;
+  if (abs < 1_000_000_000) return `${sign}${(abs / 1_000_000).toFixed(1)}M`;
+  if (abs < 1_000_000_000_000) return `${sign}${(abs / 1_000_000_000).toFixed(1)}B`;
+  return score.toExponential(1);
+}
+
 export function resolveImageUrl(uri: string | undefined | null): string | null {
   if (!uri || typeof uri !== 'string') return null;
 

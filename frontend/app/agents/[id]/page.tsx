@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { DetailPageSkeleton } from '@/components/common/Skeleton'
 import { useToast } from '@/components/common/Toast'
 import { agentService } from '@/lib/api/services'
-import { formatAddress, formatDate, resolveImageUrl } from '@/lib/utils/format'
+import { formatAddress, formatDate, resolveImageUrl, formatReputationScore } from '@/lib/utils/format'
 import { getNftExplorerUrl } from '@/lib/utils/network'
 import { NetworkIcon } from '@/components/common/NetworkIcons'
 import { OASFDetailTags } from '@/components/agent/OASFTags'
@@ -333,8 +333,8 @@ export default function AgentDetailPage() {
                   value={
                     agent.reputation_count && agent.reputation_count > 0 ? (
                       <span className="font-semibold">
-                        {agent.reputation_score.toFixed(0)}
-                        {agent.reputation_score <= 100 && (
+                        {formatReputationScore(agent.reputation_score)}
+                        {agent.reputation_score <= 100 && isFinite(agent.reputation_score) && (
                           <span className="text-xs text-[#737373]">/100</span>
                         )}
                         <span className="text-xs text-[#737373] font-normal ml-1">

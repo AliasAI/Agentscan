@@ -1,4 +1,5 @@
 // Score Ring components for visual reputation display
+import { formatReputationScore } from '@/lib/utils/format';
 
 interface ScoreRingProps {
   score: number;
@@ -63,7 +64,7 @@ export function ScoreRing({ score, size = 36 }: ScoreRingProps) {
       </svg>
       {/* Score text */}
       <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-        {score.toFixed(0)}
+        {formatReputationScore(score)}
       </span>
     </div>
   );
@@ -122,9 +123,9 @@ export function LargeScoreRing({ score, size = 120 }: ScoreRingProps) {
         {/* Score text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-            {score.toFixed(0)}
+            {formatReputationScore(score)}
           </span>
-          {score <= 100 && (
+          {score <= 100 && isFinite(score) && (
             <span className="text-[10px] text-[#737373] uppercase tracking-wide">
               / 100
             </span>
