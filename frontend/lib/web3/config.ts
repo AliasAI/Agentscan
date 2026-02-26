@@ -1,7 +1,8 @@
 /**
  * Wagmi configuration for ERC-8004 Agent creation
  *
- * Supports all 14 mainnet networks with CREATE2 contracts
+ * Supports all 14 mainnet networks with CREATE2 contracts.
+ * Connectors: injected (browser extension) + WalletConnect (mobile / QR code)
  */
 
 import { http, createConfig, createStorage } from 'wagmi'
@@ -10,7 +11,7 @@ import {
   linea, scroll, avalanche, celo, gnosis,
   taiko, bsc, monad,
 } from 'wagmi/chains'
-import { injected } from 'wagmi/connectors'
+import { injected, walletConnect } from 'wagmi/connectors'
 import { defineChain } from 'viem'
 
 // MegaETH mainnet is not yet in wagmi/chains - define custom
@@ -33,12 +34,30 @@ export const chains = [
   taiko, megaeth, bsc, monad,
 ] as const
 
+// WalletConnect projectId (optional - graceful degradation without it)
+const wcProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+
+// Build connectors list
+const connectors = wcProjectId
+  ? [
+      injected({ shimDisconnect: true }),
+      walletConnect({
+        projectId: wcProjectId,
+        showQrModal: true,
+        metadata: {
+          name: 'Agentscan',
+          description: 'ERC-8004 AI Agent Explorer',
+          url: 'https://agentscan.info',
+          icons: ['https://agentscan.info/favicon.ico'],
+        },
+      }),
+    ]
+  : [injected({ shimDisconnect: true })]
+
 // Create wagmi config
 export const wagmiConfig = createConfig({
   chains,
-  connectors: [
-    injected({ shimDisconnect: true }),
-  ],
+  connectors,
   storage: createStorage({
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     key: 'agentscan-wallet',

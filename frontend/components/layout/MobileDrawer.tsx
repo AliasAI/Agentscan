@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { WalletButton } from '@/components/web3/WalletButton';
 
 interface MobileDrawerProps {
   open: boolean;
@@ -162,6 +163,11 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             );
           })}
         </nav>
+
+        {/* Wallet connection */}
+        <div className="px-3 pt-2 mt-1 border-t border-[#e5e5e5] dark:border-[#262626]">
+          <WalletButton />
+        </div>
       </div>
     </>
   );
