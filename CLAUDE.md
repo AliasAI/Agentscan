@@ -4,400 +4,400 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Agentscan 是一个 ERC-8004 AI Agent Explorer，类似于区块链浏览器，用于展示和追踪基于 ERC-8004 协议的 AI 代理信息。项目包含前端（Next.js）和后端（FastAPI），后端通过 Web3.py 从 Sepolia 网络同步链上数据。
+Agentscan is an ERC-8004 AI Agent Explorer, similar to a blockchain explorer, used to display and track AI agent information based on the ERC-8004 protocol. The project includes a frontend (Next.js) and a backend (FastAPI), with the backend syncing on-chain data from the Sepolia network via Web3.py.
 
 ## Core Commands
 
-### 开发环境启动
+### Development Environment Startup
 
 ```bash
-# 后端开发服务器（端口 8000）
+# Backend dev server (port 8000)
 ./scripts/dev-backend.sh
 
-# 前端开发服务器（端口 3000）
+# Frontend dev server (port 3000)
 ./scripts/dev-frontend.sh
 
-# 同时启动前后端
+# Start both frontend and backend
 ./scripts/dev-all.sh
 ```
 
-### 数据库操作
+### Database Operations
 
-**本地开发环境：**
+**Local Development:**
 
 ```bash
-# 完整重置数据库（备份 + 重建 + 重新同步）
+# Full database reset (backup + rebuild + resync)
 ./scripts/reset-db.sh --backup --resync
 
-# 仅修复 network_id 问题（不删除数据）
+# Fix network_id issues only (no data deletion)
 cd backend && uv run python -m src.db.migrate_network_ids
 
-# 重置网络同步状态（重新扫描）
+# Reset network sync state (rescan)
 ./scripts/reset-sync.sh base-sepolia
 
-# 手动触发同步
+# Manually trigger sync
 ./scripts/trigger-sync.sh base-sepolia
 ```
 
-**Docker 生产环境：**
+**Docker Production:**
 
 ```bash
-# 完整重置数据库（备份 + 重建 + 重新同步）
+# Full database reset (backup + rebuild + resync)
 ./scripts/docker-reset-db.sh --backup --resync
 
-# 仅修复 network_id 问题（推荐用于服务器修复）
+# Fix network_id issues only (recommended for server repair)
 ./scripts/docker-migrate-network-ids.sh
 
-# 重置网络同步状态
+# Reset network sync state
 ./scripts/docker-reset-sync.sh base-sepolia
 
-# 手动触发同步
+# Manually trigger sync
 ./scripts/docker-trigger-sync.sh base-sepolia
 ```
 
-### 后端直接命令
+### Backend Direct Commands
 
 ```bash
 cd backend
 
-# 安装依赖（使用 uv）
+# Install dependencies (using uv)
 uv sync
 
-# 运行数据库迁移
+# Run database migrations
 uv run python -m src.db.migrate_add_contracts
 
-# 初始化测试数据
+# Initialize test data
 uv run python -m src.db.init_data
 
-# 启动服务器
+# Start server
 uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 前端直接命令
+### Frontend Direct Commands
 
 ```bash
 cd frontend
 
-# 安装依赖
-npm install  # 或 pnpm install
+# Install dependencies
+npm install  # or pnpm install
 
-# 启动开发服务器
+# Start dev server
 npm run dev
 
-# 构建生产版本
+# Build for production
 npm run build
 ```
 
 ## Architecture
 
-### 整体架构
+### Overall Architecture
 
 ```
-用户浏览器
+User Browser
     ↓
 Next.js Frontend (Port 3000)
-    ↓ API 调用
+    ↓ API calls
 FastAPI Backend (Port 8000)
-    ↓ 读写
+    ↓ Read/Write
 SQLite Database
-    ↑ 定时同步
-Web3.py ← Sepolia Network (ERC-8004 合约)
+    ↑ Scheduled sync
+Web3.py ← Sepolia Network (ERC-8004 contracts)
 ```
 
-### 后端架构（backend/src/）
+### Backend Architecture (backend/src/)
 
-**核心设计原则：**
-- 服务层（services/）处理业务逻辑和外部集成
-- API 层（api/）负责路由和请求/响应处理
-- 模型层（models/）定义数据库表结构
-- 配置层（core/）集中管理配置
+**Core Design Principles:**
+- Service layer (services/) handles business logic and external integrations
+- API layer (api/) handles routing and request/response processing
+- Model layer (models/) defines database table structures
+- Config layer (core/) centralized configuration management
 
-**关键组件：**
+**Key Components:**
 
-1. **区块链同步服务**（services/blockchain_sync.py）[UPDATED: 2025-11-15]
-   - 从 Sepolia 网络监听 ERC-8004 合约事件
-   - **批量处理区块**（BLOCKS_PER_BATCH = 1000，优化后降低 90%）
-   - **增量同步**：记录 last_block 避免重复处理
-   - **智能跳过**：无新区块时跳过同步，避免不必要的 RPC 调用
-   - **速率限制**：事件处理间延迟 0.5 秒，避免 429 错误
-   - 自动获取 IPFS 元数据（支持 HTTP、IPFS、data URI）
-   - 错误重试机制（MAX_RETRIES = 1）
-   - **集成 OASF 自动分类**：新 agent 注册时自动分类 skills 和 domains
-   - **集成 Reputation 事件驱动更新**：监听 NewFeedback 和 FeedbackRevoked 事件
+1. **Blockchain Sync Service** (services/blockchain_sync.py) [UPDATED: 2025-11-15]
+   - Listens to ERC-8004 contract events from the Sepolia network
+   - **Batch block processing** (BLOCKS_PER_BATCH = 1000, reduced by 90% after optimization)
+   - **Incremental sync**: records last_block to avoid reprocessing
+   - **Smart skip**: skips sync when no new blocks, avoiding unnecessary RPC calls
+   - **Rate limiting**: 0.5s delay between event processing to avoid 429 errors
+   - Automatically fetches IPFS metadata (supports HTTP, IPFS, data URI)
+   - Error retry mechanism (MAX_RETRIES = 1)
+   - **Integrated OASF auto-classification**: automatically classifies skills and domains on new agent registration
+   - **Integrated Reputation event-driven updates**: listens to NewFeedback and FeedbackRevoked events
 
-2. **OASF 分类服务**（services/ai_classifier.py + background_classifier.py）[UPDATED: 2025-11-14]
-   - 基于 OASF v0.8.0 规范自动分类 agent
-   - 优先从 metadata 的 `endpoints[].skills/domains` 提取
-   - 否则使用多种 LLM（参考 herAI 架构）或关键词匹配自动分类
-   - **支持的 LLM 提供商**：
-     - DeepSeek（推荐）：性价比高，使用 OpenAI SDK
-     - OpenAI：GPT-4o-mini
-     - OpenRouter：统一接口支持多种模型
-     - Anthropic Claude：保持向后兼容
-   - 支持 136 个 skills 和 204 个 domains
-   - **严格验证规则**（宁愿不分类，也不要错误分类）：
-     - Description 最小长度 20 字符
-     - 过滤错误信息和默认值（如 "metadata fetch failed"）
-     - 只对有足够信息的 agents 进行分类
-     - 验证规则文档：`docs/classification-validation-rules.md`
-   - **后台异步分类**：
-     - 支持异步批量分类，不阻塞主服务
-     - 实时进度追踪，可启动/查看/取消任务
-     - 使用脚本：`./classify_background.sh start [limit] [batch_size]`
-     - 完整使用指南：`docs/background-classification-guide.md`
-   - 完整文档：`docs/oasf-classification.md`
+2. **OASF Classification Service** (services/ai_classifier.py + background_classifier.py) [UPDATED: 2025-11-14]
+   - Automatically classifies agents based on OASF v0.8.0 specification
+   - Prioritizes extraction from metadata `endpoints[].skills/domains`
+   - Otherwise uses multiple LLMs (following herAI architecture) or keyword matching for auto-classification
+   - **Supported LLM providers**:
+     - DeepSeek (recommended): cost-effective, uses OpenAI SDK
+     - OpenAI: GPT-4o-mini
+     - OpenRouter: unified interface supporting multiple models
+     - Anthropic Claude: backward compatible
+   - Supports 136 skills and 204 domains
+   - **Strict validation rules** (prefer no classification over incorrect classification):
+     - Description minimum length 20 characters
+     - Filters error messages and default values (e.g., "metadata fetch failed")
+     - Only classifies agents with sufficient information
+     - Validation rules doc: `docs/classification-validation-rules.md`
+   - **Background async classification**:
+     - Supports async batch classification without blocking main service
+     - Real-time progress tracking, can start/view/cancel tasks
+     - Script: `./classify_background.sh start [limit] [batch_size]`
+     - Full guide: `docs/background-classification-guide.md`
+   - Full documentation: `docs/oasf-classification.md`
 
-3. **定时任务调度器**（services/scheduler.py）[UPDATED: 2025-11-15]
-   - 使用 APScheduler 管理定时任务
-   - **blockchain_sync**：每 10 分钟同步一次（固定时间触发：:00, :10, :20, :30, :40, :50）
-   - **reputation_sync**：**完全事件驱动**（零定期轮询，通过 NewFeedback/FeedbackRevoked 事件触发）
-   - **固定时间触发**：避免启动时的请求峰值，无论何时重启都等待到下一个固定时间点
-   - **RPC 优化**：请求量从 ~686K/天 降至 ~300K/天（降低 56%）
+3. **Scheduled Task Scheduler** (services/scheduler.py) [UPDATED: 2025-11-15]
+   - Uses APScheduler for task management
+   - **blockchain_sync**: syncs every 10 minutes (fixed-time trigger: :00, :10, :20, :30, :40, :50)
+   - **reputation_sync**: **fully event-driven** (zero periodic polling, triggered by NewFeedback/FeedbackRevoked events)
+   - **Fixed-time triggers**: avoids request spikes at startup, always waits until the next fixed time point regardless of restart time
+   - **RPC optimization**: requests reduced from ~686K/day to ~300K/day (56% reduction)
 
-3. **数据库迁移**
-   - 使用自定义迁移脚本（src/db/migrate_*.py）
-   - 迁移脚本需要加载 .env 文件（使用 load_dotenv()）
-   - 在 main.py 启动时自动运行迁移
+3. **Database Migrations**
+   - Uses custom migration scripts (src/db/migrate_*.py)
+   - Migration scripts need to load .env files (using load_dotenv())
+   - Automatically runs migrations on main.py startup
 
-4. **环境变量加载**
-   - 所有配置模块需要在顶部调用 load_dotenv()
-   - 特别是 blockchain_config.py、reputation_config.py
-   - 必须在 import os.getenv() 之前调用
+4. **Environment Variable Loading**
+   - All config modules need to call load_dotenv() at the top
+   - Especially blockchain_config.py, reputation_config.py
+   - Must be called before import os.getenv()
 
-### 前端架构（frontend/）
+### Frontend Architecture (frontend/)
 
-**技术栈版本要求：**
-- Next.js 强制使用 v15.4+（不要用 v14）
-- React 强制使用 v19+
-- Tailwind CSS 强制使用 v4（不要用 v3）
+**Tech Stack Version Requirements:**
+- Next.js: must use v15.4+ (do not use v14)
+- React: must use v19+
+- Tailwind CSS: must use v4 (do not use v3)
 
-**响应式设计策略：**
-- 使用 Tailwind 断点：`md:` (768px+), `lg:` (1024px+)
-- 移动端优先：默认样式为移动端，使用 md: 前缀适配桌面
-- 关键组件需要双版本：
-  - 同步状态显示：移动端在标题下方，桌面端绝对定位右上角
-  - 使用 `hidden md:flex` 和 `flex md:hidden` 切换显示
+**Responsive Design Strategy:**
+- Uses Tailwind breakpoints: `md:` (768px+), `lg:` (1024px+)
+- Mobile-first: default styles are for mobile, use md: prefix for desktop
+- Key components need dual versions:
+  - Sync status display: below title on mobile, absolute positioned top-right on desktop
+  - Use `hidden md:flex` and `flex md:hidden` to toggle display
 
-**API 集成**（lib/api/services.ts）
-- 所有 API 调用集中在此文件
-- 使用 fetch 封装的 apiGet、apiPost 等工具函数
-- 类型定义在 types/index.ts
+**API Integration** (lib/api/services.ts)
+- All API calls centralized in this file
+- Uses fetch-wrapped utility functions: apiGet, apiPost, etc.
+- Type definitions in types/index.ts
 
-### 数据流
+### Data Flow
 
 ```
-ERC-8004 合约事件 (Registered, UriUpdated, Transfer)
-    ↓ Web3.py 监听
-BlockchainSyncService 处理
-    ↓ 解析事件 + 获取元数据
-Agent 模型保存到数据库
-    ↓ FastAPI 查询
-前端通过 API 获取
-    ↓ 10 秒自动刷新
-用户界面展示
+ERC-8004 Contract Events (Registered, UriUpdated, Transfer)
+    ↓ Web3.py listener
+BlockchainSyncService processes
+    ↓ Parse events + fetch metadata
+Agent model saved to database
+    ↓ FastAPI query
+Frontend fetches via API
+    ↓ 10-second auto-refresh
+User interface display
 ```
 
 ## Critical Implementation Details
 
-### 数据库模式演进
+### Database Schema Evolution
 
-**Agent 模型字段：**
-- 基础字段：id, name, address, description, network_id
-- 链上字段：token_id (索引), owner_address (索引), metadata_uri, on_chain_data (JSON)
-- 同步字段：sync_status (enum: pending/synced/failed), synced_at, created_at (索引)
-- 业务字段：reputation_score, status (enum: active/inactive/suspended)
-- **OASF 字段**：skills (JSON), domains (JSON) - 自动分类的技能和领域标签
+**Agent Model Fields:**
+- Base fields: id, name, address, description, network_id
+- On-chain fields: token_id (indexed), owner_address (indexed), metadata_uri, on_chain_data (JSON)
+- Sync fields: sync_status (enum: pending/synced/failed), synced_at, created_at (indexed)
+- Business fields: reputation_score, status (enum: active/inactive/suspended)
+- **OASF fields**: skills (JSON), domains (JSON) - auto-classified skill and domain tags
 
-**BlockchainSync 模型：**
-- 追踪同步进度：last_block, current_block, status
-- 每个网络+合约组合一条记录
+**BlockchainSync Model:**
+- Tracks sync progress: last_block, current_block, status
+- One record per network + contract combination
 - status: idle/running/error
 
-**Network 模型 - contracts 字段：**
-- 类型：JSON
-- 存储多个合约地址：`{identity: "0x...", reputation: "0x...", validation: "0x..."}`
-- 在 migrate_add_contracts.py 中添加
+**Network Model - contracts field:**
+- Type: JSON
+- Stores multiple contract addresses: `{identity: "0x...", reputation: "0x...", validation: "0x..."}`
+- Added in migrate_add_contracts.py
 
-### 数据库迁移系统 [UPDATED: 2025-11-25]
+### Database Migration System [UPDATED: 2025-11-25]
 
-**自动迁移流程（main.py 启动时）：**
-1. `Base.metadata.create_all()` - 创建基础表结构
-2. `migrate_contracts()` - 添加 contracts 字段到 networks 表
-3. `migrate_oasf()` - 添加 skills/domains 字段到 agents 表
-4. `migrate_classification_source()` - 添加分类来源字段
-5. `migrate_multi_network()` - 添加 (token_id, network_id) 联合唯一索引
-6. `migrate_network_ids()` - **修复孤立的 network_id（UUID → network_key）**
-7. `init_networks()` - 初始化/更新网络配置
-8. `startup_event: start_scheduler()` - 启动定时任务
+**Auto-migration flow (on main.py startup):**
+1. `Base.metadata.create_all()` - Create base table structures
+2. `migrate_contracts()` - Add contracts field to networks table
+3. `migrate_oasf()` - Add skills/domains fields to agents table
+4. `migrate_classification_source()` - Add classification source field
+5. `migrate_multi_network()` - Add (token_id, network_id) composite unique index
+6. `migrate_network_ids()` - **Fix orphaned network_ids (UUID → network_key)**
+7. `init_networks()` - Initialize/update network configuration
+8. `startup_event: start_scheduler()` - Start scheduled tasks
 
-**关键迁移说明：**
+**Key Migration Notes:**
 
-- **migrate_network_ids**: 修复历史数据中使用 UUID 的 network_id
-  - 自动检测并映射旧 UUID 到新 network_key（如 `sepolia`）
-  - 更新 agents 表和 blockchain_syncs 表
-  - 保证所有 agents 都能关联到正确的网络
-  - **服务器部署时必须执行此迁移**
+- **migrate_network_ids**: Fixes historical data using UUID network_ids
+  - Automatically detects and maps old UUIDs to new network_keys (e.g., `sepolia`)
+  - Updates agents table and blockchain_syncs table
+  - Ensures all agents are associated with the correct network
+  - **Must be executed during server deployment**
 
-**手动迁移工具：**
+**Manual Migration Tools:**
 
 ```bash
-# 本地开发：完整重置数据库
+# Local dev: full database reset
 ./scripts/reset-db.sh --backup --resync
 
-# Docker：仅修复 network_id（推荐服务器使用）
+# Docker: fix network_id only (recommended for servers)
 ./scripts/docker-migrate-network-ids.sh
 
-# Docker：完整重置（慎用，会删除所有数据）
+# Docker: full reset (use with caution, deletes all data)
 ./scripts/docker-reset-db.sh --backup --resync
 ```
 
-**迁移脚本位置：**
-- `backend/src/db/migrate_*.py` - 各个独立迁移
-- `backend/src/db/reset_database.py` - 完整重置工具
-- `scripts/docker-migrate-network-ids.sh` - Docker 快速修复
-- `scripts/docker-reset-db.sh` - Docker 完整重置
+**Migration Script Locations:**
+- `backend/src/db/migrate_*.py` - Individual migrations
+- `backend/src/db/reset_database.py` - Full reset tool
+- `scripts/docker-migrate-network-ids.sh` - Docker quick fix
+- `scripts/docker-reset-db.sh` - Docker full reset
 
-### 启动流程和依赖顺序
+### Startup Flow and Dependency Order
 
-**后端启动顺序（dev-backend.sh）：**
-1. 运行数据库迁移（自动执行所有 migrate_*.py）
-2. 初始化网络数据（init_networks）
-3. 启动 uvicorn 服务器
+**Backend Startup Order (dev-backend.sh):**
+1. Run database migrations (auto-executes all migrate_*.py)
+2. Initialize network data (init_networks)
+3. Start uvicorn server
 
-**应用启动顺序（main.py）：**
-1. Base.metadata.create_all() - 创建表
-2. migrate_*() - 运行所有迁移（包括 network_id 修复）
-3. init_networks() - 初始化网络数据
-4. startup_event: start_scheduler() - 启动定时任务
+**Application Startup Order (main.py):**
+1. Base.metadata.create_all() - Create tables
+2. migrate_*() - Run all migrations (including network_id fix)
+3. init_networks() - Initialize network data
+4. startup_event: start_scheduler() - Start scheduled tasks
 
-### 区块链配置（backend/src/core/blockchain_config.py）[UPDATED: 2026-01-12]
+### Blockchain Configuration (backend/src/core/blockchain_config.py) [UPDATED: 2026-01-12]
 
-**必须配置的环境变量：**
-- SEPOLIA_RPC_URL：必填，否则启动失败
-- 从 .env 文件加载（需要 load_dotenv()）
+**Required Environment Variables:**
+- SEPOLIA_RPC_URL: required, startup fails without it
+- Loaded from .env file (requires load_dotenv())
 
-**同步配置参数（RPC 优化后）：**
-- START_BLOCK = 9989393（合约部署区块，Jan 2026 更新）
-- BLOCKS_PER_BATCH = 1000（批量大小，从 10000 降低 90%）
-- SYNC_INTERVAL_MINUTES = 10（同步间隔，实际由 CronTrigger 控制）
-- MAX_RETRIES = 1（从 2 降低，减少失败重试）
-- RETRY_DELAY_SECONDS = 5（从 3 增加，避免快速重试）
-- REQUEST_DELAY_SECONDS = 0.5（新增：事件处理间延迟）
+**Sync Configuration Parameters (post-RPC optimization):**
+- START_BLOCK = 9989393 (contract deployment block, updated Jan 2026)
+- BLOCKS_PER_BATCH = 1000 (batch size, reduced 90% from 10000)
+- SYNC_INTERVAL_MINUTES = 10 (sync interval, actually controlled by CronTrigger)
+- MAX_RETRIES = 1 (reduced from 2, fewer failed retries)
+- RETRY_DELAY_SECONDS = 5 (increased from 3, avoids rapid retries)
+- REQUEST_DELAY_SECONDS = 0.5 (new: delay between event processing)
 
-**定时执行时间表：**
-- Blockchain Sync: 每小时 :00, :10, :20, :30, :40, :50 执行（每天 144 次）
-- Reputation Sync: 事件驱动（监听 NewFeedback/FeedbackRevoked 事件，零定期轮询）
+**Scheduled Execution Timetable:**
+- Blockchain Sync: runs at :00, :10, :20, :30, :40, :50 every hour (144 times/day)
+- Reputation Sync: event-driven (listens to NewFeedback/FeedbackRevoked events, zero periodic polling)
 
-### ERC-8004 Jan 2026 规范更新 [UPDATED: 2026-01-27]
+### ERC-8004 Jan 2026 Spec Update [UPDATED: 2026-01-27]
 
-> **🚀 主网已上线**：ERC-8004 已于 2026-01-30 在 Ethereum Mainnet 正式上线！
+> **Mainnet is live**: ERC-8004 officially launched on Ethereum Mainnet on Jan 30, 2026!
 >
-> **更新历史：**
-> - Jan 9：重大规范更新（feedbackAuth 移除、agentWallet 验证等）
-> - **Jan 27：主网冻结版本**（score → value/valueDecimals、tag1 标准化、endpoints → services）
+> **Update History:**
+> - Jan 9: Major spec update (feedbackAuth removal, agentWallet verification, etc.)
+> - **Jan 27: Mainnet freeze version** (score → value/valueDecimals, tag1 standardization, endpoints → services)
 >
-> 参考资料：
-> - 最新 Specs: https://eips.ethereum.org/EIPS/eip-8004
-> - Registration 最佳实践: https://github.com/erc-8004/best-practices/blob/main/Registration.md
-> - Reputation 最佳实践: https://github.com/erc-8004/best-practices/blob/main/Reputation.md
+> References:
+> - Latest Specs: https://eips.ethereum.org/EIPS/eip-8004
+> - Registration Best Practices: https://github.com/erc-8004/best-practices/blob/main/Registration.md
+> - Reputation Best Practices: https://github.com/erc-8004/best-practices/blob/main/Reputation.md
 
-#### 最重要的变更
+#### Most Important Changes
 
-**1. Reputation Feedback 不再需要 Agent 签名预授权 (`feedbackAuth`)**
+**1. Reputation Feedback No Longer Requires Agent Signature Pre-authorization (`feedbackAuth`)**
 
-| 项目 | 旧版本 | 新版本 |
-|------|--------|--------|
-| 接口 | `giveFeedback(..., bytes feedbackAuth)` | `giveFeedback(..., string endpoint, ...)` |
-| 授权 | Agent 需签名 feedbackAuth 授权 client | 任何 clientAddress 可直接提交 |
-| 防垃圾 | 链上预授权 | 依赖链下过滤 + EIP-7702 |
+| Item | Old Version | New Version |
+|------|-------------|-------------|
+| Interface | `giveFeedback(..., bytes feedbackAuth)` | `giveFeedback(..., string endpoint, ...)` |
+| Authorization | Agent must sign feedbackAuth to authorize client | Any clientAddress can submit directly |
+| Spam prevention | On-chain pre-authorization | Off-chain filtering + EIP-7702 |
 
 ```solidity
-// 旧接口
+// Old interface
 giveFeedback(uint256 agentId, uint8 score, bytes32 tag1, bytes32 tag2,
              string fileuri, bytes32 filehash, bytes feedbackAuth)
 
-// 新接口
+// New interface
 giveFeedback(uint256 agentId, uint8 score, string tag1, string tag2,
              string endpoint, string feedbackURI, bytes32 feedbackHash)
 ```
 
-**2. Agent Wallet 地址变为链上可验证属性**
+**2. Agent Wallet Address Becomes an On-chain Verifiable Property**
 
-- 新增保留 metadata key：`agentWallet`
-- 不能通过 `setMetadata()` 或 `register()` 设置
-- 初始值为 owner 地址
-- 更新需要 **EIP-712 签名**（EOA）或 **ERC-1271**（合约钱包）验证
-- 转让后重置为零地址，需新 owner 重新验证
+- New reserved metadata key: `agentWallet`
+- Cannot be set via `setMetadata()` or `register()`
+- Initial value is the owner address
+- Updates require **EIP-712 signature** (EOA) or **ERC-1271** (contract wallet) verification
+- Resets to zero address after transfer, new owner must re-verify
 
-#### Identity Registry 变更
+#### Identity Registry Changes
 
-**术语重命名：**
+**Terminology Renames:**
 - `tokenId` → `agentId`
 - `tokenURI` → `agentURI`
-- `agentRegistry` 格式：`{namespace}:{chainId}:{identityRegistry}`
+- `agentRegistry` format: `{namespace}:{chainId}:{identityRegistry}`
 
-**新增接口：**
-- `setAgentURI(uint256 agentId, string agentURI)` - 更新 Agent URI
-- `URIUpdated(uint256 agentId, string agentURI)` - URI 更新事件
+**New Interfaces:**
+- `setAgentURI(uint256 agentId, string agentURI)` - Update Agent URI
+- `URIUpdated(uint256 agentId, string agentURI)` - URI update event
 
-**Registration JSON 示例更新：**
-- 新增 `web` 和 `email` endpoint 类型（支持人机交互）
-- MCP `capabilities` 从 `{}` 改为 `[]`
-- OASF endpoint 版本从 `0.7` 升级到 `0.8`
-- 新增可选字段：`skills[]`, `domains[]`, `x402Support`, `active`
+**Registration JSON Example Updates:**
+- New `web` and `email` endpoint types (supports human-agent interaction)
+- MCP `capabilities` changed from `{}` to `[]`
+- OASF endpoint version upgraded from `0.7` to `0.8`
+- New optional fields: `skills[]`, `domains[]`, `x402Support`, `active`
 
-**可选：Endpoint Domain Verification**
-- Agent 可在 `https://{endpoint-domain}/.well-known/agent-registration.json` 托管验证文件
-- 验证者可检查 `registrations` 条目匹配 `agentRegistry` + `agentId`
+**Optional: Endpoint Domain Verification**
+- Agents can host verification files at `https://{endpoint-domain}/.well-known/agent-registration.json`
+- Verifiers can check `registrations` entries match `agentRegistry` + `agentId`
 
-#### Reputation Registry 变更
+#### Reputation Registry Changes
 
-**🆕 Jan 27 主网冻结：score → value/valueDecimals**
+**New Jan 27 Mainnet Freeze: score → value/valueDecimals**
 
-| 项目 | 旧版本 | 新版本 |
-|------|--------|--------|
-| 评分字段 | `uint8 score` (0-100) | `int128 value` + `uint8 valueDecimals` |
-| 支持范围 | 仅 0-100 整数 | 小数、负数、大于 100 的值 |
-| getSummary 返回 | `(count, averageScore)` | `(count, averageValue, valueDecimals)` |
+| Item | Old Version | New Version |
+|------|-------------|-------------|
+| Score field | `uint8 score` (0-100) | `int128 value` + `uint8 valueDecimals` |
+| Supported range | Only 0-100 integers | Decimals, negatives, values > 100 |
+| getSummary returns | `(count, averageScore)` | `(count, averageValue, valueDecimals)` |
 
-**为什么这个变更很重要：**
+**Why This Change Matters:**
 
-| 场景 | 旧版本 | 新版本 (value, decimals) |
-|------|--------|-------------------------|
-| 成功率 99.77% | ❌ 只能近似为 100 | ✅ (9977, 2) |
-| 交易收益 -3.2% | ❌ 不支持负数 | ✅ (-32, 1) |
-| 累计收入 $556,000 | ❌ 最大 100 | ✅ (556000, 0) |
-| 响应时间 560ms | ❌ 超出范围 | ✅ (560, 0) |
+| Scenario | Old Version | New Version (value, decimals) |
+|----------|-------------|-------------------------------|
+| Success rate 99.77% | Can only approximate as 100 | (9977, 2) |
+| Trading yield -3.2% | Negatives not supported | (-32, 1) |
+| Cumulative revenue $556,000 | Max 100 | (556000, 0) |
+| Response time 560ms | Out of range | (560, 0) |
 
-**标准化 tag1 值（Best Practices）：**
+**Standardized tag1 Values (Best Practices):**
 
-| tag1 | 测量类型 | 示例 | value | valueDecimals |
-|------|---------|------|-------|---------------|
-| `starred` | 质量评分 (0-100) | 87/100 | 87 | 0 |
-| `reachable` | 可达性 (二进制) | true | 1 | 0 |
-| `ownerVerified` | 所有者验证 | true | 1 | 0 |
-| `uptime` | 正常运行时间 | 99.77% | 9977 | 2 |
-| `successRate` | 成功率 | 89% | 89 | 0 |
-| `responseTime` | 响应时间 (ms) | 560ms | 560 | 0 |
-| `blocktimeFreshness` | 区块延迟 | 4 blocks | 4 | 0 |
-| `revenues` | 累计收入 | $560 | 560 | 0 |
-| `tradingYield` | 交易收益率 | -3.2% | -32 | 1 |
+| tag1 | Measurement Type | Example | value | valueDecimals |
+|------|-----------------|---------|-------|---------------|
+| `starred` | Quality score (0-100) | 87/100 | 87 | 0 |
+| `reachable` | Reachability (binary) | true | 1 | 0 |
+| `ownerVerified` | Owner verification | true | 1 | 0 |
+| `uptime` | Uptime | 99.77% | 9977 | 2 |
+| `successRate` | Success rate | 89% | 89 | 0 |
+| `responseTime` | Response time (ms) | 560ms | 560 | 0 |
+| `blocktimeFreshness` | Block delay | 4 blocks | 4 | 0 |
+| `revenues` | Cumulative revenue | $560 | 560 | 0 |
+| `tradingYield` | Trading yield | -3.2% | -32 | 1 |
 
-**字段类型变更：**
+**Field Type Changes:**
 - `tag1`, `tag2`: `bytes32` → `string`
 - `fileuri` → `feedbackURI`
 - `filehash` → `feedbackHash`
-- 新增 `endpoint` 参数
+- New `endpoint` parameter
 
-**NewFeedback 事件（主网冻结版本）：**
+**NewFeedback Event (Mainnet Freeze Version):**
 ```solidity
 event NewFeedback(
     uint256 indexed agentId,
     address indexed clientAddress,
-    uint64 feedbackIndex,      // 每个 client 的反馈索引
-    int128 value,              // 🆕 替代 uint8 score
-    uint8 valueDecimals,       // 🆕 小数位数 (0-18)
-    string indexed tag1,       // string 类型
+    uint64 feedbackIndex,      // Per-client feedback index
+    int128 value,              // New: replaces uint8 score
+    uint8 valueDecimals,       // New: decimal places (0-18)
+    string indexed tag1,       // string type
     string tag2,
     string endpoint,
     string feedbackURI,
@@ -405,86 +405,86 @@ event NewFeedback(
 );
 ```
 
-**读取 API 变更：**
-- `getSummary(...)` 返回 `(count, averageValue, valueDecimals)` 而非 `(count, averageScore)`
-- `readFeedback(...)` 参数 `index` → `feedbackIndex`
-- `readAllFeedback(...)` 新增返回 `uint64[] feedbackIndexes`
+**Read API Changes:**
+- `getSummary(...)` returns `(count, averageValue, valueDecimals)` instead of `(count, averageScore)`
+- `readFeedback(...)` parameter `index` → `feedbackIndex`
+- `readAllFeedback(...)` new return value `uint64[] feedbackIndexes`
 
-**Off-chain Feedback JSON 变更：**
-- 移除必填字段：`feedbackAuth`
-- 重命名：`proof_of_payment` → `proofOfPayment`
-- 新增可选：`endpoint`, `domain`（OASF 定义）
+**Off-chain Feedback JSON Changes:**
+- Removed required field: `feedbackAuth`
+- Renamed: `proof_of_payment` → `proofOfPayment`
+- New optional: `endpoint`, `domain` (OASF defined)
 
-#### Registration 文件变更
+#### Registration File Changes
 
-**🆕 Jan 27 主网冻结：endpoints → services**
+**New Jan 27 Mainnet Freeze: endpoints → services**
 
-为避免与 feedback 中的 `endpoint` 字段（单个路由）混淆，Registration JSON 中的 `endpoints` 重命名为 `services`：
+To avoid confusion with the `endpoint` field in feedback (a single route), `endpoints` in Registration JSON has been renamed to `services`:
 
 ```json
-// 旧版本
+// Old version
 {
-  "endpoints": [...]  // 容易与 feedback endpoint 混淆
+  "endpoints": [...]  // Easily confused with feedback endpoint
 }
 
-// 新版本（主网）
+// New version (mainnet)
 {
-  "services": [...]  // 清晰表示 agent 提供的服务
+  "services": [...]  // Clearly represents services provided by the agent
 }
 ```
 
-#### Validation Registry 状态
+#### Validation Registry Status
 
-> ⚠️ **注意**：Validation Registry 仍在与 TEE 社区积极讨论中，将在今年晚些时候发布后续更新。
+> **Note**: The Validation Registry is still under active discussion with the TEE community and will receive follow-up updates later this year.
 
-#### 当前网络状态
+#### Current Network Status
 
-| 网络 | Chain ID | 状态 | 说明 |
-|------|----------|------|------|
-| **Ethereum Mainnet** | 1 | ✅ 启用 | 主网已上线（Jan 30, 2026） |
-| **Polygon Mainnet** | 137 | ✅ 启用 | CREATE2 确定性部署，合约地址同 Ethereum |
-| **Base** | 8453 | ✅ 启用 | CREATE2 确定性部署，合约地址同 Ethereum |
-| **BNB Smart Chain** | 56 | ✅ 启用 | CREATE2 确定性部署，合约地址同 Ethereum |
-| **Monad** | 143 | ✅ 启用 | CREATE2 确定性部署，合约地址同 Ethereum |
-| Sepolia | 11155111 | 🔧 测试 | 测试网，仅供开发使用 |
-| Base Sepolia | 84532 | ❌ 禁用 | 等待新合约部署 |
-| Linea Sepolia | 59141 | ❌ 禁用 | 等待新合约部署 |
-| Hedera Testnet | 296 | ❌ 禁用 | 等待新合约部署 |
+| Network | Chain ID | Status | Notes |
+|---------|----------|--------|-------|
+| **Ethereum Mainnet** | 1 | Enabled | Mainnet live (Jan 30, 2026) |
+| **Polygon Mainnet** | 137 | Enabled | CREATE2 deterministic deployment, same contract addresses as Ethereum |
+| **Base** | 8453 | Enabled | CREATE2 deterministic deployment, same contract addresses as Ethereum |
+| **BNB Smart Chain** | 56 | Enabled | CREATE2 deterministic deployment, same contract addresses as Ethereum |
+| **Monad** | 143 | Enabled | CREATE2 deterministic deployment, same contract addresses as Ethereum |
+| Sepolia | 11155111 | Test | Testnet, for development only |
+| Base Sepolia | 84532 | Disabled | Awaiting new contract deployment |
+| Linea Sepolia | 59141 | Disabled | Awaiting new contract deployment |
+| Hedera Testnet | 296 | Disabled | Awaiting new contract deployment |
 
-**所有主网统一合约地址（CREATE2 确定性部署）：**
+**Unified Mainnet Contract Addresses (CREATE2 Deterministic Deployment):**
 - Identity Registry: `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`
 - Reputation Registry: `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`
-- Validation Registry: 待部署
+- Validation Registry: Pending deployment
 
-**Sepolia 测试网合约地址（仅供开发）：**
+**Sepolia Testnet Contract Addresses (Development Only):**
 - Identity Registry: `0x8004A818BFB912233c491871b3d84c89A494BD9e`
 - Reputation Registry: `0x8004B663056A597Dffe9eCcC1965A193B7388713`
 
-#### 代码适配检查清单 [UPDATED: 2026-01-27]
+#### Code Adaptation Checklist [UPDATED: 2026-01-27]
 
-**Jan 9 更新（已完成）：**
-- [x] 更新 ABI 文件：Identity 和 Reputation Registry ABI 已更新
-- [x] 更新 `getSummary()` 调用：tag1/tag2 参数从 `bytes32` 改为 `string`
-- [x] 更新 feedback 事件解析：支持新旧两种 tag 格式
-- [x] 新增 `endpoint` 和 `feedbackIndex` 字段支持
-- [x] 兼容 `feedbackURI`（新）和 `feedbackUri`（旧）字段名
+**Jan 9 Update (Completed):**
+- [x] Updated ABI files: Identity and Reputation Registry ABIs updated
+- [x] Updated `getSummary()` calls: tag1/tag2 parameters changed from `bytes32` to `string`
+- [x] Updated feedback event parsing: supports both old and new tag formats
+- [x] Added `endpoint` and `feedbackIndex` field support
+- [x] Compatible with `feedbackURI` (new) and `feedbackUri` (old) field names
 
-**Jan 27 主网冻结更新（已完成）：**
-- [x] 更新 Reputation ABI：NewFeedback 事件 score → value/valueDecimals
-- [x] 更新 Reputation ABI：getSummary 返回 (count, averageValue, valueDecimals)
-- [x] 更新 Feedback 数据库模型：score → value/value_decimals 字段
-- [x] 创建数据库迁移脚本：`migrate_feedback_value.py`
-- [x] 更新 blockchain_sync.py：事件解析适配新格式
-- [x] 更新 reputation_sync.py：getSummary 结果处理
-- [x] 更新前端类型定义：Feedback 接口新增 value/value_decimals
-- [x] 更新前端组件：FeedbackList 支持多种 tag1 类型的格式化显示
+**Jan 27 Mainnet Freeze Update (Completed):**
+- [x] Updated Reputation ABI: NewFeedback event score → value/valueDecimals
+- [x] Updated Reputation ABI: getSummary returns (count, averageValue, valueDecimals)
+- [x] Updated Feedback database model: score → value/value_decimals fields
+- [x] Created database migration script: `migrate_feedback_value.py`
+- [x] Updated blockchain_sync.py: event parsing adapted for new format
+- [x] Updated reputation_sync.py: getSummary result processing
+- [x] Updated frontend type definitions: Feedback interface with value/value_decimals
+- [x] Updated frontend components: FeedbackList supports formatted display for multiple tag1 types
 
-**待完成：**
-- [ ] 考虑支持 `agentWallet` 验证流程（EIP-712/ERC-1271）
-- [ ] 可选：实现 Endpoint Domain Verification
-- [x] 支持 Registration 中的 `services` 字段（向后兼容 `endpoints`）
+**Pending:**
+- [ ] Consider supporting `agentWallet` verification flow (EIP-712/ERC-1271)
+- [ ] Optional: implement Endpoint Domain Verification
+- [x] Support `services` field in Registration (backward compatible with `endpoints`)
 
-**禁用其他网络的命令（生产环境）：**
+**Command to Disable Other Networks (Production):**
 ```bash
 docker compose exec backend uv run python -c "
 from src.db.database import SessionLocal
@@ -493,75 +493,75 @@ from src.models import Network
 db = SessionLocal()
 deleted = db.query(Network).filter(Network.id != 'sepolia').delete()
 db.commit()
-print(f'✅ 已删除 {deleted} 个网络，仅保留 Sepolia')
+print(f'Deleted {deleted} networks, keeping Sepolia only')
 db.close()
 "
 ```
 
-**配置文件位置：**
-- 网络配置：`backend/src/core/networks_config.py`
-- 网络初始化：`backend/src/db/init_networks.py`
-- API Schema：`backend/src/api/networks.py`
-- ABI 文件：`backend/src/abi/` （需要更新以匹配新接口）
+**Configuration File Locations:**
+- Network config: `backend/src/core/networks_config.py`
+- Network initialization: `backend/src/db/init_networks.py`
+- API Schema: `backend/src/api/networks.py`
+- ABI files: `backend/src/abi/` (need to be updated to match new interfaces)
 
-### API 设计模式
+### API Design Patterns
 
-**分页和筛选：**
+**Pagination and Filtering:**
 ```python
 # agents.py
 GET /api/agents?tab={all|active|new|top}&page=1&page_size=20&search=query
 ```
 
-**Tab 筛选逻辑：**
-- all: 所有代理
-- active: created_at 在最近 7 天内
-- new: created_at 在最近 24 小时内
-- top: 按 reputation_score 降序排序
+**Tab Filtering Logic:**
+- all: All agents
+- active: created_at within the last 7 days
+- new: created_at within the last 24 hours
+- top: Sorted by reputation_score descending
 
-**统计数据缓存：**
-- /api/stats 包含 blockchain_sync 字段
-- 前端每 10 秒刷新（useEffect interval）
+**Statistics Caching:**
+- /api/stats includes blockchain_sync field
+- Frontend refreshes every 10 seconds (useEffect interval)
 
 ## Common Patterns
 
-### 添加新的 API 端点
+### Adding a New API Endpoint
 
-1. 在 `backend/src/api/` 创建或修改路由文件
-2. 使用 APIRouter 定义路由
-3. 在 `main.py` 中 include_router
-4. 数据模型在 `models/`，响应模式在 `schemas/`（如果需要）
+1. Create or modify a route file in `backend/src/api/`
+2. Define routes using APIRouter
+3. Include the router in `main.py`
+4. Data models in `models/`, response schemas in `schemas/` (if needed)
 
-### 添加新的前端页面
+### Adding a New Frontend Page
 
-1. 在 `frontend/app/` 创建目录和 `page.tsx`
-2. 使用 "use client" 指令（如果需要客户端状态）
-3. 在 `lib/api/services.ts` 添加 API 调用函数
-4. 类型定义在 `types/index.ts`
+1. Create a directory and `page.tsx` in `frontend/app/`
+2. Use "use client" directive (if client-side state is needed)
+3. Add API call functions in `lib/api/services.ts`
+4. Type definitions in `types/index.ts`
 
-### 添加新的数据库迁移
+### Adding a New Database Migration
 
-1. 在 `backend/src/db/` 创建 `migrate_*.py`
-2. 使用 sqlite3 直接操作（ALTER TABLE 等）
-3. 实现 migrate() 函数，包含幂等性检查
-4. 在 `main.py` 中 import 并调用
-5. 测试本地环境：重启后端验证迁移成功
-6. 测试 Docker 环境：`docker compose restart backend` 验证
+1. Create `migrate_*.py` in `backend/src/db/`
+2. Use sqlite3 directly (ALTER TABLE, etc.)
+3. Implement a migrate() function with idempotency checks
+4. Import and call it in `main.py`
+5. Test locally: restart backend to verify migration success
+6. Test Docker: `docker compose restart backend` to verify
 
-### 服务器部署与数据库迁移 [NEW: 2025-11-25]
+### Server Deployment and Database Migration [NEW: 2025-11-25]
 
-**服务器首次部署（Docker）：**
+**First Server Deployment (Docker):**
 
 ```bash
-# 1. 拉取最新代码
+# 1. Pull latest code
 git pull origin master
 
-# 2. 启动容器（自动运行所有迁移）
+# 2. Start containers (automatically runs all migrations)
 docker compose up -d
 
-# 3. 查看迁移日志
+# 3. View migration logs
 docker compose logs backend | grep -E "Migration|migrate"
 
-# 4. 验证网络数据
+# 4. Verify network data
 docker compose exec backend sh -c "cd /app && uv run python -c \"
 from src.db.database import SessionLocal
 from src.models import Network, Agent
@@ -572,55 +572,55 @@ db.close()
 \""
 ```
 
-**服务器修复 network_id 问题（推荐）：**
+**Fix network_id Issues on Server (Recommended):**
 
-如果服务器上前端看不到 Sepolia 等网络，使用此脚本修复（不删除数据）：
+If the frontend can't see networks like Sepolia on the server, use this script to fix (without deleting data):
 
 ```bash
-# 执行 network_id 迁移
+# Run network_id migration
 ./scripts/docker-migrate-network-ids.sh
 
-# 脚本会自动：
-# 1. 检查孤立的 network_id
-# 2. 映射 UUID → network_key
-# 3. 验证修复结果
-# 4. 显示每个网络的 agent 数量
+# The script automatically:
+# 1. Checks for orphaned network_ids
+# 2. Maps UUID → network_key
+# 3. Verifies fix results
+# 4. Shows agent count per network
 
-# 无需重启，但建议重启以确保前端刷新
+# No restart required, but recommended to ensure frontend refresh
 docker compose restart backend
 ```
 
-**服务器完整重置（慎用）：**
+**Full Server Reset (Use with Caution):**
 
-只在需要完全重新同步区块链数据时使用：
+Only use when a complete re-sync of blockchain data is needed:
 
 ```bash
-# 完整重置（会删除所有数据）
+# Full reset (deletes all data)
 ./scripts/docker-reset-db.sh --backup --resync
 
-# 脚本会自动：
-# 1. 备份当前数据库
-# 2. 删除所有表
-# 3. 重建表结构
-# 4. 运行所有迁移
-# 5. 初始化网络配置
-# 6. 重置同步状态
-# 7. 重启后端容器
+# The script automatically:
+# 1. Backs up current database
+# 2. Drops all tables
+# 3. Rebuilds table structures
+# 4. Runs all migrations
+# 5. Initializes network configuration
+# 6. Resets sync state
+# 7. Restarts backend container
 ```
 
-**故障排查：**
+**Troubleshooting:**
 
 ```bash
-# 检查容器状态
+# Check container status
 docker compose ps
 
-# 查看后端日志
+# View backend logs
 docker compose logs -f backend
 
-# 进入容器手动检查
+# Enter container for manual inspection
 docker compose exec backend sh
 
-# 查看数据库表结构
+# View database table structure
 docker compose exec backend uv run python -c "
 import sqlite3
 conn = sqlite3.connect('8004scan.db')
@@ -629,7 +629,7 @@ cursor.execute('PRAGMA table_info(agents)')
 print([col[1] for col in cursor.fetchall()])
 "
 
-# 检查网络和 agents 关联
+# Check network-agent associations
 docker compose exec backend sh -c "cd /app && uv run python -c \"
 from src.db.database import SessionLocal
 from sqlalchemy import text
@@ -646,318 +646,318 @@ db.close()
 \""
 ```
 
-### 响应式组件实现
+### Responsive Component Implementation
 
 ```tsx
-{/* 桌面版 */}
+{/* Desktop version */}
 <div className="hidden md:flex ...">...</div>
 
-{/* 移动版 */}
+{/* Mobile version */}
 <div className="flex md:hidden ...">...</div>
 ```
 
 ## Development Workflow
 
-### 添加新功能的标准流程
+### Standard Flow for Adding New Features
 
-1. 后端：定义数据模型（models/）
-2. 后端：实现业务逻辑（services/ 或直接在 API）
-3. 后端：创建 API 端点（api/）
-4. 前端：定义 TypeScript 类型（types/）
-5. 前端：添加 API 调用（lib/api/services.ts）
-6. 前端：实现 UI 组件（components/）
-7. 前端：创建或更新页面（app/）
+1. Backend: Define data models (models/)
+2. Backend: Implement business logic (services/ or directly in API)
+3. Backend: Create API endpoints (api/)
+4. Frontend: Define TypeScript types (types/)
+5. Frontend: Add API calls (lib/api/services.ts)
+6. Frontend: Implement UI components (components/)
+7. Frontend: Create or update pages (app/)
 
-### 数据库模型修改流程
+### Database Model Modification Flow
 
-1. 修改 models/*.py 中的模型定义
-2. 创建迁移脚本 migrate_*.py
-3. 在 dev-backend.sh 或 main.py 中调用迁移
-4. 测试迁移的幂等性（多次运行不出错）
+1. Modify model definitions in models/*.py
+2. Create migration script migrate_*.py
+3. Call migration in dev-backend.sh or main.py
+4. Test migration idempotency (multiple runs without errors)
 
-### 环境变量修改流程
+### Environment Variable Modification Flow
 
-1. 更新 backend/.env.example
-2. 更新 backend/.env
-3. 在相关 config.py 中添加 load_dotenv()
-4. 更新 README.md 中的环境变量文档
+1. Update backend/.env.example
+2. Update backend/.env
+3. Add load_dotenv() in the relevant config.py
+4. Update environment variable documentation in README.md
 
 ## Known Issues and Solutions
 
-### 数据库迁移失败
+### Database Migration Failure
 
-**问题：** 迁移脚本无法找到 .env 文件中的 DATABASE_URL
-**解决：** 在迁移脚本顶部添加：
+**Problem:** Migration script cannot find DATABASE_URL from .env file
+**Solution:** Add at the top of the migration script:
 ```python
 from dotenv import load_dotenv
 load_dotenv()
 ```
 
-### 后端启动时 SEPOLIA_RPC_URL 未定义
+### SEPOLIA_RPC_URL Undefined on Backend Startup
 
-**问题：** blockchain_config.py 在 .env 加载之前被 import
-**解决：** 在 blockchain_config.py 顶部添加 load_dotenv()
+**Problem:** blockchain_config.py is imported before .env is loaded
+**Solution:** Add load_dotenv() at the top of blockchain_config.py
 
-### 移动端同步状态重叠
+### Mobile Sync Status Overlap
 
-**问题：** 绝对定位的同步状态与标题重叠
-**解决：** 创建两个版本，移动端使用正常文档流，桌面端使用绝对定位
+**Problem:** Absolute-positioned sync status overlaps with the title
+**Solution:** Create two versions - mobile uses normal document flow, desktop uses absolute positioning
 
-### Docker 镜像拉取失败
+### Docker Image Pull Failure
 
-**问题：** Docker Hub 连接问题（中国大陆常见）
-**解决：** 使用本地开发环境（./scripts/dev-backend.sh）而不是 Docker
+**Problem:** Docker Hub connection issues (common in mainland China)
+**Solution:** Use local development environment (./scripts/dev-backend.sh) instead of Docker
 
 ## File Organization Rules
 
-- Python 文件不超过 300 行
-- TypeScript/JavaScript 文件不超过 300 行
-- 每层文件夹中的文件不超过 8 个
-- 文档放在 docs/（正式文档）或 discuss/（讨论和历史记录）
+- Python files must not exceed 300 lines
+- TypeScript/JavaScript files must not exceed 300 lines
+- No more than 8 files per directory level
+- Documentation goes in docs/ (official docs) or discuss/ (discussions and history)
 
 ## Documentation Structure
 
-### docs/ - 正式文档
+### docs/ - Official Documentation
 
-- **DEPLOYMENT.md** - 完整的部署指南（本地开发、Docker 部署、生产环境）
-- **erc8004-mainnet-freeze-update.md** - ERC-8004 主网冻结更新文档 [NEW: 2026-01-27]
-- **oasf-classification.md** - OASF 自动分类功能说明
-- **background-classification-guide.md** - 异步批量分类使用指南
-- **classification-validation-rules.md** - 分类验证规则和标准
-- **reputation_sync_design.md** - 声誉系统设计文档
-- **rpc-optimization-final.md** - RPC 请求优化完整文档（事件驱动架构）
+- **DEPLOYMENT.md** - Complete deployment guide (local dev, Docker deployment, production)
+- **erc8004-mainnet-freeze-update.md** - ERC-8004 mainnet freeze update doc [NEW: 2026-01-27]
+- **oasf-classification.md** - OASF auto-classification feature docs
+- **background-classification-guide.md** - Async batch classification usage guide
+- **classification-validation-rules.md** - Classification validation rules and standards
+- **reputation_sync_design.md** - Reputation system design doc
+- **rpc-optimization-final.md** - Complete RPC request optimization doc (event-driven architecture)
 
-### discuss/ - 讨论和历史记录
+### discuss/ - Discussions and History
 
-- 已归档的部署文档（DOCKER_DEPLOYMENT.md、production-deployment.md）
-- 历史总结文档（oasf-upgrade-summary.md、实现总结.md）
-- 测试记录（llm-classification-test-results.md）
-- 临时故障排查文档（ssl-certificate-troubleshooting.md 等）
+- Archived deployment docs (DOCKER_DEPLOYMENT.md, production-deployment.md)
+- Historical summary docs (oasf-upgrade-summary.md, implementation-summary.md)
+- Test records (llm-classification-test-results.md)
+- Temporary troubleshooting docs (ssl-certificate-troubleshooting.md, etc.)
 
-### scripts/ - 运行脚本
+### scripts/ - Run Scripts
 
-**核心开发脚本：**
-- dev-backend.sh - 启动后端开发服务器
-- dev-frontend.sh - 启动前端开发服务器
-- dev-all.sh - 同时启动前后端
-- init-networks.sh - 初始化网络数据
-- migrate-db.sh - 运行数据库迁移
+**Core Development Scripts:**
+- dev-backend.sh - Start backend dev server
+- dev-frontend.sh - Start frontend dev server
+- dev-all.sh - Start both frontend and backend
+- init-networks.sh - Initialize network data
+- migrate-db.sh - Run database migrations
 
-**Docker 部署脚本：**
-- docker-deploy.sh - 部署完整应用
-- docker-check-env.sh - 检查环境配置
-- docker-logs.sh - 查看容器日志
-- docker-restart.sh - 重启服务
-- docker-stop.sh - 停止服务
+**Docker Deployment Scripts:**
+- docker-deploy.sh - Deploy full application
+- docker-check-env.sh - Check environment configuration
+- docker-logs.sh - View container logs
+- docker-restart.sh - Restart services
+- docker-stop.sh - Stop services
 
-**辅助工具：**
-- check-nginx-config.sh - Nginx 配置检查（生产环境辅助）
+**Utilities:**
+- check-nginx-config.sh - Nginx config check (production helper)
 
-**已归档脚本：**
-- scripts/archive/ - 临时诊断脚本（diagnose-nginx-redirect.sh 等）
+**Archived Scripts:**
+- scripts/archive/ - Temporary diagnostic scripts (diagnose-nginx-redirect.sh, etc.)
 
 ## API Documentation
 
-后端 API 文档自动生成，启动服务后访问：
-- http://localhost:8000/docs（Swagger UI）
-- http://localhost:8000/redoc（ReDoc）
+Backend API docs are auto-generated. After starting the service, visit:
+- http://localhost:8000/docs (Swagger UI)
+- http://localhost:8000/redoc (ReDoc)
 
 ## OASF Classification (NEW - 2025-11-14)
 
-### 功能概述
+### Overview
 
-Agentscan 现已集成完整的 OASF v0.8.0 分类体系，可自动为 AI Agent 打上 skills 和 domains 标签。
+Agentscan now integrates the complete OASF v0.8.0 taxonomy system, automatically labeling AI Agents with skills and domains tags.
 
-### 关键特性
+### Key Features
 
-1. **完整的 OASF v0.8.0 规范**
-   - **136 个 Skills**：涵盖 NLP、CV、Agent 编排、数据工程等 15 大类
-   - **204 个 Domains**：涵盖技术、金融、医疗、教育等 25 大领域
-   - 数据来源：https://github.com/agent0lab/agent0-py
+1. **Complete OASF v0.8.0 Specification**
+   - **136 Skills**: Covering NLP, CV, Agent orchestration, Data engineering, and 15 other major categories
+   - **204 Domains**: Covering Technology, Finance, Healthcare, Education, and 25 other major fields
+   - Data source: https://github.com/agent0lab/agent0-py
 
-2. **智能分类策略**
-   - **优先级1**：从 metadata 的 `endpoints[].skills/domains` 直接提取（OASF 标准格式）
-   - **优先级2**：使用 LLM 智能分析 agent description
-     - DeepSeek（推荐）：性价比高
-     - OpenAI：GPT-4o-mini
-     - OpenRouter：统一接口支持多种模型
-     - Anthropic Claude：保持向后兼容
-   - **优先级3**：基于关键词匹配的简单分类（无需 API key）
+2. **Smart Classification Strategy**
+   - **Priority 1**: Extract directly from metadata `endpoints[].skills/domains` (OASF standard format)
+   - **Priority 2**: Use LLM to intelligently analyze agent description
+     - DeepSeek (recommended): cost-effective
+     - OpenAI: GPT-4o-mini
+     - OpenRouter: unified interface supporting multiple models
+     - Anthropic Claude: backward compatible
+   - **Priority 3**: Simple keyword-based classification (no API key needed)
 
-3. **自动化流程**
-   - 新 agent 注册时自动分类
-   - metadata 更新时重新分类
-   - 支持手动触发单个或批量分类
+3. **Automation Flow**
+   - Automatic classification on new agent registration
+   - Re-classification on metadata updates
+   - Supports manual trigger for single or batch classification
 
-### 核心文件
+### Core Files
 
 ```
 backend/src/
 ├── taxonomies/
-│   ├── all_skills.json        # 136 skills (46KB，来自 agent0-py)
-│   ├── all_domains.json       # 204 domains (73KB，来自 agent0-py)
-│   └── oasf_taxonomy.py       # Python 模块（动态加载 JSON）
+│   ├── all_skills.json        # 136 skills (46KB, from agent0-py)
+│   ├── all_domains.json       # 204 domains (73KB, from agent0-py)
+│   └── oasf_taxonomy.py       # Python module (dynamically loads JSON)
 ├── services/
-│   └── ai_classifier.py       # AI 分类服务
+│   └── ai_classifier.py       # AI classification service
 └── api/
-    └── classification.py      # 分类 API 端点
+    └── classification.py      # Classification API endpoints
 
 frontend/
 ├── components/agent/
-│   └── OASFTags.tsx           # 标签展示组件
-└── types/index.ts             # Agent 类型定义（包含 skills/domains）
+│   └── OASFTags.tsx           # Tag display component
+└── types/index.ts             # Agent type definitions (includes skills/domains)
 ```
 
-### API 端点
+### API Endpoints
 
 ```bash
-# 手动分类单个 agent
+# Manually classify a single agent
 POST /api/agents/{agent_id}/classify
 
-# 批量分类所有未分类的 agents
+# Batch classify all unclassified agents
 POST /api/agents/classify-all?limit=100
 
-# 获取所有可用的 skills/domains
+# Get all available skills/domains
 GET /api/taxonomy/skills
 GET /api/taxonomy/domains
 ```
 
-### 前端展示
+### Frontend Display
 
-- **列表页**：Agent 卡片显示最多 3 个标签（skills 蓝色 ⚡，domains 紫色 🏢）
-- **详情页**：独立的 "OASF Taxonomy" 卡片，按分类分组完整展示
+- **List page**: Agent cards show up to 3 tags (skills in blue, domains in purple)
+- **Detail page**: Separate "OASF Taxonomy" card with full display grouped by category
 
-### 配置（可选）
+### Configuration (Optional)
 
-在 `backend/.env` 中配置 LLM 提供商以启用智能分类：
+Configure LLM provider in `backend/.env` to enable smart classification:
 
 ```bash
-# 选择提供商: deepseek, openai, openrouter, anthropic
+# Choose provider: deepseek, openai, openrouter, anthropic
 LLM_PROVIDER=deepseek
 
-# 根据选择的提供商配置对应的 API Key
+# Configure the API key for your chosen provider
 DEEPSEEK_API_KEY=sk-your-key-here
 # OPENAI_API_KEY=sk-your-key-here
 # OPENROUTER_API_KEY=sk-your-key-here
 # ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-如果不配置任何 API key，系统会使用关键词匹配进行基础分类。
+If no API key is configured, the system falls back to keyword-based basic classification.
 
-### 相关文档
+### Related Documentation
 
-- 完整功能说明：`docs/oasf-classification.md`
-- 后台分类指南：`docs/background-classification-guide.md`
-- 验证规则：`docs/classification-validation-rules.md`
-- 升级总结：`discuss/oasf-upgrade-summary.md`（历史记录）
-- OASF 规范：https://github.com/agntcy/oasf
+- Full feature documentation: `docs/oasf-classification.md`
+- Background classification guide: `docs/background-classification-guide.md`
+- Validation rules: `docs/classification-validation-rules.md`
+- Upgrade summary: `discuss/oasf-upgrade-summary.md` (historical)
+- OASF specification: https://github.com/agntcy/oasf
 
 ## External Dependencies
 
-### 区块链相关
-- Web3.py：与 Ethereum 网络交互
-- Sepolia 测试网：ERC-8004 合约部署网络
-- IPFS：元数据存储（通过公共网关访问）
+### Blockchain
+- Web3.py: Ethereum network interaction
+- Sepolia Testnet: ERC-8004 contract deployment network
+- IPFS: Metadata storage (accessed via public gateways)
 
-### AI & 分类相关
-- LLM 提供商（可选）：DeepSeek、OpenAI、OpenRouter、Anthropic Claude
-- OASF v0.8.0：开放代理服务框架标准（agent0-py）
+### AI & Classification
+- LLM providers (optional): DeepSeek, OpenAI, OpenRouter, Anthropic Claude
+- OASF v0.8.0: Open Agent Service Framework standard (agent0-py)
 
-### 后端关键依赖
-- FastAPI：Web 框架
-- SQLAlchemy 2.x：ORM
-- APScheduler：定时任务
-- structlog：结构化日志
-- httpx：异步 HTTP 客户端
-- uv：包管理器（替代 pip/poetry）
+### Backend Key Dependencies
+- FastAPI: Web framework
+- SQLAlchemy 2.x: ORM
+- APScheduler: Scheduled tasks
+- structlog: Structured logging
+- httpx: Async HTTP client
+- uv: Package manager (replaces pip/poetry)
 
-### 前端关键依赖
-- Next.js 16.0.1（App Router，不是 Pages Router）
+### Frontend Key Dependencies
+- Next.js 16.0.1 (App Router, not Pages Router)
 - React 19.2.0
 - Tailwind CSS v4
 - TypeScript 5.x
 
-## RPC 优化与事件驱动架构 (NEW - 2025-11-15)
+## RPC Optimization and Event-Driven Architecture (NEW - 2025-11-15)
 
-### 背景
+### Background
 
-优化前的问题：
-- 单日 RPC 请求量达到 686K
-- 出现 328K 的 429 错误（请求过于频繁）
-- Reputation 每 30 分钟全量查询所有 agents（1777+ agents × 48次/天 = 85K 次/天）
+Issues before optimization:
+- Daily RPC requests reached 686K
+- 328K 429 errors (too many requests)
+- Reputation polled all agents every 30 minutes (1777+ agents x 48 times/day = 85K times/day)
 
-### 革命性改进：事件驱动 Reputation
+### Revolutionary Improvement: Event-Driven Reputation
 
-**优化前（全量轮询）**：
-- 每 30 分钟查询所有 agents 的 reputation
-- 每天 85,296 次 getSummary() 调用
-- 99% 的请求都是浪费（大部分 agents 没有新反馈）
+**Before (Full Polling):**
+- Queried all agents' reputation every 30 minutes
+- 85,296 getSummary() calls per day
+- 99% of requests were wasted (most agents had no new feedback)
 
-**优化后（事件驱动）**：
-- 监听链上 `NewFeedback` 和 `FeedbackRevoked` 事件
-- **零定期轮询**
-- 只在有新反馈时才查询对应 agent
-- 每天约 50-100 次 getSummary() 调用
-- **降低 99.88%** ✨
+**After (Event-Driven):**
+- Listens to on-chain `NewFeedback` and `FeedbackRevoked` events
+- **Zero periodic polling**
+- Only queries the corresponding agent when new feedback arrives
+- ~50-100 getSummary() calls per day
+- **99.88% reduction**
 
-### 优化成果
+### Optimization Results
 
-| 指标 | 优化前 | 优化后 | 降幅 |
-|-----|--------|--------|------|
-| Blockchain 同步 | 288次/天 | 144次/天 | ↓ 50% |
-| Reputation 同步 | 48次/天 | 0次/天（事件驱动） | ↓ 100% |
-| Reputation 请求 | 85,296次/天 | ~100次/天 | ↓ 99.88% |
-| **总请求量** | **~686K/天** | **~300K/天** | **↓ 56%** |
-| 429 错误率 | 32.8% | < 0.1% | ↓ 99% |
-| **Credit 成本** | **$X/天** | **$0.44X/天** | **↓ 56%** |
+| Metric | Before | After | Reduction |
+|--------|--------|-------|-----------|
+| Blockchain sync | 288/day | 144/day | 50% |
+| Reputation sync | 48/day | 0/day (event-driven) | 100% |
+| Reputation requests | 85,296/day | ~100/day | 99.88% |
+| **Total requests** | **~686K/day** | **~300K/day** | **56%** |
+| 429 error rate | 32.8% | < 0.1% | 99% |
+| **Credit cost** | **$X/day** | **$0.44X/day** | **56%** |
 
-### 核心实现
+### Core Implementation
 
-**文件**: `backend/src/services/blockchain_sync.py`
+**File**: `backend/src/services/blockchain_sync.py`
 
 ```python
-# 在 blockchain sync 中同时监听 reputation 事件
+# Listen to reputation events during blockchain sync
 feedback_events = self.reputation_contract.events.NewFeedback.get_logs(
     from_block=from_block,
     to_block=to_block
 )
 
-# 只更新有新反馈的 agents
+# Only update agents with new feedback
 for event in feedback_events:
     await self._process_feedback_event(db, event)
 ```
 
-**文件**: `backend/src/services/scheduler.py`
+**File**: `backend/src/services/scheduler.py`
 
 ```python
-# Blockchain sync: 每 10 分钟（固定时间触发）
+# Blockchain sync: every 10 minutes (fixed-time trigger)
 scheduler.add_job(
     sync_blockchain,
     trigger=CronTrigger(minute='*/10'),
     ...
 )
 
-# Reputation sync: 完全移除，改为事件驱动
-# 无需任何定时任务
+# Reputation sync: completely removed, now event-driven
+# No scheduled task needed
 ```
 
-### 架构优势
+### Architecture Advantages
 
-1. **极佳可扩展性**：Agent 数量增长时，Reputation 成本几乎不变
-2. **更好的实时性**：更新延迟从 30分钟 → 10分钟
-3. **零浪费**：每个请求都有意义，无无效轮询
-4. **固定时间触发**：避免启动时的请求峰值
+1. **Excellent scalability**: Reputation cost remains nearly constant as agent count grows
+2. **Better real-time performance**: Update latency reduced from 30 min → 10 min
+3. **Zero waste**: Every request is meaningful, no useless polling
+4. **Fixed-time triggers**: Avoids request spikes at startup
 
-### 相关文档
+### Related Documentation
 
-完整优化文档：`docs/rpc-optimization-final.md`
+Full optimization documentation: `docs/rpc-optimization-final.md`
 
-### 监控命令
+### Monitoring Commands
 
 ```bash
-# 查看同步任务
+# View sync tasks
 tail -f backend/logs/*.log | grep -E 'sync_started|events_found|reputation_updated_from_event'
 
-# 查看 reputation 事件统计
+# View reputation event statistics
 tail -f backend/logs/*.log | grep 'NewFeedback\|FeedbackRevoked'
 ```

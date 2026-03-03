@@ -80,7 +80,7 @@ export function WalletButton() {
                      text-sm font-medium rounded-lg hover:opacity-90 transition-opacity
                      disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isConnecting ? '连接中...' : '连接钱包'}
+          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
         </button>
 
         {/* Connector picker panel (desktop with multiple connectors) */}
@@ -90,7 +90,7 @@ export function WalletButton() {
                        shadow-lg border border-[#e5e5e5] dark:border-[#333] py-2 z-50"
           >
             <p className="px-4 py-1.5 text-xs text-[#6e6e73] dark:text-[#86868b] font-medium">
-              选择连接方式
+              Select Connection
             </p>
 
             {/* Browser extension wallet */}
@@ -113,9 +113,9 @@ export function WalletButton() {
                   </svg>
                 </span>
                 <div>
-                  <p className="font-medium">浏览器钱包</p>
+                  <p className="font-medium">Browser Wallet</p>
                   <p className="text-xs text-[#6e6e73] dark:text-[#86868b]">
-                    MetaMask 等浏览器插件
+                    MetaMask and other extensions
                   </p>
                 </div>
               </button>
@@ -144,7 +144,7 @@ export function WalletButton() {
                 <div>
                   <p className="font-medium">WalletConnect</p>
                   <p className="text-xs text-[#6e6e73] dark:text-[#86868b]">
-                    扫码或移动端钱包
+                    Scan QR or mobile wallet
                   </p>
                 </div>
               </button>
@@ -195,7 +195,7 @@ export function WalletButton() {
                      shadow-lg border border-[#e5e5e5] dark:border-[#333] py-1 z-50"
         >
           <div className="px-4 py-2 border-b border-[#e5e5e5] dark:border-[#333]">
-            <p className="text-xs text-[#6e6e73] dark:text-[#86868b]">网络</p>
+            <p className="text-xs text-[#6e6e73] dark:text-[#86868b]">Network</p>
             <p
               className={`text-sm font-medium ${
                 isSupported
@@ -204,7 +204,7 @@ export function WalletButton() {
               }`}
             >
               {networkName}
-              {!isSupported && ' (不支持)'}
+              {!isSupported && ' (Unsupported)'}
             </p>
           </div>
           <button
@@ -215,7 +215,7 @@ export function WalletButton() {
             className="w-full px-4 py-2 text-left text-sm text-red-500
                        hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors"
           >
-            断开连接
+            Disconnect
           </button>
         </div>
       )}

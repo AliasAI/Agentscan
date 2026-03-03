@@ -1,185 +1,185 @@
 # Agentscan - ERC-8004 AI Agent Explorer
 
-一个类似区块链浏览器的 Web 应用，用于探索和展示 ERC-8004 协议上的 AI 代理信息。
+A blockchain explorer-like web application for exploring and displaying AI agent information on the ERC-8004 protocol.
 
-## ✨ 核心功能
+## ✨ Key Features
 
-- 🔍 查看和搜索 AI 代理
-- 📊 展示网络统计数据和代理活动
-- 🏷️ OASF 自动分类（Skills & Domains）
-- 🌓 深色/浅色主题切换
-- 🔄 自动同步链上数据
+- 🔍 Browse and search AI agents
+- 📊 Display network statistics and agent activity
+- 🏷️ OASF automatic classification (Skills & Domains)
+- 🌓 Dark / Light theme toggle
+- 🔄 Automatic on-chain data synchronization
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 前置要求
+### Prerequisites
 
 - Node.js 18+
 - Python 3.11+
-- uv (Python 包管理器)
+- uv (Python package manager)
 
 ```bash
-# 安装 uv
+# Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### 启动开发环境
+### Start Development Environment
 
 ```bash
-# 同时启动前后端
+# Start both frontend and backend
 ./scripts/dev-all.sh
 
-# 或分别启动
-./scripts/dev-backend.sh  # 后端 (端口 8000)
-./scripts/dev-frontend.sh # 前端 (端口 3000)
+# Or start separately
+./scripts/dev-backend.sh  # Backend (port 8000)
+./scripts/dev-frontend.sh # Frontend (port 3000)
 ```
 
-### 访问应用
+### Access the Application
 
-- 前端：http://localhost:3000
-- 后端 API：http://localhost:8000
-- API 文档：http://localhost:8000/docs
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 agentscan/
 ├── frontend/              # Next.js 16 + React 19 + Tailwind CSS v4
-│   ├── app/              # 页面路由
-│   ├── components/       # React 组件
-│   ├── lib/              # API 客户端
-│   └── types/            # TypeScript 类型
+│   ├── app/              # Page routes
+│   ├── components/       # React components
+│   ├── lib/              # API client
+│   └── types/            # TypeScript types
 │
 ├── backend/              # FastAPI + SQLAlchemy + Web3.py
 │   ├── src/
-│   │   ├── api/         # API 路由
-│   │   ├── models/      # 数据库模型
-│   │   ├── services/    # 业务逻辑
-│   │   ├── taxonomies/  # OASF 分类数据
-│   │   └── core/        # 核心配置
-│   └── logs/            # 日志输出
+│   │   ├── api/         # API routes
+│   │   ├── models/      # Database models
+│   │   ├── services/    # Business logic
+│   │   ├── taxonomies/  # OASF taxonomy data
+│   │   └── core/        # Core configuration
+│   └── logs/            # Log output
 │
-├── scripts/             # 运行脚本
-├── docs/                # 正式文档
-└── discuss/             # 讨论和历史记录
+├── scripts/             # Run scripts
+├── docs/                # Official documentation
+└── discuss/             # Discussion and history
 ```
 
-## 🛠️ 技术栈
+## 🛠️ Tech Stack
 
-### 前端
+### Frontend
 - Next.js 16.0.1 (App Router)
 - React 19.2.0
 - TypeScript 5.x
 - Tailwind CSS v4
 
-### 后端
+### Backend
 - Python 3.11+
 - FastAPI
 - SQLAlchemy 2.x
-- Web3.py (Sepolia 网络)
-- uv (包管理器)
+- Web3.py (Sepolia network)
+- uv (package manager)
 
-### 数据库
-- SQLite (开发环境)
-- PostgreSQL (生产环境推荐)
+### Database
+- SQLite (development)
+- PostgreSQL (recommended for production)
 
-## 📖 核心功能说明
+## 📖 Core Features
 
-### 🔄 区块链同步
+### 🔄 Blockchain Sync
 
-- 自动从 Sepolia 网络同步 ERC-8004 合约数据
-- 批量处理区块（10000 块/批次）
-- 增量同步，避免重复处理
-- 定时任务：每 5 分钟同步一次
+- Automatically syncs ERC-8004 contract data from Sepolia network
+- Batch block processing (10,000 blocks/batch)
+- Incremental sync to avoid reprocessing
+- Scheduled task: sync every 5 minutes
 
-### 🏷️ OASF 自动分类
+### 🏷️ OASF Auto-Classification
 
-基于 [OASF v0.8.0](https://github.com/agntcy/oasf) 规范，自动为 AI Agent 打上标签：
+Automatically labels AI Agents based on the [OASF v0.8.0](https://github.com/agntcy/oasf) specification:
 
-- **136 个 Skills**：NLP、CV、Agent 编排、数据工程等
-- **204 个 Domains**：技术、金融、医疗、教育等
-- **智能分类**：支持 DeepSeek、OpenAI、OpenRouter、Anthropic
-- **后台异步**：不阻塞主服务，批量处理
+- **136 Skills**: NLP, CV, Agent orchestration, Data engineering, etc.
+- **204 Domains**: Technology, Finance, Healthcare, Education, etc.
+- **Smart classification**: Supports DeepSeek, OpenAI, OpenRouter, Anthropic
+- **Background async**: Non-blocking batch processing
 
-详细文档：[docs/oasf-classification.md](docs/oasf-classification.md)
+Detailed documentation: [docs/oasf-classification.md](docs/oasf-classification.md)
 
-## 🐳 Docker 部署
+## 🐳 Docker Deployment
 
 ```bash
-# 检查环境配置
+# Check environment configuration
 ./scripts/docker-check-env.sh
 
-# 部署完整应用
+# Deploy the full application
 ./scripts/docker-deploy.sh
 
-# 常用操作
-./scripts/docker-logs.sh    # 查看日志
-./scripts/docker-restart.sh # 重启服务
-./scripts/docker-stop.sh    # 停止服务
+# Common operations
+./scripts/docker-logs.sh    # View logs
+./scripts/docker-restart.sh # Restart services
+./scripts/docker-stop.sh    # Stop services
 ```
 
-详细指南：[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+Detailed guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
-## 📚 文档
+## 📚 Documentation
 
-- [部署指南](docs/DEPLOYMENT.md) - 完整的部署文档
-- [OASF 分类](docs/oasf-classification.md) - 自动分类功能说明
-- [后台分类](docs/background-classification-guide.md) - 异步批量分类
-- [验证规则](docs/classification-validation-rules.md) - 分类验证标准
-- [声誉同步](docs/reputation_sync_design.md) - 声誉系统设计
+- [Deployment Guide](docs/DEPLOYMENT.md) - Complete deployment documentation
+- [OASF Classification](docs/oasf-classification.md) - Auto-classification feature
+- [Background Classification](docs/background-classification-guide.md) - Async batch classification
+- [Validation Rules](docs/classification-validation-rules.md) - Classification validation standards
+- [Reputation Sync](docs/reputation_sync_design.md) - Reputation system design
 
-## 🔧 环境变量
+## 🔧 Environment Variables
 
-### 后端 (backend/.env)
+### Backend (backend/.env)
 
 ```env
-# 必需配置
+# Required
 SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
 
-# 可选配置
+# Optional
 DATABASE_URL=sqlite:///./8004scan.db
 DEBUG=true
 
-# OASF 分类（可选）
+# OASF Classification (optional)
 LLM_PROVIDER=deepseek  # deepseek, openai, openrouter, anthropic
 DEEPSEEK_API_KEY=sk-your-key-here
 ```
 
-### 前端 (frontend/.env.local)
+### Frontend (frontend/.env.local)
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-## 📊 API 端点
+## 📊 API Endpoints
 
-### 统计数据
-- `GET /api/stats` - 整体统计
+### Statistics
+- `GET /api/stats` - Overall statistics
 
-### 代理相关
-- `GET /api/agents` - 代理列表（分页、搜索、筛选）
-- `GET /api/agents/featured` - 精选代理
-- `GET /api/agents/{id}` - 代理详情
-- `POST /api/agents/{id}/classify` - 手动分类单个代理
-- `POST /api/agents/classify-all` - 批量分类
+### Agents
+- `GET /api/agents` - Agent list (pagination, search, filtering)
+- `GET /api/agents/featured` - Featured agents
+- `GET /api/agents/{id}` - Agent details
+- `POST /api/agents/{id}/classify` - Manually classify a single agent
+- `POST /api/agents/classify-all` - Batch classification
 
-### 网络相关
-- `GET /api/networks` - 网络列表
-- `GET /api/networks/{id}` - 网络详情
+### Networks
+- `GET /api/networks` - Network list
+- `GET /api/networks/{id}` - Network details
 
-### 活动记录
-- `GET /api/activities` - 最近活动
+### Activities
+- `GET /api/activities` - Recent activities
 
-## 🎯 代码质量标准
+## 🎯 Code Quality Standards
 
-- Python/TypeScript 文件不超过 300 行
-- 每个文件夹不超过 8 个文件
-- 遵循优雅的架构设计原则
-- 避免代码坏味道（僵化、冗余、循环依赖等）
+- Python/TypeScript files must not exceed 300 lines
+- No more than 8 files per directory
+- Follow elegant architecture design principles
+- Avoid code smells (rigidity, redundancy, circular dependencies, etc.)
 
-## 📝 开发指南
+## 📝 Development Guide
 
-### 前端开发
+### Frontend Development
 
 ```bash
 cd frontend
@@ -187,7 +187,7 @@ npm install
 npm run dev
 ```
 
-### 后端开发
+### Backend Development
 
 ```bash
 cd backend
@@ -195,17 +195,17 @@ uv sync
 uv run uvicorn src.main:app --reload
 ```
 
-### 数据库初始化
+### Database Initialization
 
 ```bash
 cd backend
 uv run python -m src.db.init_data
 ```
 
-## 🤝 贡献指南
+## 🤝 Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Issues and Pull Requests are welcome!
 
-## 📄 许可证
+## 📄 License
 
 MIT License
