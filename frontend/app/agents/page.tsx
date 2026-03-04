@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AgentCard } from '@/components/agent/AgentCard'
 import { SearchBar } from '@/components/common/SearchBar'
@@ -11,8 +12,17 @@ import { agentService } from '@/lib/api/services'
 import type { Agent } from '@/types'
 
 export default function AgentsPage() {
+  return (
+    <Suspense>
+      <AgentsPageContent />
+    </Suspense>
+  )
+}
+
+function AgentsPageContent() {
+  const searchParams = useSearchParams()
   const [agents, setAgents] = useState<Agent[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const [selectedNetwork, setSelectedNetwork] = useState('all')
   const [filters, setFilters] = useState<FilterOptions>({})
   const [sortOption, setSortOption] = useState<SortOption>({ field: 'created_at', order: 'desc' })
@@ -187,7 +197,7 @@ export default function AgentsPage() {
 
           {/* Search bar */}
           <div className="max-w-2xl">
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar defaultValue={searchQuery} onSearch={handleSearch} />
           </div>
         </div>
       </div>

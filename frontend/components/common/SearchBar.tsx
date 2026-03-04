@@ -14,7 +14,9 @@ const PLACEHOLDER_SUGGESTIONS = [
 
 interface SearchBarProps {
   placeholder?: string;
+  defaultValue?: string;
   onSearch?: (query: string) => void;
+  onSubmit?: (query: string) => void;
   debounceDelay?: number;
 }
 
@@ -107,10 +109,12 @@ function useTypingPlaceholder(suggestions: string[], typingSpeed = 30, pauseDura
 }
 
 export function SearchBar({
+  defaultValue = '',
   onSearch,
+  onSubmit,
   debounceDelay = 500,
 }: SearchBarProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(defaultValue);
   const debouncedQuery = useDebounce(query, debounceDelay);
   const { displayText, isFocused, setIsFocused } = useTypingPlaceholder(PLACEHOLDER_SUGGESTIONS);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -122,7 +126,11 @@ export function SearchBar({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch?.(query);
+    if (onSubmit) {
+      onSubmit(query);
+    } else {
+      onSearch?.(query);
+    }
   };
 
   // 决定显示什么占位符

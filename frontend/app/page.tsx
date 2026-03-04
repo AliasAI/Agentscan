@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SearchBar } from '@/components/common/SearchBar'
 import { AgentCard } from '@/components/agent/AgentCard'
@@ -15,6 +16,7 @@ import { statsService, agentService, activityService, taxonomyService } from '@/
 import type { Agent, Activity, Stats, RegistrationTrendData, CategoryDistributionData, TrendingAgentsResponse } from '@/types'
 
 export default function HomePage() {
+  const router = useRouter()
   const [stats, setStats] = useState<Stats | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [activities, setActivities] = useState<Activity[]>([])
@@ -131,7 +133,13 @@ export default function HomePage() {
 
               <div className="flex justify-center mb-5">
                 <div className="w-full max-w-lg">
-                  <SearchBar onSearch={setSearchQuery} />
+                  <SearchBar
+                    onSearch={setSearchQuery}
+                    onSubmit={(query) => {
+                      const params = query ? `?search=${encodeURIComponent(query)}` : ''
+                      router.push(`/agents${params}`)
+                    }}
+                  />
                 </div>
               </div>
 
