@@ -180,7 +180,7 @@ export function getTxExplorerUrl(
  * Get icon type for a network (used by NetworkIcons component)
  */
 export function getNetworkIconType(networkName: string): string {
-  return NETWORKS_BY_NAME[networkName]?.iconType || 'default'
+  return NETWORKS_BY_NAME[networkName]?.iconType || NETWORKS[networkName]?.iconType || 'default'
 }
 
 /**

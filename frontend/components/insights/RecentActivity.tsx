@@ -89,17 +89,17 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                   >
                     {item.agent_name}
                   </Link>
+                  <NetworkIcon networkName={item.network_key} className="w-3.5 h-3.5 shrink-0" />
                   <span className="text-[10px] text-[#a3a3a3] shrink-0">
                     #{item.token_id}
                   </span>
                 </div>
               </div>
 
-              {/* Network */}
-              <div className="hidden sm:flex items-center gap-1 shrink-0">
-                <NetworkIcon networkName={item.network_key} className="w-3.5 h-3.5" />
-                <span className="text-[11px] text-[#737373] capitalize">{item.network_key}</span>
-              </div>
+              {/* Network name (desktop only) */}
+              <span className="hidden sm:inline text-[11px] text-[#737373] capitalize shrink-0">
+                {item.network_key}
+              </span>
 
               {/* Tx hash */}
               {item.tx_hash && (

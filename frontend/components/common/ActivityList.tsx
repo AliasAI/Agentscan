@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Activity } from '@/types';
 import { formatRelativeTime, formatAddress } from '@/lib/utils/format';
+import { NetworkIcon } from '@/components/common/NetworkIcons';
 
 interface ActivityListProps {
   activities: Activity[];
@@ -78,12 +79,17 @@ export function ActivityList({ activities }: ActivityListProps) {
 
               {/* Agent name */}
               {activity.agent && (
-                <p className="text-[11px] text-[#525252] dark:text-[#a3a3a3] truncate mb-0.5">
-                  {activity.agent.name}
-                  {activity.agent.token_id && (
-                    <span className="text-[#a3a3a3] dark:text-[#525252]"> #{activity.agent.token_id}</span>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <p className="text-[11px] text-[#525252] dark:text-[#a3a3a3] truncate">
+                    {activity.agent.name}
+                    {activity.agent.token_id && (
+                      <span className="text-[#a3a3a3] dark:text-[#525252]"> #{activity.agent.token_id}</span>
+                    )}
+                  </p>
+                  {activity.agent.network_id && (
+                    <NetworkIcon networkName={activity.agent.network_id} className="w-3.5 h-3.5 shrink-0" />
                   )}
-                </p>
+                </div>
               )}
 
               {/* Transaction hash */}
