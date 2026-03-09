@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  NetworkAbstract,
   NetworkEthereum,
   NetworkPolygon,
   NetworkBinanceSmartChain,
@@ -15,6 +16,10 @@ import {
   NetworkGnosis,
   NetworkTaiko,
   NetworkMegaEth,
+  NetworkMantle,
+  NetworkMetisAndromeda,
+  NetworkSoneium,
+  NetworkXLayer,
 } from '@web3icons/react'
 import type { IconComponent } from '@web3icons/react'
 import { getNetworkIconType } from '@/lib/networks'
@@ -53,6 +58,7 @@ export function DefaultNetworkIcon({ className = 'w-5 h-5' }: IconProps) {
 
 // Map our network icon types to web3icons components
 const ICON_COMPONENTS: Record<string, IconComponent> = {
+  abstract: NetworkAbstract,
   ethereum: NetworkEthereum,
   polygon: NetworkPolygon,
   bsc: NetworkBinanceSmartChain,
@@ -67,6 +73,10 @@ const ICON_COMPONENTS: Record<string, IconComponent> = {
   gnosis: NetworkGnosis,
   taiko: NetworkTaiko,
   megaeth: NetworkMegaEth,
+  mantle: NetworkMantle,
+  metis: NetworkMetisAndromeda,
+  soneium: NetworkSoneium,
+  xlayer: NetworkXLayer,
 }
 
 interface NetworkIconProps {

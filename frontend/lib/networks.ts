@@ -35,76 +35,111 @@ const TESTNET_CONTRACTS = {
  * Keep in sync with backend/src/core/networks_config.py
  */
 export const NETWORKS: Record<string, NetworkConfig> = {
-  // === Mainnets (14 networks) ===
-  ethereum: {
-    id: 'ethereum', name: 'Ethereum', chainId: 1,
-    explorerUrl: 'https://etherscan.io',
-    contracts: MAINNET_CONTRACTS, iconType: 'ethereum', enabled: true,
-  },
-  polygon: {
-    id: 'polygon', name: 'Polygon', chainId: 137,
-    explorerUrl: 'https://polygonscan.com',
-    contracts: MAINNET_CONTRACTS, iconType: 'polygon', enabled: true,
-  },
-  base: {
-    id: 'base', name: 'Base', chainId: 8453,
-    explorerUrl: 'https://basescan.org',
-    contracts: MAINNET_CONTRACTS, iconType: 'base', enabled: true,
+  // === Mainnets (21 networks) ===
+  abstract: {
+    id: 'abstract', name: 'Abstract', chainId: 2741,
+    explorerUrl: 'https://abscan.org',
+    contracts: MAINNET_CONTRACTS, iconType: 'abstract', enabled: true,
   },
   arbitrum: {
     id: 'arbitrum', name: 'Arbitrum', chainId: 42161,
     explorerUrl: 'https://arbiscan.io',
     contracts: MAINNET_CONTRACTS, iconType: 'arbitrum', enabled: true,
   },
-  optimism: {
-    id: 'optimism', name: 'Optimism', chainId: 10,
-    explorerUrl: 'https://optimistic.etherscan.io',
-    contracts: MAINNET_CONTRACTS, iconType: 'optimism', enabled: true,
-  },
-  linea: {
-    id: 'linea', name: 'Linea', chainId: 59144,
-    explorerUrl: 'https://lineascan.build',
-    contracts: MAINNET_CONTRACTS, iconType: 'linea', enabled: true,
-  },
-  scroll: {
-    id: 'scroll', name: 'Scroll', chainId: 534352,
-    explorerUrl: 'https://scrollscan.com',
-    contracts: MAINNET_CONTRACTS, iconType: 'scroll', enabled: true,
-  },
   avalanche: {
     id: 'avalanche', name: 'Avalanche', chainId: 43114,
     explorerUrl: 'https://snowscan.xyz',
     contracts: MAINNET_CONTRACTS, iconType: 'avalanche', enabled: true,
   },
-  celo: {
-    id: 'celo', name: 'Celo', chainId: 42220,
-    explorerUrl: 'https://celoscan.io',
-    contracts: MAINNET_CONTRACTS, iconType: 'celo', enabled: true,
-  },
-  gnosis: {
-    id: 'gnosis', name: 'Gnosis', chainId: 100,
-    explorerUrl: 'https://gnosisscan.io',
-    contracts: MAINNET_CONTRACTS, iconType: 'gnosis', enabled: true,
-  },
-  taiko: {
-    id: 'taiko', name: 'Taiko', chainId: 167000,
-    explorerUrl: 'https://taikoscan.io',
-    contracts: MAINNET_CONTRACTS, iconType: 'taiko', enabled: true,
-  },
-  megaeth: {
-    id: 'megaeth', name: 'MegaETH', chainId: 4326,
-    explorerUrl: 'https://megaeth.blockscout.com',
-    contracts: MAINNET_CONTRACTS, iconType: 'megaeth', enabled: true,
+  base: {
+    id: 'base', name: 'Base', chainId: 8453,
+    explorerUrl: 'https://basescan.org',
+    contracts: MAINNET_CONTRACTS, iconType: 'base', enabled: true,
   },
   'bsc-1': {
     id: 'bsc-1', name: 'BNB Smart Chain', chainId: 56,
     explorerUrl: 'https://bscscan.com',
     contracts: MAINNET_CONTRACTS, iconType: 'bsc', enabled: true,
   },
+  celo: {
+    id: 'celo', name: 'Celo', chainId: 42220,
+    explorerUrl: 'https://celoscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'celo', enabled: true,
+  },
+  ethereum: {
+    id: 'ethereum', name: 'Ethereum', chainId: 1,
+    explorerUrl: 'https://etherscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'ethereum', enabled: true,
+  },
+  gnosis: {
+    id: 'gnosis', name: 'Gnosis', chainId: 100,
+    explorerUrl: 'https://gnosisscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'gnosis', enabled: true,
+  },
+  goat: {
+    id: 'goat', name: 'GOAT Network', chainId: 2345,
+    explorerUrl: 'https://explorer.goat.network',
+    contracts: MAINNET_CONTRACTS, iconType: 'default', enabled: true,
+  },
+  linea: {
+    id: 'linea', name: 'Linea', chainId: 59144,
+    explorerUrl: 'https://lineascan.build',
+    contracts: MAINNET_CONTRACTS, iconType: 'linea', enabled: true,
+  },
+  mantle: {
+    id: 'mantle', name: 'Mantle', chainId: 5000,
+    explorerUrl: 'https://mantlescan.xyz',
+    contracts: MAINNET_CONTRACTS, iconType: 'mantle', enabled: true,
+  },
+  megaeth: {
+    id: 'megaeth', name: 'MegaETH', chainId: 4326,
+    explorerUrl: 'https://megaeth.blockscout.com',
+    contracts: MAINNET_CONTRACTS, iconType: 'megaeth', enabled: true,
+  },
+  metis: {
+    id: 'metis', name: 'Metis', chainId: 1088,
+    explorerUrl: 'https://andromeda-explorer.metis.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'metis', enabled: true,
+  },
   monad: {
     id: 'monad', name: 'Monad', chainId: 143,
     explorerUrl: 'https://monadscan.com',
     contracts: MAINNET_CONTRACTS, iconType: 'monad', enabled: true,
+  },
+  optimism: {
+    id: 'optimism', name: 'Optimism', chainId: 10,
+    explorerUrl: 'https://optimistic.etherscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'optimism', enabled: true,
+  },
+  polygon: {
+    id: 'polygon', name: 'Polygon', chainId: 137,
+    explorerUrl: 'https://polygonscan.com',
+    contracts: MAINNET_CONTRACTS, iconType: 'polygon', enabled: true,
+  },
+  scroll: {
+    id: 'scroll', name: 'Scroll', chainId: 534352,
+    explorerUrl: 'https://scrollscan.com',
+    contracts: MAINNET_CONTRACTS, iconType: 'scroll', enabled: true,
+  },
+  skale: {
+    id: 'skale', name: 'SKALE', chainId: 1187947933,
+    explorerUrl: 'https://skale-base-explorer.skalenodes.com',
+    contracts: MAINNET_CONTRACTS, iconType: 'default', enabled: true,
+  },
+  soneium: {
+    id: 'soneium', name: 'Soneium', chainId: 1868,
+    explorerUrl: 'https://soneium.blockscout.com',
+    contracts: MAINNET_CONTRACTS, iconType: 'soneium', enabled: true,
+  },
+  taiko: {
+    id: 'taiko', name: 'Taiko', chainId: 167000,
+    explorerUrl: 'https://taikoscan.io',
+    contracts: MAINNET_CONTRACTS, iconType: 'taiko', enabled: true,
+  },
+  xlayer: {
+    id: 'xlayer', name: 'XLayer', chainId: 196,
+    explorerUrl: 'https://www.oklink.com/xlayer',
+    contracts: MAINNET_CONTRACTS, iconType: 'xlayer', enabled: true,
   },
   // === Testnet (disabled) ===
   sepolia: {
