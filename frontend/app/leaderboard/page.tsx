@@ -81,7 +81,25 @@ export default function LeaderboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Time period selector */}
+          <div className="flex items-center bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg overflow-hidden">
+            {['7d', '30d', 'All'].map((period) => (
+              <button
+                key={period}
+                disabled={period !== 'All'}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  period === 'All'
+                    ? 'bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a]'
+                    : 'text-[#d4d4d4] dark:text-[#404040] cursor-not-allowed'
+                }`}
+                title={period !== 'All' ? 'Coming soon' : undefined}
+              >
+                {period}
+              </button>
+            ))}
+          </div>
+
           {/* Sort selector */}
           <div className="flex items-center bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg overflow-hidden">
             {SORT_OPTIONS.map((opt) => (
@@ -106,9 +124,9 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* Score legend */}
-      <div className="flex flex-wrap items-center gap-4 mb-6 text-[11px] text-[#737373]">
-        <span className="font-medium text-[#525252] dark:text-[#a3a3a3]">Score Dimensions:</span>
+      {/* Score legend + trend legend */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6 text-[11px] text-[#737373]">
+        <span className="font-medium text-[#525252] dark:text-[#a3a3a3]">Dimensions:</span>
         {[
           { color: 'bg-green-500', label: 'Service (15%)', tip: 'Ratio of healthy endpoints' },
           { color: 'bg-blue-500', label: 'Usage (60%)', tip: 'Feedback count + reputation score' },
@@ -128,6 +146,15 @@ export default function LeaderboardPage() {
             </span>
           </span>
         ))}
+        <span className="text-[#d4d4d4] dark:text-[#404040]">|</span>
+        <span className="flex items-center gap-1">
+          <svg width="8" height="8" viewBox="0 0 10 10" className="text-green-500"><path d="M5 2L8 6H2L5 2Z" fill="currentColor" /></svg>
+          Active
+        </span>
+        <span className="flex items-center gap-1">
+          <svg width="8" height="8" viewBox="0 0 10 10" className="text-[#d4d4d4] dark:text-[#404040]"><path d="M5 8L2 4H8L5 8Z" fill="currentColor" /></svg>
+          Stale
+        </span>
       </div>
 
       {loading ? (

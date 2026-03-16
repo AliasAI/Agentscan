@@ -3,34 +3,16 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, defer
 from sqlalchemy import func
 
 from src.db.database import get_db
 from src.models import Agent
-from src.schemas.agent import AgentResponse
+from src.schemas.agent import AgentResponse, AgentListItem
 from src.schemas.common import PaginatedResponse
 from src.services.metadata_processor import refresh_agent_metadata
 
 router = APIRouter()
-
-# Minimum description length to be considered "quality"
-MIN_DESCRIPTION_LENGTH = 20
-
-# Names that indicate incomplete/spam agents
-INVALID_NAMES = ["Unknown Agent", "Unknown", "Untitled", "Test", "test"]
-
-# Description patterns that indicate fetch failures or placeholders
-INVALID_DESCRIPTION_PATTERNS = [
-    "fetch failed",
-    "metadata fetch",
-    "no metadata",
-    "error",
-    "failed to",
-    "not found",
-    "undefined",
-    "null",
-]
 
 
 def apply_quality_filter(query, quality: str):
@@ -38,30 +20,15 @@ def apply_quality_filter(query, quality: str):
 
     Quality levels:
     - 'all': No filtering
-    - 'basic': Has real name (not "Unknown Agent") and meaningful description
+    - 'basic': Pre-computed is_quality flag (real name + meaningful description)
     - 'verified': Basic + has reputation (score > 0 or count > 0)
     """
     if quality == "all":
         return query
 
-    # Basic: has meaningful name and description
-    # Exclude placeholder names
-    query = query.filter(
-        Agent.name.isnot(None),
-        Agent.name != "",
-        Agent.name.notin_(INVALID_NAMES),
-        Agent.description.isnot(None),
-        func.length(Agent.description) >= MIN_DESCRIPTION_LENGTH,
-    )
-
-    # Exclude descriptions that indicate errors/failures
-    for pattern in INVALID_DESCRIPTION_PATTERNS:
-        query = query.filter(
-            ~func.lower(Agent.description).contains(pattern.lower())
-        )
+    query = query.filter(Agent.is_quality == True)  # noqa: E712
 
     if quality == "verified":
-        # Verified: also has some reputation activity
         query = query.filter(
             (Agent.reputation_score > 0) | (Agent.reputation_count > 0)
         )
@@ -75,7 +42,7 @@ METADATA_STALE_SECONDS = 3600  # 1 hour
 ALLOWED_SORT_FIELDS = {"created_at", "name", "reputation_score"}
 
 
-@router.get("/agents", response_model=PaginatedResponse[AgentResponse])
+@router.get("/agents", response_model=PaginatedResponse[AgentListItem])
 async def get_agents(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -91,21 +58,27 @@ async def get_agents(
 ):
     """Get agent list with sorting, filtering, pagination and search"""
 
-    query = db.query(Agent).options(joinedload(Agent.network))
+    # Defer heavy JSON columns not needed in list view
+    query = db.query(Agent).options(
+        joinedload(Agent.network),
+        defer(Agent.on_chain_data),
+        defer(Agent.endpoint_status),
+    )
 
-    # Quality filtering (applied first)
+    # Quality filtering (uses composite index)
     query = apply_quality_filter(query, quality)
 
     # Network filtering
     if network and network != "all":
         query = query.filter(Agent.network_id == network)
 
-    # Search functionality
+    # Case-insensitive search
     if search:
+        term = search.lower()
         query = query.filter(
-            (Agent.name.contains(search)) |
-            (Agent.address.contains(search)) |
-            (Agent.description.contains(search))
+            (func.lower(Agent.name).contains(term))
+            | (Agent.address.contains(search))
+            | (func.lower(Agent.description).contains(term))
         )
 
     # Reputation score filtering
@@ -125,15 +98,14 @@ async def get_agents(
     column = getattr(Agent, field)
     query = query.order_by(column.asc() if sort_order == "asc" else column.desc())
 
-    # Get total count before pagination
-    total = query.count()
+    # Optimized COUNT: strip ORDER BY and skip ORM hydration
+    total = query.with_entities(func.count(Agent.id)).order_by(None).scalar()
     total_pages = (total + page_size - 1) // page_size
 
     # Apply pagination
     agents = query.offset((page - 1) * page_size).limit(page_size).all()
 
-    # Convert to response with network_name
-    items = [AgentResponse.from_orm_with_network(agent) for agent in agents]
+    items = [AgentListItem.from_orm_with_network(agent) for agent in agents]
 
     return PaginatedResponse(
         items=items,
@@ -154,11 +126,14 @@ async def get_trending_agents(
     All lists are filtered to show only quality agents (with name + description).
     """
 
-    # Base query with quality filter (basic level)
     def base_query():
         return apply_quality_filter(
-            db.query(Agent).options(joinedload(Agent.network)),
-            "basic"
+            db.query(Agent).options(
+                joinedload(Agent.network),
+                defer(Agent.on_chain_data),
+                defer(Agent.endpoint_status),
+            ),
+            "basic",
         )
 
     # Top Ranked: highest reputation score (must have reviews)
@@ -188,29 +163,33 @@ async def get_trending_agents(
     )
 
     return {
-        "top_ranked": [AgentResponse.from_orm_with_network(a) for a in top_ranked],
-        "featured": [AgentResponse.from_orm_with_network(a) for a in featured],
-        "trending": [AgentResponse.from_orm_with_network(a) for a in trending],
+        "top_ranked": [AgentListItem.from_orm_with_network(a) for a in top_ranked],
+        "featured": [AgentListItem.from_orm_with_network(a) for a in featured],
+        "trending": [AgentListItem.from_orm_with_network(a) for a in trending],
     }
 
 
-@router.get("/agents/featured", response_model=list[AgentResponse])
+@router.get("/agents/featured", response_model=list[AgentListItem])
 async def get_featured_agents(db: Session = Depends(get_db)):
-    """获取精选代理（前8个）"""
+    """Get featured agents (top 8 by reputation)"""
 
     agents = (
         db.query(Agent)
-        .options(joinedload(Agent.network))
+        .options(
+            joinedload(Agent.network),
+            defer(Agent.on_chain_data),
+            defer(Agent.endpoint_status),
+        )
         .order_by(Agent.reputation_score.desc())
         .limit(8)
         .all()
     )
-    return [AgentResponse.from_orm_with_network(agent) for agent in agents]
+    return [AgentListItem.from_orm_with_network(agent) for agent in agents]
 
 
 @router.get("/agents/{agent_id}", response_model=AgentResponse)
 async def get_agent(agent_id: str, db: Session = Depends(get_db)):
-    """获取代理详情 (triggers on-demand metadata refresh if stale)"""
+    """Get agent detail (triggers on-demand metadata refresh if stale)"""
 
     agent = (
         db.query(Agent)

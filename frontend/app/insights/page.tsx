@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { NetworkSelector } from '@/components/common/NetworkSelector'
-import { StatsCards, StatIcons } from '@/components/insights/StatsCards'
+import { StatsCards } from '@/components/insights/StatsCards'
 import { TrendCharts } from '@/components/insights/TrendCharts'
 import { RecentActivity } from '@/components/insights/RecentActivity'
 import { analyticsService, endpointHealthService } from '@/lib/api/services'
@@ -57,7 +57,6 @@ export default function InsightsPage() {
     {
       label: 'Active Agents',
       value: analyticsData.stats.active_agents,
-      icon: StatIcons.activeAgents,
       color: 'green' as const,
       tooltip: 'Agents with working endpoints or reputation feedback',
       subtitle: `${analyticsData.stats.quality_rate}% of total`,
@@ -65,14 +64,12 @@ export default function InsightsPage() {
     {
       label: 'Working Endpoints',
       value: analyticsData.stats.agents_with_working_endpoints,
-      icon: StatIcons.workingEndpoints,
       color: 'blue' as const,
       tooltip: 'Agents with reachable HTTP endpoints',
     },
     {
       label: 'Total Feedbacks',
       value: quickStats.total_feedbacks || analyticsData.stats.agents_with_reputation,
-      icon: StatIcons.totalFeedbacks,
       color: 'purple' as const,
       tooltip: 'Total on-chain feedback submissions',
     },

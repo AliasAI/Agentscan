@@ -59,6 +59,9 @@ class Agent(Base):
     domains = Column(JSON, nullable=True)  # List of domain slugs: ["domain_category/domain_name"]
     classification_source = Column(String(20), nullable=True)  # 'metadata' or 'ai' - indicates source of classification
 
+    # Pre-computed quality flag (has real name + meaningful description)
+    is_quality = Column(Boolean, default=False, index=True)
+
     # ERC-8004 off-chain active field (from Registration JSON)
     is_active = Column(Boolean, nullable=True)  # None = unknown, True/False from metadata
     metadata_refreshed_at = Column(DateTime, nullable=True)  # Last metadata refresh time

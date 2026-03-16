@@ -77,16 +77,27 @@ function NetworkRow({
   maxAgents: number
 }) {
   const barPercent = maxAgents > 0 ? (agentCount / maxAgents) * 100 : 0
+  const isEmpty = agentCount === 0
 
   return (
-    <div className="group flex items-center gap-4 px-5 py-3 hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a]/50 transition-colors border-b border-[#f5f5f5] dark:border-[#1a1a1a] last:border-b-0">
+    <Link
+      href={isEmpty ? '#' : `/agents?network=${network.id}`}
+      className={`group flex items-center gap-4 px-5 py-3 transition-colors border-b border-[#f5f5f5] dark:border-[#1a1a1a] last:border-b-0 ${
+        isEmpty
+          ? 'opacity-40 cursor-default'
+          : 'hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a]/50 cursor-pointer'
+      }`}
+      onClick={isEmpty ? (e: React.MouseEvent) => e.preventDefault() : undefined}
+    >
       {/* Icon + Name */}
       <div className="flex items-center gap-3 w-40 md:w-44 shrink-0">
         <div className="w-8 h-8 bg-[#f5f5f5] dark:bg-[#262626] rounded-lg flex items-center justify-center shrink-0">
           <NetworkIcon networkName={network.name} className="w-4 h-4" />
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa] truncate">
+          <div className={`text-sm font-medium truncate ${
+            isEmpty ? 'text-[#a3a3a3] dark:text-[#525252]' : 'text-[#0a0a0a] dark:text-[#fafafa] group-hover:text-[#3b82f6]'
+          } transition-colors`}>
             {network.name}
           </div>
           <div className="text-[11px] text-[#a3a3a3] md:hidden">Chain {network.chain_id}</div>
@@ -108,17 +119,21 @@ function NetworkRow({
             />
           )}
         </div>
-        <span className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] w-16 text-right tabular-nums shrink-0">
+        <span className={`text-sm font-semibold w-16 text-right tabular-nums shrink-0 ${
+          isEmpty ? 'text-[#d4d4d4] dark:text-[#404040]' : 'text-[#0a0a0a] dark:text-[#fafafa]'
+        }`}>
           {agentCount.toLocaleString()}
         </span>
       </div>
 
       {/* Explorer link */}
-      <a
-        href={network.explorer_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-1.5 text-[#d4d4d4] dark:text-[#404040] hover:text-[#0a0a0a] dark:hover:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-all shrink-0"
+      <span
+        onClick={(e: React.MouseEvent) => {
+          e.preventDefault()
+          e.stopPropagation()
+          window.open(network.explorer_url, '_blank')
+        }}
+        className="p-1.5 text-[#d4d4d4] dark:text-[#404040] hover:text-[#0a0a0a] dark:hover:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-lg transition-all shrink-0 cursor-pointer"
         title={`View on ${network.name} explorer`}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -126,8 +141,8 @@ function NetworkRow({
           <path d="M15 3H21V9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M10 14L21 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-      </a>
-    </div>
+      </span>
+    </Link>
   )
 }
 

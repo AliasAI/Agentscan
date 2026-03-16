@@ -55,21 +55,41 @@ export function RankTable({ items, page, totalPages, onPageChange }: RankTablePr
                 key={item.agent_id}
                 className="border-b border-[#f5f5f5] dark:border-[#1a1a1a] hover:bg-[#fafafa] dark:hover:bg-[#111111] transition-colors"
               >
-                {/* Rank */}
+                {/* Rank with trend indicator */}
                 <td className="py-3 px-3">
-                  <span className="text-sm font-semibold text-[#525252] dark:text-[#a3a3a3]">
-                    {item.rank}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-semibold text-[#525252] dark:text-[#a3a3a3] tabular-nums w-6 text-right">
+                      {item.rank}
+                    </span>
+                    {item.freshness_score > 50 ? (
+                      <svg width="10" height="10" viewBox="0 0 10 10" className="text-green-500 shrink-0">
+                        <path d="M5 2L8 6H2L5 2Z" fill="currentColor" />
+                      </svg>
+                    ) : item.freshness_score === 0 ? (
+                      <svg width="10" height="10" viewBox="0 0 10 10" className="text-[#d4d4d4] dark:text-[#404040] shrink-0">
+                        <path d="M5 8L2 4H8L5 8Z" fill="currentColor" />
+                      </svg>
+                    ) : (
+                      <span className="w-[10px]" />
+                    )}
+                  </div>
                 </td>
 
                 {/* Agent */}
                 <td className="py-3 px-3">
-                  <Link
-                    href={`/agents/${item.agent_id}`}
-                    className="font-medium text-sm text-[#0a0a0a] dark:text-[#fafafa] hover:underline truncate block max-w-[200px]"
-                  >
-                    {item.agent_name}
-                  </Link>
+                  <div className="flex items-center gap-1.5">
+                    <Link
+                      href={`/agents/${item.agent_id}`}
+                      className="font-medium text-sm text-[#0a0a0a] dark:text-[#fafafa] hover:underline truncate max-w-[200px]"
+                    >
+                      {item.agent_name}
+                    </Link>
+                    {item.freshness_score > 60 && item.usage_score > 30 && (
+                      <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded">
+                        Hot
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[11px] text-[#737373]">#{item.token_id}</span>
                     <div className={`w-1.5 h-1.5 rounded-full ${item.has_working_endpoints ? 'bg-green-500' : 'bg-gray-300'}`} />

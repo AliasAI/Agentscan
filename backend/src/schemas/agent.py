@@ -1,4 +1,4 @@
-"""Agent Pydantic 数据模式"""
+"""Agent Pydantic schemas"""
 
 from datetime import datetime
 from pydantic import BaseModel, Field
@@ -8,7 +8,7 @@ from src.models.agent import AgentStatus, SyncStatus
 
 
 class AgentBase(BaseModel):
-    """Agent 基础模式"""
+    """Shared agent fields"""
 
     name: str
     address: str
@@ -19,22 +19,58 @@ class AgentBase(BaseModel):
 
 
 class AgentCreate(AgentBase):
-    """创建 Agent 数据模式"""
-
     pass
 
 
 class AgentUpdate(BaseModel):
-    """更新 Agent 数据模式"""
-
     name: str | None = None
     description: str | None = None
     reputation_score: float | None = None
     status: AgentStatus | None = None
 
 
+class AgentListItem(AgentBase):
+    """Lightweight schema for list endpoints (excludes heavy JSON blobs)."""
+
+    id: str
+    created_at: datetime
+    updated_at: datetime
+    network_name: str | None = None
+    token_id: int | None = None
+    owner_address: str | None = None
+    reputation_count: int = 0
+    skills: list[str] | None = None
+    domains: list[str] | None = None
+    classification_source: str | None = None
+    is_active: bool | None = None
+
+    model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_orm_with_network(cls, agent) -> "AgentListItem":
+        return cls(
+            id=agent.id,
+            name=agent.name,
+            address=agent.address,
+            description=agent.description,
+            reputation_score=agent.reputation_score,
+            status=agent.status,
+            network_id=agent.network_id,
+            network_name=agent.network.name if agent.network else None,
+            created_at=agent.created_at,
+            updated_at=agent.updated_at,
+            token_id=agent.token_id,
+            owner_address=agent.owner_address,
+            reputation_count=agent.reputation_count or 0,
+            skills=agent.skills,
+            domains=agent.domains,
+            classification_source=agent.classification_source,
+            is_active=agent.is_active,
+        )
+
+
 class AgentResponse(AgentBase):
-    """Agent 响应数据模式"""
+    """Full agent schema (detail endpoint)."""
 
     id: str
     created_at: datetime
@@ -71,36 +107,34 @@ class AgentResponse(AgentBase):
 
     @classmethod
     def from_orm_with_network(cls, agent) -> "AgentResponse":
-        """从 ORM 对象创建响应，包含网络名称"""
-        # Extract agentWallet from on_chain_data if present
+        """Create response from ORM object, including network name."""
         agent_wallet = None
         if agent.on_chain_data and isinstance(agent.on_chain_data, dict):
             agent_wallet = agent.on_chain_data.get("agentWallet")
 
-        data = {
-            "id": agent.id,
-            "name": agent.name,
-            "address": agent.address,
-            "description": agent.description,
-            "reputation_score": agent.reputation_score,
-            "status": agent.status,
-            "network_id": agent.network_id,
-            "network_name": agent.network.name if agent.network else None,
-            "created_at": agent.created_at,
-            "updated_at": agent.updated_at,
-            "token_id": agent.token_id,
-            "owner_address": agent.owner_address,
-            "metadata_uri": agent.metadata_uri,
-            "on_chain_data": agent.on_chain_data,
-            "last_synced_at": agent.last_synced_at,
-            "sync_status": agent.sync_status,
-            "agent_wallet": agent_wallet,
-            "reputation_count": agent.reputation_count or 0,
-            "reputation_last_updated": agent.reputation_last_updated,
-            "skills": agent.skills,
-            "domains": agent.domains,
-            "classification_source": agent.classification_source,
-            "is_active": agent.is_active,
-            "metadata_refreshed_at": agent.metadata_refreshed_at,
-        }
-        return cls(**data)
+        return cls(
+            id=agent.id,
+            name=agent.name,
+            address=agent.address,
+            description=agent.description,
+            reputation_score=agent.reputation_score,
+            status=agent.status,
+            network_id=agent.network_id,
+            network_name=agent.network.name if agent.network else None,
+            created_at=agent.created_at,
+            updated_at=agent.updated_at,
+            token_id=agent.token_id,
+            owner_address=agent.owner_address,
+            metadata_uri=agent.metadata_uri,
+            on_chain_data=agent.on_chain_data,
+            last_synced_at=agent.last_synced_at,
+            sync_status=agent.sync_status,
+            agent_wallet=agent_wallet,
+            reputation_count=agent.reputation_count or 0,
+            reputation_last_updated=agent.reputation_last_updated,
+            skills=agent.skills,
+            domains=agent.domains,
+            classification_source=agent.classification_source,
+            is_active=agent.is_active,
+            metadata_refreshed_at=agent.metadata_refreshed_at,
+        )

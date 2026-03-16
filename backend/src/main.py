@@ -19,6 +19,7 @@ from src.db.migrate_tx_hash_prefix import migrate as migrate_tx_hash_prefix
 from src.db.migrate_add_gas_fields import migrate as migrate_gas_fields
 from src.db.migrate_remove_network_unique import migrate as migrate_remove_network_unique
 from src.db.migrate_add_active_field import migrate as migrate_add_active_field
+from src.db.migrate_is_quality import migrate as migrate_is_quality
 from src.db.init_networks import init_networks
 
 # Create database tables
@@ -37,6 +38,7 @@ try:
     migrate_gas_fields()  # Add gas tracking fields to activities
     migrate_remove_network_unique()  # Allow multiple networks with same chain_id
     migrate_add_active_field()  # ERC-8004 active field + metadata refresh tracking
+    migrate_is_quality()  # Pre-computed quality flag + composite indexes
 except Exception as e:
     print(f"Migration warning: {e}")
 

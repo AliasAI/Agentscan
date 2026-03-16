@@ -21,6 +21,7 @@ from src.models import (
 from src.db.database import SessionLocal
 from src.services.metadata_service import metadata_service
 from src.services.metadata_processor import extract_oasf_data
+from src.utils.quality import compute_is_quality
 import structlog
 from eth_abi import decode
 
@@ -610,6 +611,7 @@ class NetworkSyncService:
                 skills=oasf_data.get('skills'),
                 domains=oasf_data.get('domains'),
                 classification_source=oasf_data.get('source'),
+                is_quality=compute_is_quality(name, description),
                 is_active=bool(active_value) if active_value is not None else None,
                 metadata_refreshed_at=now,
             )
@@ -692,6 +694,7 @@ class NetworkSyncService:
         agent.skills = oasf_data.get('skills')
         agent.domains = oasf_data.get('domains')
         agent.classification_source = oasf_data.get('source')
+        agent.is_quality = compute_is_quality(name, description)
 
         # Update active field
         active_value = metadata.get("active")

@@ -168,8 +168,8 @@ export default function HomePage() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {/* Overall Stats - 黑白灰配色 */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 pt-6 relative z-10">
+        {/* Overall Stats - OpenRouter-style borderless stats */}
+        <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 mb-10 pt-6 relative z-10">
           {!stats ? (
             <>
               <StatCardSkeleton />
@@ -179,123 +179,36 @@ export default function HomePage() {
             </>
           ) : (
             <>
-              {/* Total Agents Card */}
-              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040] hover:shadow-lg transition-all duration-200">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#f5f5f5] dark:bg-[#262626] rounded-lg">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#0a0a0a] dark:text-[#fafafa]">
-                      <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Total Agents</div>
-                    <div className="text-xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-                      {formatNumber(stats.total_agents)}
-                    </div>
-                  </div>
+              <Link href="/agents" className="text-center group">
+                <div className="text-2xl md:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] group-hover:text-[#22c55e] transition-colors tabular-nums">
+                  {formatNumber(stats.total_agents)}
                 </div>
-              </div>
-
-              {/* Active Agents Card */}
-              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#22c55e]/40 dark:hover:border-[#4ade80]/40 hover:shadow-lg hover:shadow-[#22c55e]/5 transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#f0fdf4] dark:bg-[#14532d]/30 rounded-lg relative">
-                    {/* Subtle pulse animation */}
-                    <div className="absolute inset-0 bg-[#22c55e]/20 dark:bg-[#4ade80]/20 rounded-lg animate-ping opacity-0 group-hover:opacity-75" style={{ animationDuration: '2s' }} />
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#22c55e] dark:text-[#4ade80] relative z-10">
-                      <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Active (7d)</span>
-                      {/* Info icon with tooltip trigger */}
-                      <div className="relative">
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          className="text-[#a3a3a3] dark:text-[#525252] cursor-help hover:text-[#22c55e] dark:hover:text-[#4ade80] transition-colors"
-                        >
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-                          <path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                        {/* Tooltip */}
-                        <div className="
-                          absolute left-1/2 -translate-x-1/2 bottom-full mb-2
-                          opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                          transition-all duration-200 ease-out
-                          translate-y-1 group-hover:translate-y-0
-                          z-50 pointer-events-none
-                        ">
-                          <div className="
-                            relative bg-[#0a0a0a] dark:bg-[#fafafa]
-                            text-white dark:text-[#0a0a0a]
-                            text-[10px] leading-relaxed
-                            px-3 py-2 rounded-lg
-                            shadow-xl shadow-black/10 dark:shadow-black/20
-                            whitespace-nowrap
-                            border border-[#262626] dark:border-[#e5e5e5]
-                          ">
-                            <div className="font-medium mb-0.5">Recently active agents</div>
-                            <div className="text-[#a3a3a3] dark:text-[#737373]">
-                              Reviewed or registered in last 7 days
-                            </div>
-                            {/* Arrow */}
-                            <div className="
-                              absolute left-1/2 -translate-x-1/2 top-full
-                              w-0 h-0
-                              border-l-[6px] border-l-transparent
-                              border-r-[6px] border-r-transparent
-                              border-t-[6px] border-t-[#0a0a0a] dark:border-t-[#fafafa]
-                            " />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-xl font-bold text-[#22c55e] dark:text-[#4ade80]">
-                      {formatNumber(stats.active_agents)}
-                    </div>
-                  </div>
+                <div className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mt-0.5">
+                  Total Agents
                 </div>
-              </div>
-
-              {/* Networks Card */}
-              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040] hover:shadow-lg transition-all duration-200">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#f5f5f5] dark:bg-[#262626] rounded-lg">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#525252] dark:text-[#a3a3a3]">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M2 12H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Networks</div>
-                    <div className="text-xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-                      {formatNumber(stats.total_networks)}
-                    </div>
-                  </div>
+              </Link>
+              <Link href="/agents" className="text-center group">
+                <div className="text-2xl md:text-3xl font-bold text-[#22c55e] dark:text-[#4ade80] tabular-nums">
+                  {formatNumber(stats.active_agents)}
                 </div>
-              </div>
-
-              {/* Total Activities Card */}
-              <div className="group relative bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626] hover:border-[#d4d4d4] dark:hover:border-[#404040] hover:shadow-lg transition-all duration-200">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#f5f5f5] dark:bg-[#262626] rounded-lg">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#525252] dark:text-[#a3a3a3]">
-                      <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-medium text-[#737373] dark:text-[#737373] uppercase tracking-wide">Activities</div>
-                    <div className="text-xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-                      {formatNumber(stats.total_activities)}
-                    </div>
-                  </div>
+                <div className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mt-0.5">
+                  Active (7d)
+                </div>
+              </Link>
+              <Link href="/networks" className="text-center group">
+                <div className="text-2xl md:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] group-hover:text-[#3b82f6] transition-colors tabular-nums">
+                  {formatNumber(stats.total_networks)}
+                </div>
+                <div className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mt-0.5">
+                  Networks
+                </div>
+              </Link>
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] tabular-nums">
+                  {formatNumber(stats.total_activities)}
+                </div>
+                <div className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mt-0.5">
+                  Activities
                 </div>
               </div>
             </>
@@ -308,37 +221,25 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Featured Agents with Tabs */}
           <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mb-4">
+              <div>
                 <h2 className="text-lg font-bold text-[#0a0a0a] dark:text-[#fafafa]">
                   AI Agents
                 </h2>
-                {/* Quality filter badge */}
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-medium rounded-full">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                    <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1952 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M22 4L12 14.01L9 11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Quality
-                </span>
+                <p className="text-xs text-[#737373] dark:text-[#525252] mt-0.5">
+                  Showing agents with complete profiles
+                </p>
               </div>
               <Link
                 href="/agents"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#0a0a0a] dark:text-[#fafafa] hover:text-[#525252] dark:hover:text-[#d4d4d4] bg-[#f5f5f5] dark:bg-[#262626] hover:bg-[#e5e5e5] dark:hover:bg-[#404040] rounded-md transition-all duration-200"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-[#525252] dark:text-[#a3a3a3] hover:text-[#0a0a0a] dark:hover:text-[#fafafa] transition-colors"
               >
-                <span>View All</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-current">
+                <span>View all</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                   <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </Link>
             </div>
-            {/* Filter explanation */}
-            <p className="text-[11px] text-[#737373] dark:text-[#525252] mb-4">
-              Showing agents with complete profiles (name + description).{' '}
-              <Link href="/agents" className="text-[#0a0a0a] dark:text-[#a3a3a3] hover:underline">
-                View all →
-              </Link>
-            </p>
 
             {/* Agent List */}
             <div className="mt-2">

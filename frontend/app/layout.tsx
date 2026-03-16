@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="en">
       <body className={`${inter.variable} antialiased flex flex-col min-h-screen`} style={{ fontFamily: 'var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}

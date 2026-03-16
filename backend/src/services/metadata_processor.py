@@ -9,42 +9,9 @@ import structlog
 from src.services.ai_classifier import ai_classifier_service
 from src.services.metadata_service import metadata_service
 from src.taxonomies.oasf_taxonomy import OASF_SKILLS, OASF_DOMAINS
+from src.utils.quality import is_valid_description, compute_is_quality
 
 logger = structlog.get_logger()
-
-# Minimum description length for AI classification
-MIN_DESCRIPTION_LENGTH = 20
-
-# Patterns indicating invalid/placeholder descriptions
-INVALID_DESCRIPTION_PATTERNS = [
-    "no metadata", "metadata fetch failed", "no description",
-    "unknown agent", "agent from direct json", "no metadata uri provided",
-    "failed to fetch", "error fetching", "not available", "n/a",
-    "test agent", "created at", "updated", "lorem ipsum",
-    "todo", "placeholder", "example", "demo agent",
-]
-
-
-def is_valid_description(description: str) -> bool:
-    """Check if description is valid for AI classification"""
-    if not description or not isinstance(description, str):
-        return False
-
-    description = description.strip()
-
-    if len(description) < MIN_DESCRIPTION_LENGTH:
-        return False
-
-    description_lower = description.lower()
-    for pattern in INVALID_DESCRIPTION_PATTERNS:
-        if pattern in description_lower:
-            return False
-
-    digit_count = sum(c.isdigit() for c in description)
-    if digit_count / len(description) > 0.5:
-        return False
-
-    return True
 
 
 async def extract_oasf_data(
@@ -178,6 +145,7 @@ async def refresh_agent_metadata(db: Session, agent) -> bool:
         if oasf_data.get("source"):
             agent.classification_source = oasf_data["source"]
 
+        agent.is_quality = compute_is_quality(agent.name, agent.description)
         agent.metadata_refreshed_at = datetime.utcnow()
         db.commit()
 
