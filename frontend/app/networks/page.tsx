@@ -167,7 +167,7 @@ export default function NetworksPage() {
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
       {/* Page Header */}
       <div className="border-b border-[#e5e5e5] dark:border-[#262626]">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
           <nav className="flex items-center gap-2 text-xs text-[#737373] mb-4">
             <Link href="/" className="hover:text-[#0a0a0a] dark:hover:text-[#fafafa] transition-colors">
               Home
@@ -212,7 +212,7 @@ export default function NetworksPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Shared Contracts */}
         <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-5">
           <div className="flex items-center gap-2 mb-3">
