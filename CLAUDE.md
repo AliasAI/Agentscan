@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Agentscan is an ERC-8004 AI Agent Explorer, similar to a blockchain explorer, used to display and track AI agent information based on the ERC-8004 protocol. The project includes a frontend (Next.js) and a backend (FastAPI), with the backend syncing on-chain data from the Sepolia network via Web3.py.
+Agentscan (https://agentscan.info) is an ERC-8004 AI Agent Explorer, similar to a blockchain explorer, used to display and track AI agent information based on the ERC-8004 protocol. The project includes a frontend (Next.js) and a backend (FastAPI), with the backend syncing on-chain data from 21 mainnet networks via Web3.py and QuikNode RPC.
 
 ## Core Commands
 
@@ -437,19 +437,35 @@ To avoid confusion with the `endpoint` field in feedback (a single route), `endp
 
 > **Note**: The Validation Registry is still under active discussion with the TEE community and will receive follow-up updates later this year.
 
-#### Current Network Status
+#### Current Network Status [UPDATED: 2026-03-09]
 
-| Network | Chain ID | Status | Notes |
-|---------|----------|--------|-------|
-| **Ethereum Mainnet** | 1 | Enabled | Mainnet live (Jan 30, 2026) |
-| **Polygon Mainnet** | 137 | Enabled | CREATE2 deterministic deployment, same contract addresses as Ethereum |
-| **Base** | 8453 | Enabled | CREATE2 deterministic deployment, same contract addresses as Ethereum |
-| **BNB Smart Chain** | 56 | Enabled | CREATE2 deterministic deployment, same contract addresses as Ethereum |
-| **Monad** | 143 | Enabled | CREATE2 deterministic deployment, same contract addresses as Ethereum |
-| Sepolia | 11155111 | Test | Testnet, for development only |
-| Base Sepolia | 84532 | Disabled | Awaiting new contract deployment |
-| Linea Sepolia | 59141 | Disabled | Awaiting new contract deployment |
-| Hedera Testnet | 296 | Disabled | Awaiting new contract deployment |
+All 21 mainnet networks use CREATE2 deterministic deployment (same contract addresses).
+QuikNode multi-chain RPC covers 17/21 networks; 4 require dedicated RPC env vars.
+
+| Network | Chain ID | QuikNode Slug | Notes |
+|---------|----------|---------------|-------|
+| **Abstract** | 2741 | `abstract-mainnet` | |
+| **Arbitrum** | 42161 | `arbitrum-mainnet` | |
+| **Avalanche** | 43114 | `avalanche-mainnet` | Needs `/ext/bc/C/rpc` suffix |
+| **Base** | 8453 | `base-mainnet` | |
+| **BNB Smart Chain** | 56 | `bsc` | |
+| **Celo** | 42220 | `celo-mainnet` | |
+| **Ethereum** | 1 | `""` (root) | Mainnet live (Jan 30, 2026) |
+| **Gnosis** | 100 | `xdai` | |
+| **GOAT Network** | 2345 | - | Needs `GOAT_RPC_URL` |
+| **Linea** | 59144 | `linea-mainnet` | |
+| **Mantle** | 5000 | `mantle-mainnet` | |
+| **MegaETH** | 4326 | `megaeth-mainnet` | |
+| **Metis** | 1088 | - | Needs `METIS_RPC_URL` |
+| **Monad** | 143 | `monad-mainnet` | |
+| **Optimism** | 10 | `optimism` | |
+| **Polygon** | 137 | `matic` | |
+| **Scroll** | 534352 | `scroll-mainnet` | |
+| **SKALE** | 1187947933 | - | Needs `SKALE_RPC_URL` |
+| **Soneium** | 1868 | `soneium-mainnet` | |
+| **Taiko** | 167000 | - | Needs `TAIKO_RPC_URL` |
+| **XLayer** | 196 | `xlayer-mainnet` | |
+| Sepolia | 11155111 | `ethereum-sepolia` | Testnet, disabled |
 
 **Unified Mainnet Contract Addresses (CREATE2 Deterministic Deployment):**
 - Identity Registry: `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`
@@ -855,8 +871,8 @@ If no API key is configured, the system falls back to keyword-based basic classi
 ## External Dependencies
 
 ### Blockchain
-- Web3.py: Ethereum network interaction
-- Sepolia Testnet: ERC-8004 contract deployment network
+- Web3.py: Multi-chain interaction (21 mainnet networks)
+- QuikNode: Multi-chain RPC provider (17/21 networks)
 - IPFS: Metadata storage (accessed via public gateways)
 
 ### AI & Classification
