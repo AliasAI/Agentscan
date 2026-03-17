@@ -20,6 +20,7 @@ import {
   NetworkMetisAndromeda,
   NetworkSoneium,
   NetworkXLayer,
+  NetworkSolana,
 } from '@web3icons/react'
 import type { IconComponent } from '@web3icons/react'
 import { getNetworkIconType } from '@/lib/networks'
@@ -77,6 +78,7 @@ const ICON_COMPONENTS: Record<string, IconComponent> = {
   metis: NetworkMetisAndromeda,
   soneium: NetworkSoneium,
   xlayer: NetworkXLayer,
+  solana: NetworkSolana,
 }
 
 interface NetworkIconProps {

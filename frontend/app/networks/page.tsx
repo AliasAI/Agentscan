@@ -12,6 +12,9 @@ const SHARED_CONTRACTS = {
   reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
 }
 
+// External ERC-8004 implementations (non-EVM, linked in header description)
+const EXTERNAL_NETWORK_COUNT = 1 // Solana (SATI)
+
 function CopyableAddress({ label, address }: { label: string; address: string }) {
   const [copied, setCopied] = useState(false)
   return (
@@ -197,8 +200,24 @@ export default function NetworksPage() {
             <h1 className="text-2xl lg:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] mb-3 tracking-tight">
               Supported Networks
             </h1>
-            <p className="text-sm text-[#525252] dark:text-[#a3a3a3] mb-6 leading-relaxed">
+            <p className="text-sm text-[#525252] dark:text-[#a3a3a3] mb-4 leading-relaxed">
               ERC-8004 registry contracts are deployed across multiple networks via CREATE2 deterministic deployment, sharing the same contract addresses on every chain.
+            </p>
+            <p className="text-sm text-[#525252] dark:text-[#a3a3a3] mb-6 leading-relaxed">
+              Beyond EVM chains, the protocol extends to{' '}
+              <a
+                href="https://sati.cascade.fyi/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#8b5cf6] hover:text-[#7c3aed] font-medium inline-flex items-center gap-0.5"
+              >
+                SATI on Solana
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="inline">
+                  <path d="M7 17L17 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M7 7H17V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
+              {' '}by Cascade Protocol.
             </p>
 
             {/* Quick stats */}
@@ -210,7 +229,7 @@ export default function NetworksPage() {
                   <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" strokeWidth="2"/>
                 </svg>
                 <span className="text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa]">
-                  {networks.length} Networks
+                  {networks.length + EXTERNAL_NETWORK_COUNT} Networks
                 </span>
               </div>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626]">
