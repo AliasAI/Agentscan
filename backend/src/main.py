@@ -89,6 +89,12 @@ async def shutdown_event():
     shutdown_scheduler()
 
 
+@app.get("/health")
+async def health():
+    """Health check endpoint for Docker and Nginx"""
+    return {"status": "ok"}
+
+
 @app.get("/")
 async def root():
     """Root endpoint"""
