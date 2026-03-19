@@ -54,37 +54,53 @@ MIN_SCORE_THRESHOLD = 10  # Hide empty-shell agents (name-only, score ~5)
 
 
 def _build_scored_list(db: Session, network: Optional[str]) -> list[dict]:
-    """Compute scores for all agents, filtering out empties. Cached at route level."""
-    query = db.query(Agent)
+    """Compute scores for all agents, filtering out empties. Cached at route level.
+
+    Uses selective column loading to avoid fetching heavy JSON blobs
+    (on_chain_data, etc.) — only the 11 columns needed for scoring.
+    """
+    query = db.query(
+        Agent.id,
+        Agent.name,
+        Agent.token_id,
+        Agent.network_id,
+        Agent.endpoint_status,
+        Agent.reputation_count,
+        Agent.reputation_score,
+        Agent.reputation_last_updated,
+        Agent.description,
+        Agent.skills,
+        Agent.domains,
+    )
     if network:
         query = query.filter(Agent.network_id == network)
 
-    agents = query.all()
+    rows = query.all()
 
     scored = []
-    for agent in agents:
+    for row in rows:
         has_working = bool(
-            agent.endpoint_status
-            and agent.endpoint_status.get("has_working_endpoints")
+            row.endpoint_status
+            and row.endpoint_status.get("has_working_endpoints")
         )
         scores = calc_agent_score(
-            endpoint_status=agent.endpoint_status,
-            feedback_count=agent.reputation_count or 0,
-            reputation_score=agent.reputation_score or 0.0,
-            reputation_last_updated=agent.reputation_last_updated,
-            name=agent.name or "",
-            description=agent.description or "",
-            skills=agent.skills,
-            domains=agent.domains,
+            endpoint_status=row.endpoint_status,
+            feedback_count=row.reputation_count or 0,
+            reputation_score=row.reputation_score or 0.0,
+            reputation_last_updated=row.reputation_last_updated,
+            name=row.name or "",
+            description=row.description or "",
+            skills=row.skills,
+            domains=row.domains,
         )
         if scores["score"] >= MIN_SCORE_THRESHOLD:
             scored.append({
-                "id": agent.id,
-                "name": agent.name or "Unknown Agent",
-                "token_id": agent.token_id,
-                "network_id": agent.network_id,
-                "reputation_score": agent.reputation_score or 0.0,
-                "reputation_count": agent.reputation_count or 0,
+                "id": row.id,
+                "name": row.name or "Unknown Agent",
+                "token_id": row.token_id,
+                "network_id": row.network_id,
+                "reputation_score": row.reputation_score or 0.0,
+                "reputation_count": row.reputation_count or 0,
                 "has_working": has_working,
                 **scores,
             })

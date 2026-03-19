@@ -102,13 +102,16 @@ async def get_stats(db: Session = Depends(get_db)):
     try:
         enabled_networks = get_enabled_networks()
 
-        # 收集需要查询的网络信息
+        # Batch load all sync trackers in one query (avoids N+1)
+        sync_map = {
+            s.network_name: s
+            for s in db.query(BlockchainSync).all()
+        }
+
+        # Collect networks that have both a sync tracker and RPC URL
         networks_to_query: list[tuple[str, dict, BlockchainSync]] = []
         for network_key, config in enabled_networks.items():
-            sync_tracker = db.query(BlockchainSync).filter(
-                BlockchainSync.network_name == network_key
-            ).first()
-
+            sync_tracker = sync_map.get(network_key)
             if not sync_tracker:
                 continue
 

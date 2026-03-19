@@ -1,8 +1,9 @@
 """Analytics API - Transaction and activity statistics"""
 
+import time
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case, cast, Float
+from sqlalchemy import func, case, cast, Float, text
 from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel
@@ -13,6 +14,10 @@ from src.core.networks_config import get_enabled_networks
 
 
 router = APIRouter()
+
+# --- Cache (2-min TTL, keyed by (days, network)) ---
+_ANALYTICS_CACHE_TTL = 120  # seconds
+_analytics_cache: dict[str, dict] = {}
 
 
 class TransactionStats(BaseModel):
@@ -80,6 +85,12 @@ async def get_analytics_overview(
 ):
     """Get comprehensive analytics overview including transaction stats and trends"""
 
+    # Check cache
+    cache_key = f"{days}:{network or '__all__'}"
+    entry = _analytics_cache.get(cache_key)
+    if entry and (time.time() - entry["ts"]) < _ANALYTICS_CACHE_TTL:
+        return entry["data"]
+
     # Build base query with network filter
     activity_query = db.query(Activity)
     agent_query = db.query(Agent)
@@ -119,56 +130,28 @@ async def get_analytics_overview(
     total_agents = agent_query.count()
     avg_tx_per_agent = total_transactions / total_agents if total_agents > 0 else 0
 
-    # Quality metrics - agents with reputation or working endpoints
-    from sqlalchemy import text
-
+    # Quality metrics — single combined query instead of 4 separate COUNTs
+    quality_sql = """
+        SELECT
+            SUM(CASE WHEN reputation_count > 0 THEN 1 ELSE 0 END),
+            SUM(CASE WHEN endpoint_status IS NOT NULL
+                 AND json_extract(endpoint_status, '$.has_working_endpoints') = 1
+                 THEN 1 ELSE 0 END),
+            SUM(CASE WHEN reputation_count > 0
+                 OR (endpoint_status IS NOT NULL
+                     AND json_extract(endpoint_status, '$.has_working_endpoints') = 1)
+                 THEN 1 ELSE 0 END)
+        FROM agents
+    """
+    params = {}
     if network:
-        agents_with_reputation = db.execute(
-            text("SELECT COUNT(*) FROM agents WHERE network_id = :network AND reputation_count > 0"),
-            {"network": network}
-        ).scalar() or 0
-        agents_with_working = db.execute(
-            text("""
-                SELECT COUNT(*) FROM agents
-                WHERE network_id = :network
-                AND endpoint_status IS NOT NULL
-                AND json_extract(endpoint_status, '$.has_working_endpoints') = 1
-            """),
-            {"network": network}
-        ).scalar() or 0
-    else:
-        agents_with_reputation = db.execute(
-            text("SELECT COUNT(*) FROM agents WHERE reputation_count > 0")
-        ).scalar() or 0
-        agents_with_working = db.execute(
-            text("""
-                SELECT COUNT(*) FROM agents
-                WHERE endpoint_status IS NOT NULL
-                AND json_extract(endpoint_status, '$.has_working_endpoints') = 1
-            """)
-        ).scalar() or 0
+        quality_sql += " WHERE network_id = :network"
+        params["network"] = network
 
-    # Active agents = union of agents with reputation OR working endpoints
-    if network:
-        active_agents = db.execute(
-            text("""
-                SELECT COUNT(DISTINCT id) FROM agents
-                WHERE network_id = :network
-                AND (reputation_count > 0
-                    OR (endpoint_status IS NOT NULL
-                        AND json_extract(endpoint_status, '$.has_working_endpoints') = 1))
-            """),
-            {"network": network}
-        ).scalar() or 0
-    else:
-        active_agents = db.execute(
-            text("""
-                SELECT COUNT(DISTINCT id) FROM agents
-                WHERE reputation_count > 0
-                    OR (endpoint_status IS NOT NULL
-                        AND json_extract(endpoint_status, '$.has_working_endpoints') = 1)
-            """)
-        ).scalar() or 0
+    qrow = db.execute(text(quality_sql), params).first()
+    agents_with_reputation = qrow[0] or 0
+    agents_with_working = qrow[1] or 0
+    active_agents = qrow[2] or 0
 
     quality_rate = round((active_agents / total_agents * 100), 2) if total_agents > 0 else 0
 
@@ -267,41 +250,45 @@ async def get_analytics_overview(
         ))
         current_date += timedelta(days=1)
 
-    # 4. Network-level statistics
-    network_stats_results = (
-        db.query(
-            Agent.network_id,
-            func.count(func.distinct(Agent.id)).label('agent_count'),
-            func.count(Activity.id).label('tx_count')
-        )
-        .outerjoin(Activity, Agent.id == Activity.agent_id)
+    # 4. Network-level statistics — two fast indexed queries instead of OUTERJOIN
+    agent_counts = dict(
+        db.query(Agent.network_id, func.count(Agent.id))
         .group_by(Agent.network_id)
         .all()
     )
 
-    # Get network names
+    tx_counts = dict(
+        db.query(Agent.network_id, func.count(Activity.id))
+        .join(Activity, Agent.id == Activity.agent_id)
+        .group_by(Agent.network_id)
+        .all()
+    )
+
     enabled_networks = get_enabled_networks()
 
     network_stats = []
-    for row in network_stats_results:
-        network_config = enabled_networks.get(row.network_id)
+    for net_key, agent_count in agent_counts.items():
+        network_config = enabled_networks.get(net_key)
         if not network_config:
             continue
 
+        tx_count = tx_counts.get(net_key, 0)
         network_stats.append(NetworkTxStats(
-            network_key=row.network_id,
-            network_name=network_config.get('name', row.network_id),
-            total_transactions=row.tx_count or 0,
-            total_agents=row.agent_count or 0,
-            avg_tx_per_agent=round((row.tx_count or 0) / row.agent_count, 2) if row.agent_count > 0 else 0
+            network_key=net_key,
+            network_name=network_config.get('name', net_key),
+            total_transactions=tx_count,
+            total_agents=agent_count,
+            avg_tx_per_agent=round(tx_count / agent_count, 2) if agent_count > 0 else 0
         ))
 
-    return AnalyticsResponse(
+    result = AnalyticsResponse(
         stats=stats,
         recent_activities=recent_activities,
         trend_data=trend_data,
         network_stats=network_stats
     )
+    _analytics_cache[cache_key] = {"ts": time.time(), "data": result}
+    return result
 
 
 @router.get("/analytics/agent/{agent_id}/transactions")
