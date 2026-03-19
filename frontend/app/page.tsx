@@ -106,7 +106,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
       {/* Hero Section - 黑白极简风格 */}
-      <div className="relative overflow-hidden border-b border-[#e5e5e5] dark:border-[#262626]">
+      <div className="relative border-b border-[#e5e5e5] dark:border-[#262626]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center pt-10 pb-8 lg:pt-14 lg:pb-10">
             {/* Multi-Network Sync Status */}
