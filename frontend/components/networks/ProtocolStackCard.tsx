@@ -161,7 +161,7 @@ export default function ProtocolStackCard() {
               <p className="text-[11px] text-[#737373] mb-1.5">
                 First ERC-8183 implementation by BSC — job posting, agent matching, and escrow settlement.
               </p>
-              <ExternalLink href="https://www.bnbchain.org/en/blog/bnbagent-sdk-ai-agents-on-bnb-chain">
+              <ExternalLink href="https://www.bnbchain.org/en/blog/bnbagent-sdk-the-first-live-erc-8183-implementation-for-onchain-ai-agents">
                 Announcement
               </ExternalLink>
             </div>
@@ -193,10 +193,10 @@ export default function ProtocolStackCard() {
         <ExternalLink href="https://eips.ethereum.org/EIPS/eip-8183">
           ERC-8183 Spec
         </ExternalLink>
-        <ExternalLink href="https://ethereum-magicians.org/t/erc-8183-agentic-commerce/22785">
+        <ExternalLink href="https://ethereum-magicians.org/t/erc-8183-agentic-commerce/27902">
           Ethereum Magicians
         </ExternalLink>
-        <ExternalLink href="https://www.bnbchain.org/en/blog/bnbagent-sdk-ai-agents-on-bnb-chain">
+        <ExternalLink href="https://www.bnbchain.org/en/blog/bnbagent-sdk-the-first-live-erc-8183-implementation-for-onchain-ai-agents">
           BNBAgent Blog
         </ExternalLink>
       </div>
