@@ -91,7 +91,7 @@ export function MultiNetworkSyncStatus({ syncStatus }: Props) {
           </div>
 
           {/* Network list */}
-          <div className="max-h-72 overflow-y-auto">
+          <div className="max-h-[70vh] overflow-y-auto">
             {syncStatus.networks.map((network) => {
               const isSynced = network.sync_progress >= 99.9
               const blocksBehind = network.latest_block - network.current_block
