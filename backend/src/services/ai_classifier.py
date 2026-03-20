@@ -29,6 +29,14 @@ class AIClassifierService:
 
     def __init__(self):
         """初始化分类器"""
+        # Kill switch: set LLM_CLASSIFICATION_ENABLED=false to force keyword fallback
+        enabled = os.getenv("LLM_CLASSIFICATION_ENABLED", "true").lower()
+        if enabled in ("false", "0", "no", "off"):
+            logger.info("llm_classification_disabled", reason="LLM_CLASSIFICATION_ENABLED=false")
+            self.llm_provider = "disabled"
+            self.use_fallback = True
+            return
+
         # 从环境变量获取配置
         self.llm_provider = os.getenv("LLM_PROVIDER", "deepseek")  # 默认使用 deepseek
         self.model_name = os.getenv("LLM_MODEL_NAME", "")
@@ -277,7 +285,19 @@ class AIClassifierService:
             }
 
         except Exception as e:
-            logger.error("llm_api_call_failed", error=str(e), provider=self.llm_provider)
+            error_str = str(e)
+            logger.error("llm_api_call_failed", error=error_str, provider=self.llm_provider)
+
+            # Circuit breaker: auto-disable LLM on payment/auth errors
+            # to prevent infinite retry spam (402 = insufficient balance)
+            if "402" in error_str or "Insufficient Balance" in error_str or "401" in error_str:
+                logger.warning(
+                    "llm_auto_disabled",
+                    reason="payment_or_auth_error",
+                    provider=self.llm_provider,
+                )
+                self.use_fallback = True
+
             raise
 
     async def _anthropic_classify(self, name: str, description: str) -> Dict[str, List[str]]:
