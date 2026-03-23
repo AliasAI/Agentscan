@@ -1,10 +1,27 @@
 """FastAPI application entry point"""
 
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.db.database import engine, Base
+from src.services.notifications.telegram_notifier import get_telegram_processor
+
+# Configure structlog with Telegram error notification processor
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        get_telegram_processor(),
+        structlog.dev.ConsoleRenderer(),
+    ],
+    wrapper_class=structlog.make_filtering_bound_logger(0),
+    context_class=dict,
+    logger_factory=structlog.PrintLoggerFactory(),
+    cache_logger_on_first_use=True,
+)
 from src.api import stats, agents, sync, networks, activities, classification, feedback, endpoint_health, metadata, analytics
 from src.api.leaderboard import router as leaderboard_router
 from src.services.scheduler import start_scheduler, shutdown_scheduler
