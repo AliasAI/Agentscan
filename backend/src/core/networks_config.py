@@ -19,8 +19,8 @@ _TESTNET_CONTRACTS = {
 
 
 # === QuikNode multi-chain RPC ===
-_QN_POOL = "dark-divine-pool"
-_QN_KEY = "1901fe0d2ad4caa6cf9ab68c628bcab7be99f665"
+_QN_POOL = "twilight-ultra-road"
+_QN_KEY = "3345a665f2ebd66c8a604714984ee0612448c28a"
 
 
 def _qn(slug: str = "", suffix: str = "") -> str:

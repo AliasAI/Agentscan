@@ -41,6 +41,12 @@ SQLITE_INT_MIN = -9223372036854775808  # -2^63
 # Note: has indexedTag1 (string indexed) AND tag1 (string) = 2 string params for tag1
 NEWFEEDBACK_TOPIC = "0x6a4a61743519c9d648a14e6493f47dbe3ff1aa29e7785c96c8326a205e58febc"
 
+# Identity event topics (used for merged getLogs query)
+# Registered(uint256 indexed agentId, string agentURI, address indexed owner)
+REGISTERED_TOPIC = "0x" + Web3.keccak(text="Registered(uint256,string,address)").hex()
+# URIUpdated(uint256 indexed agentId, string newURI, address indexed updatedBy)
+URI_UPDATED_TOPIC = "0x" + Web3.keccak(text="URIUpdated(uint256,string,address)").hex()
+
 # Validation event topics
 # ValidationRequest(address indexed validatorAddress, uint256 indexed agentId, string requestUri, bytes32 indexed requestHash)
 VALIDATION_REQUEST_TOPIC = Web3.keccak(text="ValidationRequest(address,uint256,string,bytes32)").hex()
@@ -104,6 +110,9 @@ class NetworkSyncService:
             "blocks_per_batch", DEFAULT_BLOCKS_PER_BATCH
         )
 
+        # Per-run block timestamp cache (cleared at start of each sync)
+        self._block_cache: dict[int, datetime] = {}
+
         logger.info(
             "network_sync_initialized",
             network=network_key,
@@ -113,8 +122,18 @@ class NetworkSyncService:
             start_block=self.start_block
         )
 
+    async def _get_block_timestamp(self, block_number: int) -> datetime:
+        """Get block timestamp with per-run cache to avoid redundant eth_getBlock calls"""
+        if block_number not in self._block_cache:
+            block = await asyncio.to_thread(self.w3.eth.get_block, block_number)
+            self._block_cache[block_number] = datetime.fromtimestamp(block["timestamp"])
+        return self._block_cache[block_number]
+
     async def sync(self):
         """Main sync method with smart sync logic"""
+        # Clear block timestamp cache for this run
+        self._block_cache = {}
+
         db = SessionLocal()
         try:
             # Get or create sync tracker
@@ -227,42 +246,63 @@ class NetworkSyncService:
             db.close()
 
     async def _process_events(self, db: Session, from_block: int, to_block: int):
-        """Process blockchain events with rate limiting"""
+        """Process blockchain events.
 
-        # Get Registered events
-        registered_events = self.contract.events.Registered.get_logs(
-            from_block=from_block,
-            to_block=to_block
-        )
+        Optimization: single eth_getLogs for Registered + URIUpdated (saves 1 RPC call/batch).
+        """
+        identity_address = self.network_config["contracts"]["identity"]
+
+        # Single getLogs covering both Registered and URIUpdated events (OR topic filter)
+        try:
+            identity_logs = await asyncio.to_thread(
+                self.w3.eth.get_logs,
+                {
+                    "address": identity_address,
+                    "fromBlock": from_block,
+                    "toBlock": to_block,
+                    "topics": [[REGISTERED_TOPIC, URI_UPDATED_TOPIC]],
+                }
+            )
+        except Exception as e:
+            logger.warning(
+                "identity_events_query_failed",
+                network=self.network_key,
+                from_block=from_block,
+                to_block=to_block,
+                error=str(e)
+            )
+            identity_logs = []
+
+        registered_logs = [
+            l for l in identity_logs
+            if "0x" + l["topics"][0].hex() == REGISTERED_TOPIC
+        ]
+        updated_logs = [
+            l for l in identity_logs
+            if "0x" + l["topics"][0].hex() == URI_UPDATED_TOPIC
+        ]
 
         logger.info(
             "events_found",
             network=self.network_key,
             event_type="Registered",
-            count=len(registered_events)
+            count=len(registered_logs)
         )
-
-        for i, event in enumerate(registered_events):
-            await self._process_registered_event(db, event)
-            if i < len(registered_events) - 1:
-                await asyncio.sleep(REQUEST_DELAY_SECONDS)
-
-        # Get URIUpdated events (renamed from UriUpdated in Jan 2026 update)
-        updated_events = self.contract.events.URIUpdated.get_logs(
-            from_block=from_block,
-            to_block=to_block
-        )
-
         logger.info(
             "events_found",
             network=self.network_key,
             event_type="URIUpdated",
-            count=len(updated_events)
+            count=len(updated_logs)
         )
 
-        for i, event in enumerate(updated_events):
-            await self._process_updated_event(db, event)
-            if i < len(updated_events) - 1:
+        for i, log in enumerate(registered_logs):
+            await self._process_registered_log(db, log)
+            if i < len(registered_logs) - 1:
+                await asyncio.sleep(REQUEST_DELAY_SECONDS)
+
+        for i, log in enumerate(updated_logs):
+            await self._process_updated_log(db, log)
+            if i < len(updated_logs) - 1:
                 await asyncio.sleep(REQUEST_DELAY_SECONDS)
 
         # Get reputation events if reputation contract is configured
@@ -427,11 +467,8 @@ class NetworkSyncService:
             if existing:
                 return  # Already cached
 
-            # Get block timestamp
-            block = await asyncio.to_thread(
-                self.w3.eth.get_block, log["blockNumber"]
-            )
-            block_timestamp = datetime.fromtimestamp(block["timestamp"])
+            # Get block timestamp (cached)
+            block_timestamp = await self._get_block_timestamp(log["blockNumber"])
 
             # Create validation record
             validation = Validation(
@@ -500,11 +537,8 @@ class NetworkSyncService:
             if validation.status == "COMPLETED":
                 return  # Already completed
 
-            # Get block timestamp
-            block = await asyncio.to_thread(
-                self.w3.eth.get_block, log["blockNumber"]
-            )
-            block_timestamp = datetime.fromtimestamp(block["timestamp"])
+            # Get block timestamp (cached)
+            block_timestamp = await self._get_block_timestamp(log["blockNumber"])
 
             # Update validation with response
             validation.response_score = response_score
@@ -530,17 +564,18 @@ class NetworkSyncService:
                 error=str(e)
             )
 
-    async def _process_registered_event(self, db: Session, event):
-        """Process Registered event"""
+    async def _process_registered_log(self, db: Session, log: dict):
+        """Process Registered raw log (from merged getLogs query)"""
         from sqlalchemy.exc import IntegrityError
 
-        token_id = event['args']['agentId']
-        owner = event['args']['owner']
-        metadata_uri = event['args']['agentURI']  # renamed from tokenURI in Jan 2026 update
+        token_id = int(log["topics"][1].hex(), 16)
+        owner = "0x" + log["topics"][2].hex()[-40:]
+        (metadata_uri,) = decode(["string"], bytes(log["data"]))
+        block_number = log["blockNumber"]
+        tx_hash = "0x" + log["transactionHash"].hex() if log.get("transactionHash") else None
 
-        # Get block timestamp for accurate registration time
-        block = self.w3.eth.get_block(event['blockNumber'])
-        block_timestamp = datetime.fromtimestamp(block['timestamp'])
+        # Use cached block timestamp (avoids redundant eth_getBlock calls)
+        block_timestamp = await self._get_block_timestamp(block_number)
 
         logger.info(
             "processing_agent",
@@ -604,7 +639,7 @@ class NetworkSyncService:
                 status=AgentStatus.ACTIVE,
                 network_id=network_id,
                 metadata_uri=metadata_uri,
-                on_chain_data=dict(event['args']),
+                on_chain_data={"agentId": token_id, "owner": owner, "agentURI": metadata_uri},
                 sync_status=SyncStatus.SYNCED,
                 last_synced_at=now,
                 created_at=block_timestamp,
@@ -619,22 +654,13 @@ class NetworkSyncService:
             db.add(agent)
             db.commit()
 
-            # Create activity record with gas information
-            tx_hash = "0x" + event['transactionHash'].hex() if 'transactionHash' in event else None
-            gas_used, gas_price, transaction_fee = None, None, None
-
-            if tx_hash:
-                gas_used, gas_price, transaction_fee = self._get_transaction_gas_info(tx_hash)
-
+            # Create activity record (gas info omitted to avoid extra RPC calls)
             activity = Activity(
                 agent_id=agent.id,
                 activity_type=ActivityType.REGISTERED,
                 description=f"Agent '{agent.name}' (#{token_id}) registered on {self.network_config['name']}",
                 tx_hash=tx_hash,
                 created_at=block_timestamp,
-                gas_used=gas_used,
-                gas_price=gas_price,
-                transaction_fee=transaction_fee
             )
             db.add(activity)
             db.commit()
@@ -656,10 +682,10 @@ class NetworkSyncService:
                 error="Concurrent insert detected, skipping"
             )
 
-    async def _process_updated_event(self, db: Session, event):
-        """Process URIUpdated event (renamed from UriUpdated in Jan 2026 update)"""
-        token_id = event['args']['agentId']
-        metadata_uri = event['args']['newURI']  # renamed from newUri in Jan 2026 update
+    async def _process_updated_log(self, db: Session, log: dict):
+        """Process URIUpdated raw log (from merged getLogs query)"""
+        token_id = int(log["topics"][1].hex(), 16)
+        (metadata_uri,) = decode(["string"], bytes(log["data"]))
 
         network_id = self._get_network_id(db)
         agent = db.query(Agent).filter(
@@ -772,11 +798,8 @@ class NetworkSyncService:
                 )
                 return
 
-            # Get block timestamp
-            block = await asyncio.to_thread(
-                self.w3.eth.get_block, log["blockNumber"]
-            )
-            block_timestamp = datetime.fromtimestamp(block["timestamp"])
+            # Get block timestamp (cached)
+            block_timestamp = await self._get_block_timestamp(log["blockNumber"])
 
             # Clamp value to SQLite INTEGER range (int128 can exceed 64-bit)
             stored_value = value
@@ -819,9 +842,10 @@ class NetworkSyncService:
                 timestamp=block_timestamp
             )
             db.add(feedback)
+            db.flush()  # ensure feedback is visible for local aggregation
 
-            # Update agent reputation from on-chain
-            await self._update_agent_reputation(db, agent)
+            # Update agent reputation from local DB (zero RPC calls)
+            self._update_agent_reputation_local(db, agent)
 
             db.commit()
 
@@ -845,59 +869,49 @@ class NetworkSyncService:
                 log_tx="0x" + log.get("transactionHash", b"").hex() if log.get("transactionHash") else None
             )
 
-    async def _update_agent_reputation(self, db: Session, agent: Agent):
-        """Update agent's reputation from on-chain getSummary call
+    def _update_agent_reputation_local(self, db: Session, agent: Agent):
+        """Update agent reputation from local feedback table — zero RPC calls.
 
-        Jan 27, 2026 mainnet freeze:
-        - getSummary now returns (count, averageValue, valueDecimals)
-        - clientAddresses MUST NOT be empty (use getClients first)
+        Replaces on-chain getClients + getSummary. Since we already cache every
+        NewFeedback event in the Feedback table, we can compute the average locally.
+        This keeps the per-event cost constant regardless of ecosystem growth.
         """
-        if not self.reputation_contract:
+        feedbacks = db.query(Feedback).filter(
+            Feedback.agent_id == agent.id,
+            Feedback.is_revoked == False
+        ).all()
+
+        count = len(feedbacks)
+        if count == 0:
             return
 
-        try:
-            # First get all clients (required for getSummary in mainnet freeze)
-            clients = await asyncio.to_thread(
-                self.reputation_contract.functions.getClients(agent.token_id).call
+        # Normalize each value by its decimal places before averaging
+        total = sum(
+            float(f.value) / (10 ** f.value_decimals) if f.value_decimals else float(f.value)
+            for f in feedbacks
+        )
+        avg_value = total / count
+
+        old_score = agent.reputation_score or 0.0
+        agent.reputation_score = avg_value
+        agent.reputation_count = count
+        agent.reputation_last_updated = datetime.utcnow()
+
+        if abs(old_score - avg_value) >= 0.1:
+            activity = Activity(
+                agent_id=agent.id,
+                activity_type=ActivityType.REPUTATION_UPDATE,
+                description=f"Reputation updated: {old_score:.1f} → {avg_value:.1f} ({count} reviews)"
             )
+            db.add(activity)
 
-            if not clients:
-                # No clients = no feedback, skip update
-                return
-
-            # Call getSummary with actual clients (not empty array)
-            count, average_value, value_decimals = await asyncio.to_thread(
-                self.reputation_contract.functions.getSummary(
-                    agent.token_id,
-                    clients,  # Actual clients list (required)
-                    "",   # tag1 = empty string (no filter)
-                    ""    # tag2 = empty string (no filter)
-                ).call
-            )
-
-            old_score = agent.reputation_score
-            # Convert value with decimals to float
-            actual_value = average_value / (10 ** value_decimals) if value_decimals else average_value
-            agent.reputation_score = float(actual_value)
-            agent.reputation_count = int(count)
-            agent.reputation_last_updated = datetime.utcnow()
-
-            # Create activity record if score changed significantly
-            if abs((old_score or 0) - float(actual_value)) >= 0.1:
-                activity = Activity(
-                    agent_id=agent.id,
-                    activity_type=ActivityType.REPUTATION_UPDATE,
-                    description=f"Reputation updated: {old_score or 0:.1f} → {actual_value:.1f} ({count} reviews)"
-                )
-                db.add(activity)
-
-        except Exception as e:
-            logger.warning(
-                "update_agent_reputation_failed",
-                network=self.network_key,
-                token_id=agent.token_id,
-                error=str(e)
-            )
+        logger.debug(
+            "reputation_updated_local",
+            network=self.network_key,
+            token_id=agent.token_id,
+            count=count,
+            avg_value=round(avg_value, 4)
+        )
 
     async def _process_feedback_event(self, db: Session, event):
         """Process NewFeedback or FeedbackRevoked event"""
@@ -918,69 +932,9 @@ class NetworkSyncService:
             return
 
         try:
-            # First get all clients (required for getSummary in mainnet freeze)
-            clients = await asyncio.to_thread(
-                self.reputation_contract.functions.getClients(token_id).call
-            )
-
-            if not clients:
-                logger.debug(
-                    "no_clients_for_feedback_event",
-                    network=self.network_key,
-                    token_id=token_id
-                )
-                return
-
-            # Call getSummary with actual clients (not empty array)
-            # Jan 2026 mainnet freeze: clientAddresses required
-            count, average_value, value_decimals = await asyncio.to_thread(
-                self.reputation_contract.functions.getSummary(
-                    token_id,
-                    clients,  # Actual clients list (required)
-                    "",   # tag1 = empty string (no filter)
-                    ""    # tag2 = empty string (no filter)
-                ).call
-            )
-
-            # Update reputation
-            old_score = agent.reputation_score
-            actual_value = average_value / (10 ** value_decimals) if value_decimals else average_value
-            agent.reputation_score = float(actual_value)
-            agent.reputation_count = int(count)
-            agent.reputation_last_updated = datetime.utcnow()
-
+            # Update reputation from local DB (zero RPC calls)
+            self._update_agent_reputation_local(db, agent)
             db.commit()
-
-            # Create activity record if score changed
-            if old_score != float(actual_value):
-                tx_hash = "0x" + event['transactionHash'].hex() if 'transactionHash' in event else None
-                gas_used, gas_price, transaction_fee = None, None, None
-
-                if tx_hash:
-                    gas_used, gas_price, transaction_fee = self._get_transaction_gas_info(tx_hash)
-
-                activity = Activity(
-                    agent_id=agent.id,
-                    activity_type=ActivityType.REPUTATION_UPDATE,
-                    description=f"Reputation updated: {old_score:.1f} → {actual_value:.1f} ({count} reviews)",
-                    tx_hash=tx_hash,
-                    gas_used=gas_used,
-                    gas_price=gas_price,
-                    transaction_fee=transaction_fee
-                )
-                db.add(activity)
-                db.commit()
-
-            logger.info(
-                "reputation_updated_from_event",
-                network=self.network_key,
-                token_id=token_id,
-                agent_name=agent.name,
-                value=average_value,
-                value_decimals=value_decimals,
-                count=count,
-                event_type=event['event']
-            )
 
         except Exception as e:
             logger.warning(

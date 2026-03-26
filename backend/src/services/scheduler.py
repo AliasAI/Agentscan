@@ -18,15 +18,12 @@ scheduler = AsyncIOScheduler()
 ENDPOINT_SCAN_HOUR = 3  # UTC 03:00 daily
 STARTUP_SCAN_THRESHOLD = 10  # Trigger startup scan if unchecked agents >= this
 
-# Network sync intervals (minutes) - staggered to avoid RPC rate limits
+# Network sync intervals (minutes) - all networks at 5 minutes
+# Rationale: catch-up is complete; event volume is low; 2-3min intervals wasted RPC budget
 NETWORK_SYNC_INTERVALS = {
-    # Primary networks (high activity)
-    "ethereum": 2, "polygon": 2, "base": 2, "monad": 2,
-    # L2 networks
-    "arbitrum": 3, "optimism": 3, "linea": 5, "scroll": 5,
-    # Other mainnets
+    "ethereum": 5, "polygon": 5, "base": 5, "monad": 5,
+    "arbitrum": 5, "optimism": 5, "linea": 5, "scroll": 5,
     "avalanche": 5, "celo": 5, "gnosis": 5, "taiko": 5, "megaeth": 5,
-    # Rate-limited / lower priority
     "bsc-1": 5, "sepolia": 5,
 }
 
