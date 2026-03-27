@@ -74,7 +74,7 @@ class NetworkSyncService:
 
         # Initialize Web3 with network-specific RPC
         rpc_url = self.network_config["rpc_url"]
-        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 30}))
 
         # Inject POA middleware for chains like BSC that use Proof of Authority
         # This handles the extraData field that exceeds 32 bytes in POA chains
@@ -139,8 +139,8 @@ class NetworkSyncService:
             # Get or create sync tracker
             sync_tracker = self._get_sync_tracker(db)
 
-            # Get current block number
-            current_block = self.w3.eth.block_number
+            # Get current block number (async to avoid blocking the event loop)
+            current_block = await asyncio.to_thread(lambda: self.w3.eth.block_number)
             sync_tracker.current_block = current_block
 
             # Calculate starting point
