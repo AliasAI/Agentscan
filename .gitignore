@@ -7,8 +7,16 @@ __pycache__/
 backend/.venv/
 backend/venv/
 backend/env/
+*.db
 backend/*.db
 backend/*.db-journal
+backend/*.db-shm
+backend/*.db-wal
+
+# Screenshots (project uses SVGs for assets, PNGs are always temp screenshots)
+*.png
+*.jpg
+*.jpeg
 
 # Node
 node_modules/
