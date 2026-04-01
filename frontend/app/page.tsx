@@ -12,6 +12,7 @@ import { MultiNetworkSyncStatus } from '@/components/common/MultiNetworkSyncStat
 import { formatNumber } from '@/lib/utils/format'
 import { AgentCardSkeleton, StatCardSkeleton, ActivityItemSkeleton } from '@/components/common/Skeleton'
 import { TrendingSection } from '@/components/home/TrendingSection'
+import { McpInstallModal } from '@/components/home/McpInstallModal'
 import { statsService, agentService, activityService, taxonomyService } from '@/lib/api/services'
 import type { Agent, Activity, Stats, RegistrationTrendData, CategoryDistributionData, TrendingAgentsResponse } from '@/types'
 
@@ -26,6 +27,7 @@ export default function HomePage() {
   const [trendingLoading, setTrendingLoading] = useState(true)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [mcpModalOpen, setMcpModalOpen] = useState(false)
 
   // Fetch stats on mount and refresh every 10 seconds
   useEffect(() => {
@@ -161,6 +163,12 @@ export default function HomePage() {
                 >
                   <span>Networks</span>
                 </Link>
+                <button
+                  onClick={() => setMcpModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 h-10 px-5 bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] active:scale-[0.98] text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
+                >
+                  <span>Install MCP</span>
+                </button>
               </div>
             </div>
           </div>
@@ -332,6 +340,8 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      <McpInstallModal open={mcpModalOpen} onClose={() => setMcpModalOpen(false)} />
     </div>
   )
 }
