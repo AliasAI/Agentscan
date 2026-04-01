@@ -18,12 +18,6 @@ if [ ! -f backend/.env ]; then
     exit 1
 fi
 
-if ! grep -q "SEPOLIA_RPC_URL=" backend/.env || grep -q "SEPOLIA_RPC_URL=YOUR_NEW_RPC_URL_HERE" backend/.env; then
-    echo "❌ 错误：SEPOLIA_RPC_URL 未配置"
-    echo "请在 backend/.env 中配置有效的 SEPOLIA_RPC_URL"
-    exit 1
-fi
-
 # 创建必要的目录
 echo "📁 创建数据和日志目录..."
 mkdir -p data
