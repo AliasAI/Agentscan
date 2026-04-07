@@ -11,7 +11,7 @@ export default function NetworksApiPage() {
       <h1 className="text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] mb-4">Networks API</h1>
       <p className="text-[#525252] dark:text-[#a1a1a6] mb-8">
         Query supported blockchain networks, their configuration, agent counts, and sync status.
-        Agentscan currently indexes 21 mainnet networks.
+        Agentscan indexes multiple mainnet networks and continues to add more.
       </p>
 
       <EndpointBlock

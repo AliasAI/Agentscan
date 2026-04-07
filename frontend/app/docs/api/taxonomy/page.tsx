@@ -12,7 +12,7 @@ export default function TaxonomyApiPage() {
       <p className="text-[#525252] dark:text-[#a1a1a6] mb-8">
         Agentscan uses the{' '}
         <a href="https://github.com/agntcy/oasf" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#0a0a0a] dark:hover:text-[#fafafa]">
-          OASF v0.8.0
+          OASF v1.0
         </a>{' '}
         taxonomy standard to classify AI agents with 136 skills and 204 domains.
         These endpoints let you query the distribution and list of available categories.

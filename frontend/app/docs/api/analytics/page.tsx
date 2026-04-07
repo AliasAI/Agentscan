@@ -2,7 +2,7 @@ import { EndpointBlock } from '@/components/docs/EndpointBlock';
 
 export const metadata = {
   title: 'Analytics & Stats API - Agentscan Docs',
-  description: 'Platform statistics, registration trends, network distribution, and analytics',
+  description: 'Platform statistics, registration trends, and analytics',
 };
 
 export default function AnalyticsApiPage() {
@@ -10,7 +10,7 @@ export default function AnalyticsApiPage() {
     <div>
       <h1 className="text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] mb-4">Analytics & Stats API</h1>
       <p className="text-[#525252] dark:text-[#a1a1a6] mb-8">
-        Platform-level statistics, registration trends, network distribution, skill rankings, and detailed analytics.
+        Platform-level statistics, registration trends, and detailed analytics.
       </p>
 
       <h2 className="text-xl font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-4">Platform Stats</h2>
@@ -23,7 +23,7 @@ export default function AnalyticsApiPage() {
         response={`{
   "total_agents": 1200,
   "active_agents": 850,
-  "total_networks": 21,
+  "total_networks": 20,
   "total_activities": 5600,
   "updated_at": "2026-04-07T10:00:00Z",
   "blockchain_sync": {
@@ -51,38 +51,6 @@ export default function AnalyticsApiPage() {
     { "date": "2026-04-02", "count": 22 },
     { "date": "2026-04-03", "count": 8 }
   ]
-}`}
-      />
-
-      <EndpointBlock
-        method="GET"
-        path="/api/stats/network-distribution"
-        description="Agent distribution across all supported networks."
-        params={[]}
-        response={`{
-  "networks": [
-    { "network": "ethereum", "agent_count": 450, "percentage": 37.5 },
-    { "network": "base", "agent_count": 280, "percentage": 23.3 },
-    { "network": "arbitrum", "agent_count": 150, "percentage": 12.5 }
-  ],
-  "total_networks": 21
-}`}
-      />
-
-      <EndpointBlock
-        method="GET"
-        path="/api/stats/skill-ranking"
-        description="Top OASF skills ranked by the number of agents classified with each skill."
-        params={[
-          { name: 'limit', type: 'integer', default: '30', description: 'Max results (max 136)' },
-        ]}
-        response={`{
-  "skills": [
-    { "slug": "nlp", "agent_count": 320 },
-    { "slug": "code-generation", "agent_count": 215 },
-    { "slug": "data-analysis", "agent_count": 180 }
-  ],
-  "total_classified": 950
 }`}
       />
 

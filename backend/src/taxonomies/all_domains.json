@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "version": "0.8.0",
+    "version": "1.0.1",
     "description": "Comprehensive collection of all OASF domains",
     "identifier_format": "Slash-separated path matching file structure (e.g., 'technology/software_engineering/devops')",
     "total_domains": 204

@@ -2,7 +2,7 @@ import { ParamsTable } from '@/components/docs/ParamsTable';
 
 export const metadata = {
   title: 'MCP Tools Reference - Agentscan Docs',
-  description: 'Complete reference for all 22 Agentscan MCP tools',
+  description: 'Complete reference for Agentscan MCP tools',
 };
 
 interface ToolDef {
@@ -14,29 +14,18 @@ interface ToolDef {
 const searchTools: ToolDef[] = [
   {
     name: 'search_agents',
-    description: 'Full-featured agent search with text, network, skill, domain, owner, quality tier, reputation range, endpoint, date range filters, sorting, and pagination.',
+    description: 'Full-featured agent search with text, network, quality tier, reputation range filters, sorting, and pagination.',
     params: [
       { name: 'query', type: 'string', description: 'Text search (name, description, address)' },
       { name: 'network', type: 'string', description: 'Filter by network key (e.g. "ethereum", "base")' },
-      { name: 'skill', type: 'string', description: 'Filter by OASF skill slug' },
-      { name: 'domain', type: 'string', description: 'Filter by OASF domain slug' },
-      { name: 'owner', type: 'string', description: 'Filter by owner wallet address' },
       { name: 'quality', type: 'string', default: 'all', description: 'Quality tier: "all", "basic", "verified"' },
       { name: 'reputation_min', type: 'number', description: 'Minimum reputation score' },
       { name: 'reputation_max', type: 'number', description: 'Maximum reputation score' },
-      { name: 'has_endpoints', type: 'boolean', description: 'Only agents with endpoints' },
+      { name: 'has_reputation', type: 'boolean', description: 'Only agents with reputation data' },
       { name: 'sort_field', type: 'string', default: 'created_at', description: 'Sort field' },
       { name: 'sort_order', type: 'string', default: 'desc', description: '"asc" or "desc"' },
       { name: 'page', type: 'integer', default: '1', description: 'Page number' },
       { name: 'page_size', type: 'integer', default: '20', description: 'Items per page (max 100)' },
-    ],
-  },
-  {
-    name: 'find_similar_agents',
-    description: 'Find agents with shared skills or domains.',
-    params: [
-      { name: 'agent_id', type: 'string', required: true, description: 'Agent ID to find similar agents for' },
-      { name: 'limit', type: 'integer', default: '10', description: 'Max results (1-50)' },
     ],
   },
   {
@@ -105,18 +94,6 @@ const detailTools: ToolDef[] = [
   },
 ];
 
-const portfolioTools: ToolDef[] = [
-  {
-    name: 'get_owner_portfolio',
-    description: 'All agents owned by a wallet, with cross-network summary and aggregated stats.',
-    params: [
-      { name: 'owner_address', type: 'string', required: true, description: 'Owner wallet address' },
-      { name: 'page', type: 'integer', default: '1', description: 'Page number' },
-      { name: 'page_size', type: 'integer', default: '50', description: 'Items per page (max 100)' },
-    ],
-  },
-];
-
 const analyticsTools: ToolDef[] = [
   {
     name: 'get_stats',
@@ -136,18 +113,6 @@ const analyticsTools: ToolDef[] = [
     params: [
       { name: 'days', type: 'integer', default: '30', description: 'Lookback period (max 365)' },
       { name: 'network', type: 'string', description: 'Filter by network' },
-    ],
-  },
-  {
-    name: 'get_network_distribution',
-    description: 'Agent distribution across networks with quality breakdown.',
-    params: [],
-  },
-  {
-    name: 'get_skill_ranking',
-    description: 'Top OASF skills ranked by agent count.',
-    params: [
-      { name: 'limit', type: 'integer', default: '30', description: 'Max results (max 136)' },
     ],
   },
   {
@@ -196,7 +161,6 @@ const taxonomyTools: ToolDef[] = [
 const categories = [
   { title: 'Search & Discovery', tools: searchTools },
   { title: 'Agent Details', tools: detailTools },
-  { title: 'Owner Portfolio', tools: portfolioTools },
   { title: 'Platform Analytics', tools: analyticsTools },
   { title: 'Networks', tools: networkTools },
   { title: 'Taxonomy', tools: taxonomyTools },
@@ -209,7 +173,7 @@ export default function McpToolsPage() {
         MCP Tools Reference
       </h1>
       <p className="text-[#525252] dark:text-[#a1a1a6] mb-8">
-        Complete reference for all 22 tools available in the Agentscan MCP server.
+        Complete reference for all tools available in the Agentscan MCP server.
       </p>
 
       {/* Table of contents */}

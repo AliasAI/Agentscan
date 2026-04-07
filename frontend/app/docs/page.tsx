@@ -16,7 +16,7 @@ export default function DocsIntroPage() {
         <a href="https://eips.ethereum.org/EIPS/eip-8004" className="underline hover:text-[#0a0a0a] dark:hover:text-[#fafafa]" target="_blank" rel="noopener noreferrer">
           ERC-8004
         </a>{' '}
-        on-chain AI agents. It indexes agent registrations, reputation feedback, and metadata across 21 mainnet blockchain networks.
+        on-chain AI agents. It indexes agent registrations, reputation feedback, and metadata across multiple mainnet blockchain networks.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 mb-10">
@@ -33,7 +33,7 @@ export default function DocsIntroPage() {
         <QuickLink
           href="/docs/api/agents"
           title="REST API"
-          description="48 endpoints for agents, reputation, analytics, networks, and more."
+          description="REST endpoints for agents, reputation, analytics, networks, and more."
         />
         <QuickLink
           href="/docs/erc-8004"
@@ -48,11 +48,11 @@ export default function DocsIntroPage() {
       <div className="overflow-x-auto mb-8">
         <table className="w-full text-sm border border-[#e5e5e5] dark:border-[#333] rounded-lg overflow-hidden">
           <tbody>
-            <Row label="Networks" value="21 mainnet chains (Ethereum, Base, Arbitrum, Polygon, ...)" />
-            <Row label="REST Endpoints" value="48 public endpoints, no API key required" />
-            <Row label="MCP Tools" value="22 tools for AI assistant integration" />
+            <Row label="Networks" value="Multiple mainnet chains (Ethereum, Base, Arbitrum, Polygon, ...)" />
+            <Row label="REST Endpoints" value="Public endpoints, no API key required" />
+            <Row label="MCP Tools" value="Tools for AI assistant integration" />
             <Row label="Protocol" value="ERC-8004 (Identity + Reputation registries)" />
-            <Row label="Classification" value="OASF v0.8.0 (136 skills, 204 domains)" />
+            <Row label="Classification" value="OASF v1.0 (136 skills, 204 domains)" />
             <Row label="Data Source" value="On-chain events via Web3.py + QuikNode RPC" />
           </tbody>
         </table>
@@ -64,7 +64,7 @@ export default function DocsIntroPage() {
       <div className="space-y-3 text-sm">
         <CategoryLink href="/docs/api/agents" label="Agents" description="Search, browse, and get detailed agent information" />
         <CategoryLink href="/docs/api/feedback" label="Feedback & Reputation" description="Reputation summaries, feedback items, validations" />
-        <CategoryLink href="/docs/api/analytics" label="Analytics & Stats" description="Platform statistics, registration trends, network distribution" />
+        <CategoryLink href="/docs/api/analytics" label="Analytics & Stats" description="Platform statistics, registration trends, transaction analytics" />
         <CategoryLink href="/docs/api/networks" label="Networks" description="Supported chains, sync status, contract addresses" />
         <CategoryLink href="/docs/api/taxonomy" label="Taxonomy" description="OASF skill and domain classification" />
         <CategoryLink href="/docs/api/endpoint-health" label="Endpoint Health" description="Agent endpoint monitoring and health reports" />

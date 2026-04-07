@@ -126,7 +126,7 @@ Web3.py ← Sepolia Network (ERC-8004 contracts)
    - **Integrated Reputation event-driven updates**: listens to NewFeedback and FeedbackRevoked events
 
 2. **OASF Classification Service** (services/ai_classifier.py + background_classifier.py) [UPDATED: 2025-11-14]
-   - Automatically classifies agents based on OASF v0.8.0 specification
+   - Automatically classifies agents based on OASF v1.0 specification
    - Prioritizes extraction from metadata `endpoints[].skills/domains`
    - Otherwise uses multiple LLMs (following herAI architecture) or keyword matching for auto-classification
    - **Supported LLM providers**:
@@ -782,11 +782,11 @@ Backend API docs are auto-generated. After starting the service, visit:
 
 ### Overview
 
-Agentscan now integrates the complete OASF v0.8.0 taxonomy system, automatically labeling AI Agents with skills and domains tags.
+Agentscan now integrates the complete OASF v1.0 taxonomy system, automatically labeling AI Agents with skills and domains tags.
 
 ### Key Features
 
-1. **Complete OASF v0.8.0 Specification**
+1. **Complete OASF v1.0 Specification**
    - **136 Skills**: Covering NLP, CV, Agent orchestration, Data engineering, and 15 other major categories
    - **204 Domains**: Covering Technology, Finance, Healthcare, Education, and 25 other major fields
    - Data source: https://github.com/agent0lab/agent0-py
@@ -877,7 +877,7 @@ If no API key is configured, the system falls back to keyword-based basic classi
 
 ### AI & Classification
 - LLM providers (optional): DeepSeek, OpenAI, OpenRouter, Anthropic Claude
-- OASF v0.8.0: Open Agent Service Framework standard (agent0-py)
+- OASF v1.0: Open Agent Service Framework standard (agntcy/oasf)
 
 ### Backend Key Dependencies
 - FastAPI: Web framework

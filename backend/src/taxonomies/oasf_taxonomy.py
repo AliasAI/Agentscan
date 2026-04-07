@@ -1,7 +1,7 @@
-"""OASF v0.8.0 完整分类体系
+"""OASF v1.0 完整分类体系
 
-基于 agent0_sdk 的 OASF 规范，提供完整的 136 skills 和 204 domains 分类。
-来源：https://github.com/agent0lab/agent0-py
+基于 OASF 规范，提供完整的 136 skills 和 204 domains 分类。
+来源：https://github.com/agntcy/oasf
 """
 
 import json

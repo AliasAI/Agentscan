@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "version": "0.8.0",
+    "version": "1.0.1",
     "description": "Comprehensive collection of all OASF skills",
     "identifier_format": "Slash-separated path matching file structure (e.g., 'natural_language_processing/summarization')",
     "total_skills": 136

@@ -22,16 +22,10 @@ export default function AgentsApiPage() {
           { name: 'page_size', type: 'integer', default: '20', description: 'Items per page (max 100)' },
           { name: 'search', type: 'string', description: 'Text search across name, description, address' },
           { name: 'network', type: 'string', description: 'Filter by network key (e.g. "ethereum", "base")' },
-          { name: 'skill', type: 'string', description: 'Filter by OASF skill slug' },
-          { name: 'domain', type: 'string', description: 'Filter by OASF domain slug' },
-          { name: 'owner', type: 'string', description: 'Filter by owner wallet address' },
           { name: 'quality', type: 'string', default: 'all', description: '"all", "basic", or "verified"' },
           { name: 'reputation_min', type: 'number', description: 'Minimum reputation score' },
           { name: 'reputation_max', type: 'number', description: 'Maximum reputation score' },
           { name: 'has_reputation', type: 'boolean', description: 'Only agents with reputation data' },
-          { name: 'has_endpoints', type: 'boolean', description: 'Only agents with endpoints' },
-          { name: 'created_after', type: 'string', description: 'ISO date filter (e.g. "2026-01-01")' },
-          { name: 'created_before', type: 'string', description: 'ISO date filter' },
           { name: 'sort_field', type: 'string', default: 'created_at', description: 'Sort by field' },
           { name: 'sort_order', type: 'string', default: 'desc', description: '"asc" or "desc"' },
         ]}
@@ -88,26 +82,6 @@ export default function AgentsApiPage() {
 
       <EndpointBlock
         method="GET"
-        path="/api/agents/similar/{agent_id}"
-        description="Find agents with shared skills or domains."
-        params={[
-          { name: 'agent_id', type: 'string', required: true, description: 'Agent ID to find similar agents for' },
-          { name: 'limit', type: 'integer', default: '10', description: 'Max results (1-50)' },
-        ]}
-        response={`[
-  {
-    "id": "base-5",
-    "name": "SimilarAgent",
-    "skills": ["nlp"],
-    "domains": ["technology"],
-    "reputation_score": 72.0,
-    ...
-  }
-]`}
-      />
-
-      <EndpointBlock
-        method="GET"
         path="/api/agents/trending"
         description="Get top-ranked, featured, and trending agents."
         params={[
@@ -117,28 +91,6 @@ export default function AgentsApiPage() {
   "top_ranked": [ ... ],
   "featured": [ ... ],
   "trending": [ ... ]
-}`}
-      />
-
-      <EndpointBlock
-        method="GET"
-        path="/api/agents/by-owner/{owner_address}"
-        description="Get all agents owned by a specific wallet address with cross-network summary."
-        params={[
-          { name: 'owner_address', type: 'string', required: true, description: 'Owner wallet address' },
-          { name: 'page', type: 'integer', default: '1', description: 'Page number' },
-          { name: 'page_size', type: 'integer', default: '50', description: 'Items per page (max 100)' },
-        ]}
-        response={`{
-  "owner": "0xabc...",
-  "summary": {
-    "total_agents": 5,
-    "networks": ["ethereum", "base"],
-    "average_reputation": 78.3
-  },
-  "agents": [ ... ],
-  "page": 1,
-  "page_size": 50
 }`}
       />
 

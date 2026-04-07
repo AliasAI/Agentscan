@@ -81,7 +81,7 @@ event NewFeedback(
 
       <Section title="Contract Addresses">
         <p className="text-sm text-[#525252] dark:text-[#a1a1a6] mb-4">
-          All 21 mainnet networks use CREATE2 deterministic deployment, meaning the contract addresses are the same on every chain.
+          All supported mainnet networks use CREATE2 deterministic deployment, meaning the contract addresses are the same on every chain.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm border border-[#e5e5e5] dark:border-[#333] rounded-lg overflow-hidden">
@@ -157,7 +157,7 @@ event NewFeedback(
           </li>
           <li>
             <a href="https://github.com/agntcy/oasf" target="_blank" rel="noopener noreferrer" className="text-[#525252] dark:text-[#a1a1a6] underline hover:text-[#0a0a0a] dark:hover:text-[#fafafa]">
-              OASF v0.8.0 Standard
+              OASF v1.0 Standard
             </a>
           </li>
         </ul>

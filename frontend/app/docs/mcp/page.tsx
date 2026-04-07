@@ -14,7 +14,7 @@ export default function McpOverviewPage() {
       </h1>
       <p className="text-[#525252] dark:text-[#a1a1a6] mb-8 leading-relaxed">
         The Agentscan MCP (Model Context Protocol) server lets AI assistants like Claude, Cursor, and Windsurf
-        query the ERC-8004 agent ecosystem directly. It provides 22 tools across 6 categories.
+        query the ERC-8004 agent ecosystem directly.
       </p>
 
       <Section title="What is MCP?">
