@@ -45,6 +45,7 @@ export function Header() {
     { href: '/networks', label: 'Networks' },
     { href: '/leaderboard', label: 'Leaderboard' },
     { href: '/insights', label: 'Insights' },
+    { href: '/docs', label: 'Docs' },
     { href: '/create', label: 'Create' },
   ];
 
