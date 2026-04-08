@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 const tabs = [
   {
     label: 'Claude Code',
-    code: `claude mcp add agentscan -- npx @aliasai2026/agentscan-mcp-server`,
+    code: `claude mcp add agentscan -- npx -y @aliasai2026/agentscan-mcp-server`,
   },
   {
     label: 'Claude Desktop',
@@ -13,7 +13,7 @@ const tabs = [
   "mcpServers": {
     "agentscan": {
       "command": "npx",
-      "args": ["@aliasai2026/agentscan-mcp-server"]
+      "args": ["-y", "@aliasai2026/agentscan-mcp-server"]
     }
   }
 }`,
@@ -24,7 +24,7 @@ const tabs = [
   "mcpServers": {
     "agentscan": {
       "command": "npx",
-      "args": ["@aliasai2026/agentscan-mcp-server"]
+      "args": ["-y", "@aliasai2026/agentscan-mcp-server"]
     }
   }
 }`,
