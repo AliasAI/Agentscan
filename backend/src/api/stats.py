@@ -92,7 +92,9 @@ async def get_stats(db: Session = Depends(get_db)):
             )
         ).count()
     )
-    total_networks = db.query(Network).count()
+    # Include external (non-EVM) implementations like Solana/SATI
+    EXTERNAL_NETWORK_COUNT = 1
+    total_networks = db.query(Network).count() + EXTERNAL_NETWORK_COUNT
     total_activities = db.query(Activity).count()
 
     # 获取多网络同步状态
