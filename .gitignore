@@ -18,6 +18,10 @@ backend/*.db-wal
 *.jpg
 *.jpeg
 
+# SEO assets (exceptions to the PNG rule above)
+!frontend/public/og-image.png
+!frontend/public/apple-touch-icon.png
+
 # Node
 node_modules/
 frontend/.next/

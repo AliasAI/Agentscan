@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ToastProvider } from "@/components/common/Toast";
 import { Web3Provider } from "@/components/web3/Web3Provider";
 import { Inter } from 'next/font/google';
+import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, OG_IMAGE } from '@/lib/seo/constants';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-ENM8LLWG7P";
 
@@ -18,8 +19,27 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Agentscan - ERC-8004 AI Agent Explorer",
-  description: "Explore AI agents on the ERC-8004 protocol",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    template: `%s | ${SITE_NAME}`,
+    default: `${SITE_NAME} - ERC-8004 AI Agent Explorer`,
+  },
+  description: DEFAULT_DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'en_US',
+    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: `${SITE_NAME} - ERC-8004 AI Agent Explorer` }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: [OG_IMAGE],
+  },
+  robots: { index: true, follow: true },
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({
