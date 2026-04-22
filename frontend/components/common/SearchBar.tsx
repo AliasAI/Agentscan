@@ -5,8 +5,9 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 
 // 动态占位符提示语列表
 const PLACEHOLDER_SUGGESTIONS = [
-  'Search agents by name…',
   'Search by wallet address…',
+  'Search agents by name…',
+  'Find agents by token ID…',
   'Find AI assistants…',
   'Explore DeFi agents…',
   'Discover trading bots…',
@@ -149,7 +150,7 @@ export function SearchBar({
         {/* 动态打字占位符层 */}
         {showTypingPlaceholder && (
           <div
-            className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-[#a3a3a3] dark:text-[#525252] pointer-events-none select-none"
+            className="absolute left-10 top-1/2 z-10 -translate-y-1/2 text-sm text-[#8a8a8a] dark:text-[#6a6a6a] pointer-events-none select-none"
             onClick={() => inputRef.current?.focus()}
           >
             {displayText}
@@ -168,7 +169,7 @@ export function SearchBar({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder={isFocused ? 'Type to search…' : ''}
-          className="w-full h-11 px-4 pl-10 pr-10 text-sm rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#0a0a0a] dark:text-[#fafafa] placeholder:text-[#a3a3a3] dark:placeholder:text-[#525252] focus:outline-none focus:border-[#0a0a0a] dark:focus:border-[#fafafa] focus:ring-2 focus:ring-[#0a0a0a]/10 dark:focus:ring-[#fafafa]/20 transition-[border-color,box-shadow,color,background-color] duration-200"
+          className="w-full h-11 px-4 pl-10 pr-10 text-sm rounded-lg border border-[#dddddd] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(250,250,250,0.98)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.9)_0%,rgba(18,18,18,0.96)_100%)] backdrop-blur-md text-[#0a0a0a] dark:text-[#fafafa] placeholder:text-[#a3a3a3] dark:placeholder:text-[#525252] focus:outline-none focus:border-[#cfcfcf] dark:focus:border-[#3a3a3a] focus:ring-2 focus:ring-[#0a0a0a]/6 dark:focus:ring-[#fafafa]/10 transition-[border-color,box-shadow,color,background-color] duration-200"
         />
 
         {/* Clear Button */}

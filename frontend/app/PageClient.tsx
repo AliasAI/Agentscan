@@ -89,9 +89,12 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
-      <div className="relative border-b border-[#e5e5e5] dark:border-[#262626] bg-[linear-gradient(180deg,#ffffff_0%,#fafafa_100%)] dark:bg-[linear-gradient(180deg,#0a0a0a_0%,#0d0d0d_100%)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[440px] bg-[radial-gradient(circle_at_top_left,rgba(226,232,240,0.55),transparent_42%),radial-gradient(circle_at_top_right,rgba(245,239,226,0.6),transparent_34%),radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.75),transparent_38%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(38,38,38,0.6),transparent_42%),radial-gradient(circle_at_top_right,rgba(28,37,30,0.45),transparent_34%),radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.05),transparent_36%)]" />
+      <div className="pointer-events-none absolute left-[8%] top-10 h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.55),transparent_70%)] opacity-60 blur-3xl animate-[pulse_11s_ease-in-out_infinite] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.06),transparent_70%)]" />
+      <div className="pointer-events-none absolute right-[10%] top-20 h-36 w-36 rounded-full bg-[radial-gradient(circle,rgba(226,232,240,0.6),transparent_70%)] opacity-50 blur-3xl animate-[pulse_13s_ease-in-out_infinite] dark:bg-[radial-gradient(circle,rgba(80,80,80,0.16),transparent_72%)]" />
+      <div className="relative border-b border-[#e3e3e3] dark:border-[#2a2a2a] bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(250,250,250,0.94)_100%)] dark:bg-[linear-gradient(180deg,rgba(10,10,10,0.88)_0%,rgba(13,13,13,0.96)_100%)] backdrop-blur-lg">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="pt-8 pb-6 lg:pt-10 lg:pb-8">
+          <div className="pt-7 pb-5 lg:pt-8 lg:pb-6">
             {stats?.multi_network_sync && (
               <>
                 <div className="hidden md:block absolute top-4 right-6">
@@ -104,53 +107,52 @@ export default function HomePage() {
             )}
 
             <div className="max-w-5xl mx-auto">
-              <div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#737373] dark:text-[#737373]">
+              <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-[#737373] dark:text-[#737373]">
                 Onchain Agent Index
               </div>
 
-              <div className="max-w-3xl">
+              <div className="max-w-[780px]">
                 <div>
-                  <h1 className="text-balance text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight text-[#0a0a0a] dark:text-[#fafafa] tracking-tight">
+                  <h1 className="text-balance text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-semibold leading-[1.05] text-[#0a0a0a] dark:text-[#fafafa] tracking-tight">
                     See the agent economy across blockchain networks.
                   </h1>
                 </div>
               </div>
 
-              <section className="mt-5 rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+              <section className="group relative mt-4 overflow-hidden rounded-2xl border border-[#e4e4e4] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(19,19,19,0.94)_100%)] p-4 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_12px_36px_rgba(10,10,10,0.04)] backdrop-blur-lg transition-[box-shadow,border-color] duration-300 dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_16px_40px_rgba(0,0,0,0.28)] hover:shadow-[0_1px_2px_rgba(10,10,10,0.04),0_18px_44px_rgba(10,10,10,0.06)] dark:hover:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_20px_48px_rgba(0,0,0,0.32)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-[linear-gradient(180deg,rgba(255,255,255,0.5),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent)]" />
+                <div className="pointer-events-none absolute -right-16 top-0 h-28 w-40 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.55),transparent_68%)] opacity-70 blur-2xl transition-opacity duration-300 group-hover:opacity-90 animate-[pulse_12s_ease-in-out_infinite] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.08),transparent_68%)]" />
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                   <div className="max-w-xl">
                     <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                       Search
                     </div>
-                    <h2 className="mt-1 text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
-                      Search the index
+                    <h2 className="mt-1 text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                      Find agents
                     </h2>
-                    <p className="mt-1 text-sm text-[#525252] dark:text-[#a3a3a3] leading-relaxed">
-                      Find agents by name, wallet, or known identifiers, then jump straight into the full index.
-                    </p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 lg:min-w-[560px]">
                     <Link
                       href="/agents"
-                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 bg-[#0a0a0a] hover:bg-[#262626] active:scale-[0.98] text-white text-sm font-semibold rounded-lg transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] dark:bg-[#fafafa] dark:hover:bg-[#e5e5e5] dark:text-[#0a0a0a]"
+                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 rounded-lg border border-[#2a2a2a] bg-[linear-gradient(180deg,#141414_0%,#2a2a2a_100%)] text-white text-sm font-semibold shadow-[0_8px_20px_rgba(10,10,10,0.12)] transition-[transform,box-shadow,background-color,border-color] duration-200 hover:-translate-y-[1px] hover:border-[#111111] hover:shadow-[0_12px_28px_rgba(10,10,10,0.16)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] dark:border-[#d0d0d0] dark:bg-[linear-gradient(180deg,#fafafa_0%,#e5e5e5_100%)] dark:text-[#0a0a0a] dark:shadow-[0_8px_20px_rgba(0,0,0,0.2)]"
                     >
                       <span>Browse Agents</span>
                     </Link>
                     <Link
                       href="/ecosystems"
-                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
+                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 rounded-lg border border-[#dddddd] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.88)_0%,rgba(18,18,18,0.94)_100%)] backdrop-blur-lg text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium transition-[transform,border-color,background-color] duration-200 hover:-translate-y-[1px] hover:border-[#cfcfcf] dark:hover:border-[#383838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
                     >
                       <span>Open Ecosystems</span>
                     </Link>
                     <button
                       onClick={() => setMcpModalOpen(true)}
-                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] sm:col-span-2 lg:col-span-1"
+                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 rounded-lg border border-[#dddddd] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.88)_0%,rgba(18,18,18,0.94)_100%)] backdrop-blur-lg text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium transition-[transform,border-color,background-color] duration-200 hover:-translate-y-[1px] hover:border-[#cfcfcf] dark:hover:border-[#383838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] sm:col-span-2 lg:col-span-1"
                     >
                       <span>Install MCP</span>
                     </button>
                   </div>
                 </div>
-                <div className="mt-3">
+                <div className="mt-2.5">
                   <SearchBar
                     onSearch={setSearchQuery}
                     onSubmit={(query) => {
@@ -161,7 +163,7 @@ export default function HomePage() {
                 </div>
               </section>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
                 {!stats ? (
                   <>
                     <StatCardSkeleton />
@@ -171,7 +173,8 @@ export default function HomePage() {
                   </>
                 ) : (
                   <>
-                    <Link href="/agents" className="rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-4 text-left transition-colors hover:border-[#d4d4d4] dark:hover:border-[#404040]">
+                    <Link href="/agents" className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(251,251,251,0.95)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left backdrop-blur-lg transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:border-[#d0d0d0] dark:hover:border-[#383838] hover:shadow-[0_10px_24px_rgba(10,10,10,0.05)] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.38),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
                       <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                         Indexed Agents
                       </div>
@@ -179,7 +182,8 @@ export default function HomePage() {
                         {formatNumber(stats.total_agents)}
                       </div>
                     </Link>
-                    <Link href="/agents" className="rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-4 text-left transition-colors hover:border-[#d4d4d4] dark:hover:border-[#404040]">
+                    <Link href="/agents" className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(251,251,251,0.95)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left backdrop-blur-lg transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:border-[#d0d0d0] dark:hover:border-[#383838] hover:shadow-[0_10px_24px_rgba(10,10,10,0.05)] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.38),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
                       <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                         Active Agents
                       </div>
@@ -187,7 +191,8 @@ export default function HomePage() {
                         {formatNumber(stats.active_agents)}
                       </div>
                     </Link>
-                    <Link href="/networks" className="rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-4 text-left transition-colors hover:border-[#d4d4d4] dark:hover:border-[#404040]">
+                    <Link href="/networks" className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(251,251,251,0.95)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left backdrop-blur-lg transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:border-[#d0d0d0] dark:hover:border-[#383838] hover:shadow-[0_10px_24px_rgba(10,10,10,0.05)] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.38),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
                       <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                         Networks
                       </div>
@@ -195,7 +200,8 @@ export default function HomePage() {
                         {formatNumber(stats.total_networks)}
                       </div>
                     </Link>
-                    <div className="rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-4 text-left">
+                    <div className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(251,251,251,0.95)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left shadow-[0_1px_2px_rgba(10,10,10,0.03)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.38),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
                       <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                         Activities
                       </div>
@@ -212,13 +218,14 @@ export default function HomePage() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <section className="pt-6">
+        <section className="relative pt-6">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(10,10,10,0.12),transparent)] dark:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent)]" />
           <TrendingSection data={trendingData} isLoading={trendingLoading} />
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="mt-1 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <section className="lg:col-span-2">
-            <div className="flex items-end justify-between gap-4 mb-5">
+            <div className="flex items-end justify-between gap-4 mb-5 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
               <div>
                 <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
                   Index
@@ -226,9 +233,6 @@ export default function HomePage() {
                 <h2 className="text-balance text-xl font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
                   Recently updated agents
                 </h2>
-                <p className="text-sm text-[#525252] dark:text-[#a3a3a3] mt-2">
-                  Use this list to inspect identity, signals, trust, and freshness at a glance.
-                </p>
               </div>
               <Link
                 href="/agents"
@@ -259,8 +263,9 @@ export default function HomePage() {
                   <p className="text-xs text-[#737373] dark:text-[#737373]">Try adjusting your search or filters</p>
                 </div>
               ) : (
-                <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
-                  <div className="hidden md:grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_96px] gap-4 px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fcfcfc] dark:bg-[#121212] text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
+                <div className="overflow-hidden rounded-2xl border border-[#dfdfdf] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] shadow-[0_1px_2px_rgba(10,10,10,0.04),0_18px_40px_rgba(10,10,10,0.05)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_20px_44px_rgba(0,0,0,0.24)]">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-[linear-gradient(180deg,rgba(255,255,255,0.3),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+                  <div className="hidden md:grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_96px_88px] gap-4 px-4 py-2.5 border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[linear-gradient(180deg,rgba(255,255,255,0.76)_0%,rgba(247,247,247,0.86)_100%)] dark:bg-[linear-gradient(180deg,rgba(21,21,21,0.84)_0%,rgba(18,18,18,0.9)_100%)] text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                     <div>Agent</div>
                     <div>Signals</div>
                     <div className="text-right">Trust</div>
@@ -270,9 +275,9 @@ export default function HomePage() {
                     <Link
                       key={agent.id}
                       href={`/agents/${agent.id}`}
-                      className={`block px-4 py-4 transition-colors hover:bg-[#fafafa] dark:hover:bg-[#111111] ${index !== agents.length - 1 ? 'border-b border-[#e5e5e5] dark:border-[#262626]' : ''}`}
+                      className={`block px-4 py-3.5 transition-[background-color,border-color,box-shadow] hover:bg-[rgba(250,250,250,0.95)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:hover:bg-[rgba(255,255,255,0.04)] dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${index !== agents.length - 1 ? 'border-b border-[#ebebeb] dark:border-[#2a2a2a]' : ''}`}
                     >
-                      <div className="grid gap-4 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_96px]">
+                      <div className="grid gap-4 md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_96px_88px]">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="truncate text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
@@ -295,12 +300,15 @@ export default function HomePage() {
                             {formatAddress(agent.address, 12)}
                           </div>
 
-                          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[#525252] dark:text-[#a3a3a3]">
+                          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[#525252] dark:text-[#a3a3a3]">
                             {agent.description}
                           </p>
                         </div>
 
                         <div className="min-w-0">
+                          <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#737373] dark:text-[#737373] md:hidden mb-1">
+                            Signals
+                          </div>
                           <EcosystemBadges
                             ecosystems={agent.ecosystems}
                             capabilities={agent.capabilities}
@@ -341,9 +349,9 @@ export default function HomePage() {
             </div>
           </section>
 
-          <aside className="space-y-6">
+          <aside className="space-y-6 lg:pl-1">
             <div>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
                 <div>
                   <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
                     Live Feed
@@ -357,7 +365,8 @@ export default function HomePage() {
                   <span className="text-[10px] text-[#a3a3a3] dark:text-[#525252] uppercase tracking-wide">Live</span>
                 </div>
               </div>
-              <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
+              <div className="overflow-hidden rounded-2xl border border-[#dfdfdf] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] shadow-[0_1px_2px_rgba(10,10,10,0.04),0_14px_32px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.28),0_18px_36px_rgba(0,0,0,0.22)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
                 {activities.length === 0 ? (
                   loading ? (
                     <div className="p-4 space-y-3">
@@ -385,7 +394,7 @@ export default function HomePage() {
             </div>
 
             <div>
-              <div className="mb-3">
+              <div className="mb-3 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
                 <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
                   Analysis
                 </div>
@@ -393,7 +402,8 @@ export default function HomePage() {
                   Registration trend
                 </h2>
               </div>
-              <div className="bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626]">
+              <div className="relative rounded-2xl border border-[#dfdfdf] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] p-4 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_14px_32px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.28),0_18px_36px_rgba(0,0,0,0.22)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
                 {trendData.length > 0 ? (
                   <RegistrationTrendChart data={trendData} />
                 ) : (
@@ -406,7 +416,7 @@ export default function HomePage() {
             </div>
 
             <div>
-              <div className="mb-3">
+              <div className="mb-3 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
                 <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
                   Analysis
                 </div>

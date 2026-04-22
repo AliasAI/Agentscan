@@ -307,7 +307,8 @@ export function CategoryDistribution({
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626]">
+      <div className="relative overflow-hidden rounded-2xl border border-[#dfdfdf] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] p-4 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_14px_32px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.28),0_18px_36px_rgba(0,0,0,0.22)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
         <div className="flex items-center justify-between mb-4">
           <div className="h-4 w-32 rounded bg-[#f5f5f5] dark:bg-[#1a1a1a]" />
           <div className="h-3 w-16 rounded bg-[#f5f5f5] dark:bg-[#1a1a1a]" />
@@ -329,7 +330,8 @@ export function CategoryDistribution({
   const classificationRate = ((data.total_classified / data.total_agents) * 100).toFixed(0)
 
   return (
-    <div className="bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626]">
+    <div className="relative overflow-hidden rounded-2xl border border-[#dfdfdf] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] p-4 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_14px_32px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.28),0_18px_36px_rgba(0,0,0,0.22)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
@@ -344,7 +346,7 @@ export function CategoryDistribution({
       </div>
 
       {/* Classification rate indicator */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#f5f5f5] dark:border-[#262626]">
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#e6e6e6] dark:border-[#2a2a2a]">
         <div className="flex items-center gap-1.5">
           <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
           <span className="text-[10px] text-[#737373] dark:text-[#737373]">

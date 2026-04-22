@@ -22,17 +22,17 @@ interface TrendingColumnProps {
 const accentStyles = {
   gold: {
     icon: 'text-[#111111] dark:text-[#fafafa]',
-    bg: 'bg-[linear-gradient(135deg,#efe8d5_0%,#f7f3e8_100%)] dark:bg-[linear-gradient(135deg,#1a1a1a_0%,#111111_100%)]',
+    bg: 'bg-[#f4efe2] dark:bg-[#171717]',
     badge: 'bg-[#efe6c6] text-[#6b5315] dark:bg-[#242017] dark:text-[#d8b85b]',
   },
   purple: {
     icon: 'text-[#111111] dark:text-[#fafafa]',
-    bg: 'bg-[linear-gradient(135deg,#ece6de_0%,#f7f5f2_100%)] dark:bg-[linear-gradient(135deg,#1a1a1a_0%,#111111_100%)]',
+    bg: 'bg-[#f1ece7] dark:bg-[#171717]',
     badge: 'bg-[#ede6e0] text-[#5c5047] dark:bg-[#24201d] dark:text-[#d0c6bd]',
   },
   green: {
     icon: 'text-[#111111] dark:text-[#fafafa]',
-    bg: 'bg-[linear-gradient(135deg,#e1ece2_0%,#f3f7f2_100%)] dark:bg-[linear-gradient(135deg,#131714_0%,#101210_100%)]',
+    bg: 'bg-[#e9f1ea] dark:bg-[#141814]',
     badge: 'bg-[#dbe9db] text-[#35563a] dark:bg-[#1c261d] dark:text-[#82c28c]',
   },
 }
@@ -47,9 +47,9 @@ function TrendingColumn({
   const styles = accentStyles[accentColor]
 
   return (
-    <div className="rounded-[22px] border border-[#e3dfd5] bg-[linear-gradient(180deg,#ffffff_0%,#f7f5ef_100%)] p-4 shadow-[0_14px_30px_-24px_rgba(0,0,0,0.25)] dark:border-[#262626] dark:bg-[linear-gradient(180deg,#151515_0%,#111111_100%)]">
-      {/* Column Header */}
-      <div className="flex items-center gap-2 mb-3">
+    <div className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] p-3.5 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_12px_30px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:border-[#2b2b2b] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.26),0_16px_32px_rgba(0,0,0,0.22)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+      <div className="flex items-center gap-2 mb-2.5">
         <div className={`p-1.5 rounded-md ${styles.bg}`}>
           <span className={styles.icon}>{icon}</span>
         </div>
@@ -58,8 +58,7 @@ function TrendingColumn({
         </h3>
       </div>
 
-      {/* Agent List */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {agents.length === 0 ? (
           <div className="text-center py-6">
             <p className="text-xs text-[#737373]">No agents yet</p>
@@ -69,14 +68,12 @@ function TrendingColumn({
             <Link
               key={agent.id}
               href={`/agents/${agent.id}`}
-              className="group flex items-center gap-3 rounded-xl border border-transparent p-2.5 transition-colors hover:border-[#e7e1d4] hover:bg-white/80 dark:hover:border-[#2b2b2b] dark:hover:bg-[#171717]"
+              className="group relative flex items-center gap-3 rounded-lg border border-transparent px-2.5 py-2 transition-[background-color,border-color,box-shadow] hover:border-[#e5e5e5] hover:bg-[rgba(250,250,250,0.95)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.58)] dark:hover:border-[#2f2f2f] dark:hover:bg-[#111111] dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
             >
-              {/* Rank number */}
               <span className="text-xs font-medium text-[#a3a3a3] dark:text-[#525252] w-4 text-center">
                 {index + 1}
               </span>
 
-              {/* Agent info */}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa] truncate group-hover:text-[#525252] dark:group-hover:text-[#d4d4d4] transition-colors">
                   {agent.name}
@@ -86,7 +83,6 @@ function TrendingColumn({
                 </div>
               </div>
 
-              {/* Value badge */}
               <span
                 className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${styles.badge}`}
               >
@@ -104,8 +100,8 @@ export function TrendingSection({ data, isLoading }: TrendingSectionProps) {
   if (isLoading || !data) {
     return (
       <div className="mb-8">
-        <h2 className="text-lg font-bold text-[#0a0a0a] dark:text-[#fafafa] mb-4">
-          Trending Now
+        <h2 className="text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-4">
+          Snapshot
         </h2>
         <TrendingSectionSkeleton />
       </div>
@@ -113,25 +109,18 @@ export function TrendingSection({ data, isLoading }: TrendingSectionProps) {
   }
 
   return (
-    <div className="mb-8">
-      <div className="mb-1 flex items-center gap-2">
-        <h2 className="text-lg font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-          Trending Now
+    <div className="relative mb-8 rounded-[28px] border border-[#e2e2e2] bg-[linear-gradient(180deg,rgba(255,255,255,0.7)_0%,rgba(255,255,255,0.3)_100%)] px-3 py-4 dark:border-[#252525] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.02)_100%)]">
+      <div className="pointer-events-none absolute left-0 top-8 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.45),transparent_70%)] opacity-70 blur-3xl animate-[pulse_12s_ease-in-out_infinite] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.05),transparent_70%)]" />
+      <div className="mb-4 border-b border-[#e5e5e5]/80 pb-3 dark:border-[#262626]/90">
+        <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
+          Snapshot
+        </div>
+        <h2 className="text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+          Top ranked, reviewed, and recent
         </h2>
-        <span className="inline-flex items-center gap-1 rounded-full bg-[#e6f0e7] px-2 py-0.5 text-[10px] font-medium text-[#35563a] dark:bg-[#18231a] dark:text-[#82c28c]">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-            <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1952 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M22 4L12 14.01L9 11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Quality
-        </span>
       </div>
-      <p className="text-[11px] text-[#737373] dark:text-[#525252] mb-4">
-        Curated agents with complete profiles • Top Ranked by score • Featured by reviews • Trending by date
-      </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Top Ranked - by reputation score */}
         <TrendingColumn
           title="Top Ranked"
           icon={
@@ -148,7 +137,6 @@ export function TrendingSection({ data, isLoading }: TrendingSectionProps) {
           accentColor="gold"
         />
 
-        {/* Featured - by review count */}
         <TrendingColumn
           title="Featured"
           icon={
@@ -172,7 +160,6 @@ export function TrendingSection({ data, isLoading }: TrendingSectionProps) {
           accentColor="purple"
         />
 
-        {/* Trending - newest agents */}
         <TrendingColumn
           title="Trending"
           icon={
