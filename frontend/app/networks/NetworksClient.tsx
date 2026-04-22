@@ -8,8 +8,7 @@ import ProtocolStackCard from '@/components/networks/ProtocolStackCard'
 import NetworkList from '@/components/networks/NetworkList'
 import type { Network, NetworkWithStats } from '@/types'
 
-// External ERC-8004 implementations (non-EVM, linked in header description)
-const EXTERNAL_NETWORK_COUNT = 1 // Solana (SATI)
+const EXTERNAL_NETWORK_COUNT = 1
 
 export default function NetworksPage() {
   const [networks, setNetworks] = useState<Network[]>([])
@@ -32,7 +31,6 @@ export default function NetworksPage() {
       })
   }, [])
 
-  // Merge & sort by agent count (descending)
   const mergedNetworks = networks
     .map(n => ({
       network: n,
@@ -45,7 +43,6 @@ export default function NetworksPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
-      {/* Page Header */}
       <div className="border-b border-[#e5e5e5] dark:border-[#262626]">
         <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
           <nav className="flex items-center gap-2 text-xs text-[#737373] mb-4">
@@ -82,7 +79,6 @@ export default function NetworksPage() {
               {' '}by Cascade Protocol.
             </p>
 
-            {/* Quick stats */}
             <div className="flex flex-wrap gap-3">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626]">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#525252] dark:text-[#a3a3a3]">

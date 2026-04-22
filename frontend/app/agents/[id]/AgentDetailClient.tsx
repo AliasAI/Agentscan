@@ -10,6 +10,7 @@ import { formatAddress, formatDate, resolveImageUrl, formatReputationScore } fro
 import { getNftExplorerUrl } from '@/lib/utils/network'
 import { NetworkIcon } from '@/components/common/NetworkIcons'
 import { OASFDetailTags } from '@/components/agent/OASFTags'
+import { EcosystemBadges } from '@/components/agent/EcosystemBadges'
 import { TrustTabs } from '@/components/agent/TrustTabs'
 import { LargeScoreRing, EmptyScoreRing } from '@/components/agent/ScoreRing'
 import {
@@ -132,6 +133,34 @@ export default function AgentDetailPage() {
   }
 
   const status = statusConfig[agent.status]
+  const acpLink = agent.ecosystems?.find((item) => item.name === 'virtuals_acp')
+  const acpCapability = agent.capabilities?.find((item) => item.name === 'acp')
+  const payableCapability = agent.capabilities?.find((item) => item.name === 'payable')
+  const acpMetadata = acpLink?.metadata || {}
+  const acpChains = (
+    (acpMetadata.chains as Array<{
+      chainId?: number
+      symbol?: string | null
+      tokenAddress?: string | null
+      virtualAgentId?: number | null
+      acpV2AgentId?: number | null
+      erc8004AgentId?: number | null
+    }> | undefined) || []
+  )
+  const acpOfferings = (
+    (agent.on_chain_data?.offerings as Array<{ id?: string; name?: string; description?: string }> | undefined) || []
+  )
+  const acpResources = (
+    (agent.on_chain_data?.resources as Array<{ id?: string; name?: string; url?: string; description?: string }> | undefined) || []
+  )
+  const acpOfferingsCount = Number(acpCapability?.value?.offerings_count ?? acpMetadata.offerings_count ?? acpOfferings.length)
+  const acpResourcesCount = Number(acpCapability?.value?.resources_count ?? acpMetadata.resources_count ?? acpResources.length)
+  const acpChainIds = (
+    (acpCapability?.value?.chain_ids as number[] | undefined) ||
+    acpChains.map((item) => item.chainId).filter((value): value is number => typeof value === 'number')
+  )
+  const acpCluster = String(acpCapability?.value?.cluster ?? acpMetadata.cluster ?? '').trim()
+  const acpTag = String(acpCapability?.value?.tag ?? acpMetadata.tag ?? '').trim()
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
@@ -397,6 +426,144 @@ export default function AgentDetailPage() {
               </div>
             )}
 
+            {((agent.ecosystems && agent.ecosystems.length > 0) || (agent.capabilities && agent.capabilities.length > 0)) && (
+              <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-6 animate-fade-in" style={{ animationDelay: '125ms' }}>
+                <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] uppercase tracking-wider mb-4">
+                  External Ecosystems
+                </h2>
+                <EcosystemBadges
+                  ecosystems={agent.ecosystems}
+                  capabilities={agent.capabilities}
+                  tokenId={agent.token_id}
+                  agentWallet={agent.agent_wallet}
+                  isActive={agent.is_active}
+                />
+              </div>
+            )}
+
+            {acpLink && (
+              <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-6 animate-fade-in" style={{ animationDelay: '140ms' }}>
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] uppercase tracking-wider">
+                      ACP Discovery
+                    </h2>
+                    <p className="mt-1 text-xs text-[#737373] dark:text-[#737373]">
+                      Commerce and invocation signals discovered from Virtuals ACP.
+                    </p>
+                  </div>
+                  {payableCapability && (
+                    <span className="rounded-lg bg-[#ecfdf5] px-2.5 py-1 text-[11px] font-medium text-[#059669] dark:bg-[#14532d]/30 dark:text-[#34d399]">
+                      Payable via ACP escrow
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 mb-4">
+                  <div className="rounded-lg border border-[#f0f0f0] bg-[#fafafa] p-3 dark:border-[#262626] dark:bg-[#111111]">
+                    <div className="text-[11px] uppercase tracking-wide text-[#737373]">Offerings</div>
+                    <div className="mt-1 text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa]">{acpOfferingsCount}</div>
+                  </div>
+                  <div className="rounded-lg border border-[#f0f0f0] bg-[#fafafa] p-3 dark:border-[#262626] dark:bg-[#111111]">
+                    <div className="text-[11px] uppercase tracking-wide text-[#737373]">Resources</div>
+                    <div className="mt-1 text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa]">{acpResourcesCount}</div>
+                  </div>
+                  <div className="rounded-lg border border-[#f0f0f0] bg-[#fafafa] p-3 dark:border-[#262626] dark:bg-[#111111]">
+                    <div className="text-[11px] uppercase tracking-wide text-[#737373]">Chains</div>
+                    <div className="mt-1 text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                      {acpChainIds.length > 0 ? acpChainIds.join(', ') : 'None'}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-[#f0f0f0] bg-[#fafafa] p-3 dark:border-[#262626] dark:bg-[#111111]">
+                    <div className="text-[11px] uppercase tracking-wide text-[#737373]">Cluster</div>
+                    <div className="mt-1 text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                      {acpCluster || acpTag || 'Independent'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {acpChains.length > 0 && (
+                    <div>
+                      <div className="mb-2 text-xs font-medium text-[#525252] dark:text-[#a3a3a3]">Chain mappings</div>
+                      <div className="space-y-2">
+                        {acpChains.slice(0, 4).map((chain, index) => (
+                          <div key={`${chain.chainId}-${index}`} className="rounded-lg border border-[#f0f0f0] px-3 py-2 text-xs dark:border-[#262626]">
+                            <div className="flex flex-wrap items-center gap-2 text-[#0a0a0a] dark:text-[#fafafa]">
+                              <span className="font-medium">Chain {chain.chainId ?? 'unknown'}</span>
+                              {chain.symbol && (
+                                <span className="rounded bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] dark:bg-[#262626]">
+                                  {chain.symbol}
+                                </span>
+                              )}
+                              {chain.virtualAgentId && <span className="text-[#737373]">Virtuals #{chain.virtualAgentId}</span>}
+                              {chain.acpV2AgentId && <span className="text-[#737373]">ACP #{chain.acpV2AgentId}</span>}
+                              {chain.erc8004AgentId && <span className="text-[#737373]">ERC-8004 #{chain.erc8004AgentId}</span>}
+                            </div>
+                            {chain.tokenAddress && (
+                              <div className="mt-1 font-mono text-[11px] text-[#737373]">
+                                {formatAddress(chain.tokenAddress, 10)}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {acpOfferings.length > 0 && (
+                    <div>
+                      <div className="mb-2 text-xs font-medium text-[#525252] dark:text-[#a3a3a3]">Featured offerings</div>
+                      <div className="space-y-2">
+                        {acpOfferings.slice(0, 3).map((offering, index) => (
+                          <div key={offering.id || `${offering.name}-${index}`} className="rounded-lg border border-[#f0f0f0] px-3 py-2 dark:border-[#262626]">
+                            <div className="text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa]">
+                              {offering.name || 'Unnamed offering'}
+                            </div>
+                            {offering.description && (
+                              <div className="mt-1 text-xs leading-relaxed text-[#737373] dark:text-[#737373]">
+                                {offering.description}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {acpResources.length > 0 && (
+                    <div>
+                      <div className="mb-2 text-xs font-medium text-[#525252] dark:text-[#a3a3a3]">Resources</div>
+                      <div className="space-y-2">
+                        {acpResources.slice(0, 3).map((resource, index) => (
+                          <div key={resource.id || `${resource.name}-${index}`} className="rounded-lg border border-[#f0f0f0] px-3 py-2 dark:border-[#262626]">
+                            <div className="text-sm font-medium text-[#0a0a0a] dark:text-[#fafafa]">
+                              {resource.name || 'Unnamed resource'}
+                            </div>
+                            {resource.url && (
+                              <a
+                                href={resource.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-1 block truncate font-mono text-[11px] text-[#2563eb] hover:underline dark:text-[#60a5fa]"
+                              >
+                                {resource.url}
+                              </a>
+                            )}
+                            {resource.description && (
+                              <div className="mt-1 text-xs leading-relaxed text-[#737373] dark:text-[#737373]">
+                                {resource.description}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Agent Metadata - Inline display */}
             {agent.metadata_uri && (
               <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] overflow-hidden animate-fade-in" style={{ animationDelay: '150ms' }}>
@@ -533,6 +700,38 @@ export default function AgentDetailPage() {
                 )}
               </div>
             </div>
+
+            {acpLink && (
+              <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626] p-6 animate-fade-in" style={{ animationDelay: '260ms' }}>
+                <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] uppercase tracking-wider mb-4">
+                  Capability Snapshot
+                </h2>
+                <div className="space-y-3 text-sm text-[#525252] dark:text-[#a3a3a3]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Found on</span>
+                    <span className="font-medium text-[#0a0a0a] dark:text-[#fafafa]">Virtuals ACP</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Invocation</span>
+                    <span className="font-medium text-[#0a0a0a] dark:text-[#fafafa]">
+                      {acpResourcesCount > 0 ? 'Resource endpoint + jobs' : 'Job offerings'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Payment path</span>
+                    <span className="font-medium text-[#0a0a0a] dark:text-[#fafafa]">
+                      {payableCapability ? 'ACP escrow' : 'Unknown'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>External ID</span>
+                    <span className="font-mono text-xs text-[#737373]">
+                      {acpLink.external_id || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

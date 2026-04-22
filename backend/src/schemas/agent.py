@@ -18,6 +18,21 @@ class AgentBase(BaseModel):
     network_id: str
 
 
+class AgentEcosystemLinkResponse(BaseModel):
+    name: str
+    source_url: str | None = None
+    external_id: str | None = None
+    confidence_score: float | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class AgentCapabilityResponse(BaseModel):
+    name: str
+    source: str | None = None
+    verified: bool = False
+    value: dict[str, Any] | None = None
+
+
 class AgentCreate(AgentBase):
     pass
 
@@ -43,6 +58,8 @@ class AgentListItem(AgentBase):
     domains: list[str] | None = None
     classification_source: str | None = None
     is_active: bool | None = None
+    ecosystems: list[AgentEcosystemLinkResponse] = Field(default_factory=list)
+    capabilities: list[AgentCapabilityResponse] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -66,6 +83,25 @@ class AgentListItem(AgentBase):
             domains=agent.domains,
             classification_source=agent.classification_source,
             is_active=agent.is_active,
+            ecosystems=[
+                AgentEcosystemLinkResponse(
+                    name=link.ecosystem_name,
+                    source_url=link.source_url,
+                    external_id=link.external_id,
+                    confidence_score=link.confidence_score,
+                    metadata=link.metadata_json,
+                )
+                for link in getattr(agent, "ecosystem_links", []) or []
+            ],
+            capabilities=[
+                AgentCapabilityResponse(
+                    name=cap.capability_name,
+                    source=cap.source,
+                    verified=cap.verified,
+                    value=cap.value_json,
+                )
+                for cap in getattr(agent, "capabilities", []) or []
+            ],
         )
 
 
@@ -102,6 +138,8 @@ class AgentResponse(AgentBase):
     # ERC-8004 active field and metadata refresh
     is_active: bool | None = None
     metadata_refreshed_at: datetime | None = None
+    ecosystems: list[AgentEcosystemLinkResponse] = Field(default_factory=list)
+    capabilities: list[AgentCapabilityResponse] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -137,4 +175,23 @@ class AgentResponse(AgentBase):
             classification_source=agent.classification_source,
             is_active=agent.is_active,
             metadata_refreshed_at=agent.metadata_refreshed_at,
+            ecosystems=[
+                AgentEcosystemLinkResponse(
+                    name=link.ecosystem_name,
+                    source_url=link.source_url,
+                    external_id=link.external_id,
+                    confidence_score=link.confidence_score,
+                    metadata=link.metadata_json,
+                )
+                for link in getattr(agent, "ecosystem_links", []) or []
+            ],
+            capabilities=[
+                AgentCapabilityResponse(
+                    name=cap.capability_name,
+                    source=cap.source,
+                    verified=cap.verified,
+                    value=cap.value_json,
+                )
+                for cap in getattr(agent, "capabilities", []) or []
+            ],
         )

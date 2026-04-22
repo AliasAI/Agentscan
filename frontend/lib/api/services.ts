@@ -19,6 +19,7 @@ import type {
   AnalyticsResponse,
   TrendingAgentsResponse,
   LeaderboardResponse,
+  EcosystemSummaryResponse,
 } from '@/types';
 
 // 统计数据服务
@@ -36,6 +37,8 @@ export const agentService = {
       page_size?: number;
       search?: string;
       network?: string;
+      ecosystem?: string;
+      capability?: string;
       reputation_min?: number;
       reputation_max?: number;
       has_reputation?: boolean;
@@ -68,6 +71,10 @@ export const agentService = {
   // Fetch agent's metadata in real-time (resolves IPFS/data URI)
   getAgentMetadata: (id: string) =>
     apiGet<MetadataResponse>(`/agents/${id}/metadata`),
+};
+
+export const ecosystemService = {
+  getSummary: () => apiGet<EcosystemSummaryResponse>('/ecosystems/summary'),
 };
 
 // 网络服务

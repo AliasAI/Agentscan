@@ -34,6 +34,19 @@ const navLinks = [
     ),
   },
   {
+    href: '/ecosystems',
+    label: 'Ecosystems',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="7" cy="12" r="3" />
+        <circle cx="17" cy="7" r="3" />
+        <circle cx="17" cy="17" r="3" />
+        <path d="M9.5 10.5L14.5 8.5" />
+        <path d="M9.5 13.5L14.5 15.5" />
+      </svg>
+    ),
+  },
+  {
     href: '/networks',
     label: 'Networks',
     icon: (

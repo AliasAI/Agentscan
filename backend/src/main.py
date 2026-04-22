@@ -22,7 +22,7 @@ structlog.configure(
     logger_factory=structlog.PrintLoggerFactory(),
     cache_logger_on_first_use=True,
 )
-from src.api import stats, agents, sync, networks, activities, classification, feedback, endpoint_health, metadata, analytics
+from src.api import stats, agents, sync, networks, activities, classification, feedback, endpoint_health, metadata, analytics, ecosystems
 from src.api.leaderboard import router as leaderboard_router
 from src.services.scheduler import start_scheduler, shutdown_scheduler
 from src.db.migrate_add_contracts import migrate as migrate_contracts
@@ -38,6 +38,7 @@ from src.db.migrate_remove_network_unique import migrate as migrate_remove_netwo
 from src.db.migrate_add_active_field import migrate as migrate_add_active_field
 from src.db.migrate_is_quality import migrate as migrate_is_quality
 from src.db.migrate_activity_indexes import migrate as migrate_activity_indexes
+from src.db.migrate_add_ecosystem_tables import migrate as migrate_add_ecosystem_tables
 from src.db.init_networks import init_networks
 
 # Create database tables
@@ -58,6 +59,7 @@ try:
     migrate_add_active_field()  # ERC-8004 active field + metadata refresh tracking
     migrate_is_quality()  # Pre-computed quality flag + composite indexes
     migrate_activity_indexes()  # Indexes on activities table for JOINs/GROUP BYs
+    migrate_add_ecosystem_tables()  # Ecosystem and capability tables
 except Exception as e:
     print(f"Migration warning: {e}")
 
@@ -91,6 +93,7 @@ app.include_router(feedback.router, prefix="/api", tags=["feedback"])
 app.include_router(endpoint_health.router, prefix="/api", tags=["endpoint-health"])
 app.include_router(metadata.router, prefix="/api", tags=["metadata"])
 app.include_router(analytics.router, prefix="/api", tags=["analytics"])
+app.include_router(ecosystems.router, prefix="/api", tags=["ecosystems"])
 app.include_router(leaderboard_router, prefix="/api", tags=["leaderboard"])
 
 

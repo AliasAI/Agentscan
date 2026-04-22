@@ -21,19 +21,19 @@ interface TrendingColumnProps {
 // Accent color styles mapping
 const accentStyles = {
   gold: {
-    icon: 'text-amber-500 dark:text-amber-400',
-    bg: 'bg-amber-50 dark:bg-amber-900/20',
-    badge: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
+    icon: 'text-[#111111] dark:text-[#fafafa]',
+    bg: 'bg-[linear-gradient(135deg,#efe8d5_0%,#f7f3e8_100%)] dark:bg-[linear-gradient(135deg,#1a1a1a_0%,#111111_100%)]',
+    badge: 'bg-[#efe6c6] text-[#6b5315] dark:bg-[#242017] dark:text-[#d8b85b]',
   },
   purple: {
-    icon: 'text-purple-500 dark:text-purple-400',
-    bg: 'bg-purple-50 dark:bg-purple-900/20',
-    badge: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+    icon: 'text-[#111111] dark:text-[#fafafa]',
+    bg: 'bg-[linear-gradient(135deg,#ece6de_0%,#f7f5f2_100%)] dark:bg-[linear-gradient(135deg,#1a1a1a_0%,#111111_100%)]',
+    badge: 'bg-[#ede6e0] text-[#5c5047] dark:bg-[#24201d] dark:text-[#d0c6bd]',
   },
   green: {
-    icon: 'text-emerald-500 dark:text-emerald-400',
-    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
-    badge: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
+    icon: 'text-[#111111] dark:text-[#fafafa]',
+    bg: 'bg-[linear-gradient(135deg,#e1ece2_0%,#f3f7f2_100%)] dark:bg-[linear-gradient(135deg,#131714_0%,#101210_100%)]',
+    badge: 'bg-[#dbe9db] text-[#35563a] dark:bg-[#1c261d] dark:text-[#82c28c]',
   },
 }
 
@@ -47,7 +47,7 @@ function TrendingColumn({
   const styles = accentStyles[accentColor]
 
   return (
-    <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] p-4">
+    <div className="rounded-[22px] border border-[#e3dfd5] bg-[linear-gradient(180deg,#ffffff_0%,#f7f5ef_100%)] p-4 shadow-[0_14px_30px_-24px_rgba(0,0,0,0.25)] dark:border-[#262626] dark:bg-[linear-gradient(180deg,#151515_0%,#111111_100%)]">
       {/* Column Header */}
       <div className="flex items-center gap-2 mb-3">
         <div className={`p-1.5 rounded-md ${styles.bg}`}>
@@ -69,7 +69,7 @@ function TrendingColumn({
             <Link
               key={agent.id}
               href={`/agents/${agent.id}`}
-              className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors group"
+              className="group flex items-center gap-3 rounded-xl border border-transparent p-2.5 transition-colors hover:border-[#e7e1d4] hover:bg-white/80 dark:hover:border-[#2b2b2b] dark:hover:bg-[#171717]"
             >
               {/* Rank number */}
               <span className="text-xs font-medium text-[#a3a3a3] dark:text-[#525252] w-4 text-center">
@@ -114,11 +114,11 @@ export function TrendingSection({ data, isLoading }: TrendingSectionProps) {
 
   return (
     <div className="mb-8">
-      <div className="flex items-center gap-2 mb-1">
+      <div className="mb-1 flex items-center gap-2">
         <h2 className="text-lg font-bold text-[#0a0a0a] dark:text-[#fafafa]">
           Trending Now
         </h2>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-medium rounded-full">
+        <span className="inline-flex items-center gap-1 rounded-full bg-[#e6f0e7] px-2 py-0.5 text-[10px] font-medium text-[#35563a] dark:bg-[#18231a] dark:text-[#82c28c]">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
             <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1952 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M22 4L12 14.01L9 11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

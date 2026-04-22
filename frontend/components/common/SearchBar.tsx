@@ -5,11 +5,11 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 
 // 动态占位符提示语列表
 const PLACEHOLDER_SUGGESTIONS = [
-  'Search agents by name...',
-  'Search by wallet address...',
-  'Find AI assistants...',
-  'Explore DeFi agents...',
-  'Discover trading bots...',
+  'Search agents by name…',
+  'Search by wallet address…',
+  'Find AI assistants…',
+  'Explore DeFi agents…',
+  'Discover trading bots…',
 ];
 
 interface SearchBarProps {
@@ -160,12 +160,15 @@ export function SearchBar({
         <input
           ref={inputRef}
           type="text"
+          name="agent_search"
+          autoComplete="off"
+          aria-label="Search the agent index"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder={isFocused ? 'Type to search...' : ''}
-          className="w-full h-11 px-4 pl-10 pr-10 text-sm rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#0a0a0a] dark:text-[#fafafa] placeholder:text-[#a3a3a3] dark:placeholder:text-[#525252] focus:outline-none focus:border-[#0a0a0a] dark:focus:border-[#fafafa] focus:ring-2 focus:ring-[#0a0a0a]/10 dark:focus:ring-[#fafafa]/20 transition-all duration-200"
+          placeholder={isFocused ? 'Type to search…' : ''}
+          className="w-full h-11 px-4 pl-10 pr-10 text-sm rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#0a0a0a] dark:text-[#fafafa] placeholder:text-[#a3a3a3] dark:placeholder:text-[#525252] focus:outline-none focus:border-[#0a0a0a] dark:focus:border-[#fafafa] focus:ring-2 focus:ring-[#0a0a0a]/10 dark:focus:ring-[#fafafa]/20 transition-[border-color,box-shadow,color,background-color] duration-200"
         />
 
         {/* Clear Button */}
@@ -173,7 +176,7 @@ export function SearchBar({
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#a3a3a3] hover:text-[#525252] dark:hover:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded transition-all duration-200 z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#a3a3a3] hover:text-[#525252] dark:hover:text-[#d4d4d4] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded transition-[color,background-color] duration-200 z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
             title="Clear search"
             aria-label="Clear search"
           >

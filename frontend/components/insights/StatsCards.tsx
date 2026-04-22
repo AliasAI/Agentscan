@@ -14,7 +14,7 @@ interface StatsCardsProps {
 
 export function StatsCards({ cards }: StatsCardsProps) {
   return (
-    <div className="flex flex-wrap items-start justify-center gap-x-12 gap-y-4 mb-8 py-2">
+    <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
       {cards.map((card) => (
         <StatCard key={card.label} {...card} />
       ))}
@@ -30,15 +30,15 @@ function StatCard({ label, value, color, tooltip, subtitle }: StatCardData) {
     'text-[#0a0a0a] dark:text-[#fafafa]'
 
   return (
-    <div className="text-center group relative">
-      <div className={`text-2xl md:text-3xl font-bold tabular-nums ${valueColor}`}>
-        {typeof value === 'number' ? value.toLocaleString() : value}
-      </div>
-      <div className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mt-0.5">
+    <div className="group relative rounded-2xl border border-[#e5e5e5] bg-white px-4 py-4 shadow-[0_10px_30px_-24px_rgba(0,0,0,0.22)] dark:border-[#262626] dark:bg-[#171717]">
+      <div className="mb-1 text-[10px] font-medium uppercase tracking-[0.18em] text-[#8a877d] dark:text-[#5f5f5f]">
         {label}
       </div>
+      <div className={`text-2xl font-bold tabular-nums ${valueColor}`}>
+        {typeof value === 'number' ? value.toLocaleString() : value}
+      </div>
       {subtitle && (
-        <div className="text-[10px] text-[#a3a3a3] dark:text-[#525252] mt-0.5">{subtitle}</div>
+        <div className="mt-1 text-[11px] text-[#6d6b63] dark:text-[#8a8a8a]">{subtitle}</div>
       )}
       {tooltip && (
         <div className="

@@ -22,7 +22,6 @@ export function Header() {
     }
   }, []);
 
-  // Global "/" shortcut to open search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === '/' && !searchOpen && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
@@ -42,6 +41,7 @@ export function Header() {
   const navLinks = [
     { href: '/', label: 'Overview' },
     { href: '/agents', label: 'Agents' },
+    { href: '/ecosystems', label: 'Ecosystems' },
     { href: '/networks', label: 'Networks' },
     { href: '/leaderboard', label: 'Leaderboard' },
     { href: '/insights', label: 'Insights' },
@@ -63,7 +63,6 @@ export function Header() {
     }
   };
 
-  // SSR placeholder
   if (!mounted) {
     return (
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#fafafa]/90 dark:bg-[#0a0a0a]/90 border-b border-[#e5e5e5] dark:border-[#262626]">
@@ -94,7 +93,6 @@ export function Header() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 lg:h-16">
             <div className="flex items-center space-x-6 lg:space-x-8">
-              {/* Logo */}
               <Link href="/" className="flex items-center gap-2.5 group shrink-0">
                 <div className="relative bg-[#0a0a0a] dark:bg-[#fafafa] p-2 rounded-lg transform group-hover:scale-105 transition-transform duration-200">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white dark:text-[#0a0a0a]">
@@ -108,7 +106,6 @@ export function Header() {
                 </span>
               </Link>
 
-              {/* Compact Search - Desktop */}
               <div className="hidden md:block">
                 {searchOpen ? (
                   <form onSubmit={handleSearchSubmit} className="relative">
@@ -139,7 +136,6 @@ export function Header() {
                 )}
               </div>
 
-              {/* Navigation - Desktop (text only, no icons) */}
               <nav className="hidden md:flex items-center">
                 {navLinks.map((link) => {
                   const active = isActive(link.href);
@@ -174,14 +170,11 @@ export function Header() {
               </nav>
             </div>
 
-            {/* Right side */}
             <div className="flex items-center gap-3">
-              {/* Wallet Button - Desktop */}
               <div className="hidden md:flex items-center">
                 <WalletButton />
               </div>
 
-              {/* Hamburger - Mobile */}
               <button
                 onClick={() => setDrawerOpen(true)}
                 className="md:hidden p-2 rounded-lg text-[#525252] dark:text-[#a3a3a3] hover:bg-[#e5e5e5]/50 dark:hover:bg-[#262626]/50 transition-colors"

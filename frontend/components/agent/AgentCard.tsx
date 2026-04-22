@@ -3,6 +3,7 @@ import type { Agent } from '@/types';
 import { formatAddress } from '@/lib/utils/format';
 import { NetworkIcon } from '@/components/common/NetworkIcons';
 import { OASFTags } from './OASFTags';
+import { EcosystemBadges } from './EcosystemBadges';
 import { ScoreRing, EmptyScoreRing } from './ScoreRing';
 
 interface AgentCardProps {
@@ -10,6 +11,25 @@ interface AgentCardProps {
 }
 
 export function AgentCard({ agent }: AgentCardProps) {
+  const acpLink = agent.ecosystems?.find((item) => item.name === 'virtuals_acp')
+  const acpCapability = agent.capabilities?.find((item) => item.name === 'acp')
+  const payableCapability = agent.capabilities?.find((item) => item.name === 'payable')
+  const acpMetadata = acpLink?.metadata || {}
+  const offeringsCount = Number(
+    acpCapability?.value?.offerings_count ?? acpMetadata.offerings_count ?? 0
+  )
+  const resourcesCount = Number(
+    acpCapability?.value?.resources_count ?? acpMetadata.resources_count ?? 0
+  )
+  const chainIds = (
+    (acpCapability?.value?.chain_ids as number[] | undefined) ||
+    ((acpMetadata.chains as Array<{ chainId?: number }> | undefined)?.map((item) => item.chainId).filter(Boolean) as number[] | undefined) ||
+    []
+  )
+  const cluster = String(acpCapability?.value?.cluster ?? acpMetadata.cluster ?? '').trim()
+  const tag = String(acpCapability?.value?.tag ?? acpMetadata.tag ?? '').trim()
+  const lastActiveAt = String(acpMetadata.last_active_at ?? '').trim()
+
   // 统一的状态配色 - 黑白灰科技风格
   const statusColors = {
     active: 'bg-[#f0fdf4] text-[#22c55e] dark:bg-[#14532d]/30 dark:text-[#4ade80]',
@@ -75,6 +95,57 @@ export function AgentCard({ agent }: AgentCardProps) {
               compact
             />
           </div>
+
+          <div className="mb-2 min-h-[24px]">
+            <EcosystemBadges
+              ecosystems={agent.ecosystems}
+              capabilities={agent.capabilities}
+              tokenId={agent.token_id}
+              agentWallet={agent.agent_wallet}
+              isActive={agent.is_active}
+              compact
+            />
+          </div>
+
+          {acpLink && (
+            <div className="mb-3 rounded-lg border border-[#f0f0f0] bg-[#fafafa] px-3 py-2 dark:border-[#262626] dark:bg-[#111111]">
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#525252] dark:text-[#a3a3a3]">
+                <span>{offeringsCount} offerings</span>
+                <span className="text-[#d4d4d4] dark:text-[#404040]">•</span>
+                <span>{resourcesCount} resources</span>
+                {chainIds.length > 0 && (
+                  <>
+                    <span className="text-[#d4d4d4] dark:text-[#404040]">•</span>
+                    <span>{chainIds.join(', ')} chains</span>
+                  </>
+                )}
+              </div>
+              {(cluster || tag || lastActiveAt) && (
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                  {cluster && (
+                    <span className="rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#525252] dark:bg-[#171717] dark:text-[#a3a3a3]">
+                      {cluster}
+                    </span>
+                  )}
+                  {tag && tag !== cluster && (
+                    <span className="rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#737373] dark:bg-[#171717] dark:text-[#737373]">
+                      {tag}
+                    </span>
+                  )}
+                  {lastActiveAt && (
+                    <span className="text-[10px] text-[#737373] dark:text-[#737373]">
+                      Updated {new Date(lastActiveAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              )}
+              {payableCapability && (
+                <div className="mt-1 text-[10px] text-[#737373] dark:text-[#737373]">
+                  ACP escrow payable
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Trust Footer - Reviews & Validations */}
           <div className="flex items-center justify-between pt-3 border-t border-[#e5e5e5] dark:border-[#262626] mt-auto">

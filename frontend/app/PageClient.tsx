@@ -4,17 +4,25 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SearchBar } from '@/components/common/SearchBar'
-import { AgentCard } from '@/components/agent/AgentCard'
+import { EcosystemBadges } from '@/components/agent/EcosystemBadges'
 import { ActivityList } from '@/components/common/ActivityList'
 import { RegistrationTrendChart } from '@/components/charts/RegistrationTrendChart'
 import { CategoryDistribution } from '@/components/charts/CategoryDistribution'
 import { MultiNetworkSyncStatus } from '@/components/common/MultiNetworkSyncStatus'
-import { formatNumber } from '@/lib/utils/format'
+import { NetworkIcon } from '@/components/common/NetworkIcons'
+import { formatAddress, formatNumber, formatTimeAgo, formatReputationScore } from '@/lib/utils/format'
 import { AgentCardSkeleton, StatCardSkeleton, ActivityItemSkeleton } from '@/components/common/Skeleton'
 import { TrendingSection } from '@/components/home/TrendingSection'
 import { McpInstallModal } from '@/components/home/McpInstallModal'
 import { statsService, agentService, activityService, taxonomyService } from '@/lib/api/services'
-import type { Agent, Activity, Stats, RegistrationTrendData, CategoryDistributionData, TrendingAgentsResponse } from '@/types'
+import type {
+  Agent,
+  Activity,
+  Stats,
+  RegistrationTrendData,
+  CategoryDistributionData,
+  TrendingAgentsResponse,
+} from '@/types'
 
 export default function HomePage() {
   const router = useRouter()
@@ -29,21 +37,16 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [mcpModalOpen, setMcpModalOpen] = useState(false)
 
-  // Fetch stats on mount and refresh every 10 seconds
   useEffect(() => {
     const fetchStats = () => {
-      statsService.getStats()
-        .then(setStats)
-        .catch(console.error)
+      statsService.getStats().then(setStats).catch(console.error)
     }
 
     fetchStats()
-    const interval = setInterval(fetchStats, 10000) // Refresh every 10 seconds
-
+    const interval = setInterval(fetchStats, 10000)
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch agents (latest by default, quality filtered)
   useEffect(() => {
     setLoading(true)
     agentService
@@ -51,67 +54,44 @@ export default function HomePage() {
         page: 1,
         page_size: 8,
         search: searchQuery || undefined,
-        quality: 'basic', // Only show agents with name + description
+        quality: 'basic',
       })
-      .then((response) => {
-        setAgents(response.items)
-      })
+      .then((response) => setAgents(response.items))
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [searchQuery])
 
-  // Fetch activities and refresh every 10 seconds
   useEffect(() => {
     const fetchActivities = () => {
       activityService
         .getActivities({ page: 1, page_size: 10 })
-        .then((response) => {
-          setActivities(response.items)
-        })
+        .then((response) => setActivities(response.items))
         .catch(console.error)
     }
 
     fetchActivities()
-    const interval = setInterval(fetchActivities, 10000) // Refresh every 10 seconds
-
+    const interval = setInterval(fetchActivities, 10000)
     return () => clearInterval(interval)
   }, [])
 
-  // Fetch registration trend data on mount only (no auto-refresh)
   useEffect(() => {
-    statsService
-      .getRegistrationTrend(30)
-      .then((response) => {
-        setTrendData(response.data)
-      })
-      .catch(console.error)
+    statsService.getRegistrationTrend(30).then((response) => setTrendData(response.data)).catch(console.error)
   }, [])
 
-  // Fetch category distribution data on mount only
   useEffect(() => {
-    taxonomyService
-      .getDistribution()
-      .then(setCategoryData)
-      .catch(console.error)
+    taxonomyService.getDistribution().then(setCategoryData).catch(console.error)
   }, [])
 
-  // Fetch trending agents on mount only
   useEffect(() => {
     setTrendingLoading(true)
-    agentService
-      .getTrendingAgents(5)
-      .then(setTrendingData)
-      .catch(console.error)
-      .finally(() => setTrendingLoading(false))
+    agentService.getTrendingAgents(5).then(setTrendingData).catch(console.error).finally(() => setTrendingLoading(false))
   }, [])
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
-      {/* Hero Section - 黑白极简风格 */}
-      <div className="relative border-b border-[#e5e5e5] dark:border-[#262626]">
+      <div className="relative border-b border-[#e5e5e5] dark:border-[#262626] bg-[linear-gradient(180deg,#ffffff_0%,#fafafa_100%)] dark:bg-[linear-gradient(180deg,#0a0a0a_0%,#0d0d0d_100%)]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center pt-10 pb-8 lg:pt-14 lg:pb-10">
-            {/* Multi-Network Sync Status */}
+          <div className="pt-8 pb-6 lg:pt-10 lg:pb-8">
             {stats?.multi_network_sync && (
               <>
                 <div className="hidden md:block absolute top-4 right-6">
@@ -123,18 +103,54 @@ export default function HomePage() {
               </>
             )}
 
-            <div className="max-w-3xl mx-auto">
-              {/* 标题使用纯黑 */}
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 leading-tight text-[#0a0a0a] dark:text-[#fafafa] tracking-tight">
-                ERC-8004 AI Agent Explorer
-              </h1>
+            <div className="max-w-5xl mx-auto">
+              <div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#737373] dark:text-[#737373]">
+                Onchain Agent Index
+              </div>
 
-              <p className="text-sm md:text-base text-[#525252] dark:text-[#a3a3a3] mb-6 max-w-xl mx-auto leading-relaxed">
-                Discover and track AI agents on the blockchain
-              </p>
+              <div className="max-w-3xl">
+                <div>
+                  <h1 className="text-balance text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight text-[#0a0a0a] dark:text-[#fafafa] tracking-tight">
+                    See the agent economy across blockchain networks.
+                  </h1>
+                </div>
+              </div>
 
-              <div className="flex justify-center mb-5">
-                <div className="w-full max-w-lg">
+              <section className="mt-5 rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="max-w-xl">
+                    <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
+                      Search
+                    </div>
+                    <h2 className="mt-1 text-lg font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                      Search the index
+                    </h2>
+                    <p className="mt-1 text-sm text-[#525252] dark:text-[#a3a3a3] leading-relaxed">
+                      Find agents by name, wallet, or known identifiers, then jump straight into the full index.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 lg:min-w-[560px]">
+                    <Link
+                      href="/agents"
+                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 bg-[#0a0a0a] hover:bg-[#262626] active:scale-[0.98] text-white text-sm font-semibold rounded-lg transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] dark:bg-[#fafafa] dark:hover:bg-[#e5e5e5] dark:text-[#0a0a0a]"
+                    >
+                      <span>Browse Agents</span>
+                    </Link>
+                    <Link
+                      href="/ecosystems"
+                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
+                    >
+                      <span>Open Ecosystems</span>
+                    </Link>
+                    <button
+                      onClick={() => setMcpModalOpen(true)}
+                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] sm:col-span-2 lg:col-span-1"
+                    >
+                      <span>Install MCP</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-3">
                   <SearchBar
                     onSearch={setSearchQuery}
                     onSubmit={(query) => {
@@ -143,32 +159,52 @@ export default function HomePage() {
                     }}
                   />
                 </div>
-              </div>
+              </section>
 
-              <div className="flex flex-wrap justify-center gap-3">
-                {/* 主按钮：纯黑背景 */}
-                <Link
-                  href="/agents"
-                  className="inline-flex items-center gap-1.5 h-10 px-5 bg-[#0a0a0a] hover:bg-[#262626] active:scale-[0.98] text-white text-sm font-semibold rounded-lg shadow-md transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] dark:bg-[#fafafa] dark:hover:bg-[#e5e5e5] dark:text-[#0a0a0a]"
-                >
-                  <span>Browse Agents</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </Link>
-                {/* 次按钮：细边框风格 */}
-                <Link
-                  href="/networks"
-                  className="inline-flex items-center gap-1.5 h-10 px-5 bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] active:scale-[0.98] text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
-                >
-                  <span>Networks</span>
-                </Link>
-                <button
-                  onClick={() => setMcpModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 h-10 px-5 bg-white dark:bg-[#171717] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] active:scale-[0.98] text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
-                >
-                  <span>Install MCP</span>
-                </button>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+                {!stats ? (
+                  <>
+                    <StatCardSkeleton />
+                    <StatCardSkeleton />
+                    <StatCardSkeleton />
+                    <StatCardSkeleton />
+                  </>
+                ) : (
+                  <>
+                    <Link href="/agents" className="rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-4 text-left transition-colors hover:border-[#d4d4d4] dark:hover:border-[#404040]">
+                      <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
+                        Indexed Agents
+                      </div>
+                      <div className="mt-2 text-2xl md:text-3xl font-semibold text-[#0a0a0a] dark:text-[#fafafa] tabular-nums">
+                        {formatNumber(stats.total_agents)}
+                      </div>
+                    </Link>
+                    <Link href="/agents" className="rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-4 text-left transition-colors hover:border-[#d4d4d4] dark:hover:border-[#404040]">
+                      <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
+                        Active Agents
+                      </div>
+                      <div className="mt-2 text-2xl md:text-3xl font-semibold text-[#0a0a0a] dark:text-[#fafafa] tabular-nums">
+                        {formatNumber(stats.active_agents)}
+                      </div>
+                    </Link>
+                    <Link href="/networks" className="rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-4 text-left transition-colors hover:border-[#d4d4d4] dark:hover:border-[#404040]">
+                      <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
+                        Networks
+                      </div>
+                      <div className="mt-2 text-2xl md:text-3xl font-semibold text-[#0a0a0a] dark:text-[#fafafa] tabular-nums">
+                        {formatNumber(stats.total_networks)}
+                      </div>
+                    </Link>
+                    <div className="rounded-2xl border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-4 text-left">
+                      <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
+                        Activities
+                      </div>
+                      <div className="mt-2 text-2xl md:text-3xl font-semibold text-[#0a0a0a] dark:text-[#fafafa] tabular-nums">
+                        {formatNumber(stats.total_activities)}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -176,66 +212,22 @@ export default function HomePage() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {/* Overall Stats - OpenRouter-style borderless stats */}
-        <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 mb-10 pt-6 relative z-10">
-          {!stats ? (
-            <>
-              <StatCardSkeleton />
-              <StatCardSkeleton />
-              <StatCardSkeleton />
-              <StatCardSkeleton />
-            </>
-          ) : (
-            <>
-              <Link href="/agents" className="text-center group">
-                <div className="text-2xl md:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] group-hover:text-[#22c55e] transition-colors tabular-nums">
-                  {formatNumber(stats.total_agents)}
-                </div>
-                <div className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mt-0.5">
-                  Total Agents
-                </div>
-              </Link>
-              <Link href="/agents" className="text-center group">
-                <div className="text-2xl md:text-3xl font-bold text-[#22c55e] dark:text-[#4ade80] tabular-nums">
-                  {formatNumber(stats.active_agents)}
-                </div>
-                <div className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mt-0.5">
-                  Active (7d)
-                </div>
-              </Link>
-              <Link href="/networks" className="text-center group">
-                <div className="text-2xl md:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] group-hover:text-[#3b82f6] transition-colors tabular-nums">
-                  {formatNumber(stats.total_networks)}
-                </div>
-                <div className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mt-0.5">
-                  Networks
-                </div>
-              </Link>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] tabular-nums">
-                  {formatNumber(stats.total_activities)}
-                </div>
-                <div className="text-[11px] font-medium text-[#737373] uppercase tracking-wide mt-0.5">
-                  Activities
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Trending Now Section */}
-        <TrendingSection data={trendingData} isLoading={trendingLoading} />
+        <section className="pt-6">
+          <TrendingSection data={trendingData} isLoading={trendingLoading} />
+        </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Featured Agents with Tabs */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
+          <section className="lg:col-span-2">
+            <div className="flex items-end justify-between gap-4 mb-5">
               <div>
-                <h2 className="text-lg font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-                  AI Agents
+                <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
+                  Index
+                </div>
+                <h2 className="text-balance text-xl font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                  Recently updated agents
                 </h2>
-                <p className="text-xs text-[#737373] dark:text-[#525252] mt-0.5">
-                  Showing agents with complete profiles
+                <p className="text-sm text-[#525252] dark:text-[#a3a3a3] mt-2">
+                  Use this list to inspect identity, signals, trust, and freshness at a glance.
                 </p>
               </div>
               <Link
@@ -249,10 +241,9 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Agent List */}
             <div className="mt-2">
               {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-3">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <AgentCardSkeleton key={i} />
                   ))}
@@ -268,44 +259,99 @@ export default function HomePage() {
                   <p className="text-xs text-[#737373] dark:text-[#737373]">Try adjusting your search or filters</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {agents.map((agent) => (
-                    <AgentCard key={agent.id} agent={agent} />
+                <div className="bg-white dark:bg-[#171717] rounded-lg border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
+                  <div className="hidden md:grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_96px] gap-4 px-4 py-3 border-b border-[#e5e5e5] dark:border-[#262626] bg-[#fcfcfc] dark:bg-[#121212] text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
+                    <div>Agent</div>
+                    <div>Signals</div>
+                    <div className="text-right">Trust</div>
+                    <div className="text-right">Updated</div>
+                  </div>
+                  {agents.map((agent, index) => (
+                    <Link
+                      key={agent.id}
+                      href={`/agents/${agent.id}`}
+                      className={`block px-4 py-4 transition-colors hover:bg-[#fafafa] dark:hover:bg-[#111111] ${index !== agents.length - 1 ? 'border-b border-[#e5e5e5] dark:border-[#262626]' : ''}`}
+                    >
+                      <div className="grid gap-4 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_96px]">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="truncate text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                              {agent.name}
+                            </span>
+                            {agent.token_id !== undefined && agent.token_id !== null && (
+                              <span className="text-[10px] text-[#737373] dark:text-[#737373] font-mono">
+                                #{agent.token_id}
+                              </span>
+                            )}
+                            {agent.network_name && (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-[#737373] dark:text-[#737373]">
+                                <NetworkIcon networkName={agent.network_name} className="w-3.5 h-3.5" />
+                                {agent.network_name}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="mt-1 text-[11px] font-mono text-[#737373] dark:text-[#737373]">
+                            {formatAddress(agent.address, 12)}
+                          </div>
+
+                          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[#525252] dark:text-[#a3a3a3]">
+                            {agent.description}
+                          </p>
+                        </div>
+
+                        <div className="min-w-0">
+                          <EcosystemBadges
+                            ecosystems={agent.ecosystems}
+                            capabilities={agent.capabilities}
+                            tokenId={agent.token_id}
+                            agentWallet={agent.agent_wallet}
+                            isActive={agent.is_active}
+                            compact
+                          />
+                        </div>
+
+                        <div className="text-left md:text-right">
+                          <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#737373] dark:text-[#737373] md:hidden mb-1">
+                            Trust
+                          </div>
+                          <div className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] tabular-nums">
+                            {(agent.reputation_count || 0) > 0 ? formatReputationScore(agent.reputation_score) : 'No score'}
+                          </div>
+                          <div className="mt-1 text-[11px] text-[#737373] dark:text-[#737373]">
+                            {(agent.reputation_count || 0) > 0
+                              ? `${agent.reputation_count} review${agent.reputation_count === 1 ? '' : 's'}`
+                              : 'No reviews'}
+                          </div>
+                        </div>
+
+                        <div className="text-left md:text-right">
+                          <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#737373] dark:text-[#737373] md:hidden mb-1">
+                            Updated
+                          </div>
+                          <div className="text-[11px] text-[#737373] dark:text-[#737373]">
+                            {formatTimeAgo(agent.updated_at)}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
                   ))}
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
-          {/* Sidebar: Category Trends + Registration Trend + Recent Activity */}
-          <div className="space-y-6">
-            {/* Category Distribution */}
-            <CategoryDistribution data={categoryData || undefined} isLoading={!categoryData} />
-
-            {/* Registration Trend Chart */}
-            <div>
-              <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-3">
-                Registration Trend
-              </h2>
-              <div className="bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626]">
-                {trendData.length > 0 ? (
-                  <RegistrationTrendChart data={trendData} />
-                ) : (
-                  <div className="h-[160px] flex flex-col items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-[#0a0a0a] dark:border-[#fafafa] border-t-transparent rounded-full animate-spin mb-2"></div>
-                    <p className="text-xs text-[#737373] dark:text-[#737373]">Loading...</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Recent Activity */}
+          <aside className="space-y-6">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
-                  Recent Activity
-                </h2>
-                {/* Live indicator */}
+                <div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
+                    Live Feed
+                  </div>
+                  <h2 className="text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                    Recent activity
+                  </h2>
+                </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-[10px] text-[#a3a3a3] dark:text-[#525252] uppercase tracking-wide">Live</span>
@@ -337,7 +383,40 @@ export default function HomePage() {
                 )}
               </div>
             </div>
-          </div>
+
+            <div>
+              <div className="mb-3">
+                <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
+                  Analysis
+                </div>
+                <h2 className="text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                  Registration trend
+                </h2>
+              </div>
+              <div className="bg-white dark:bg-[#171717] rounded-lg p-4 border border-[#e5e5e5] dark:border-[#262626]">
+                {trendData.length > 0 ? (
+                  <RegistrationTrendChart data={trendData} />
+                ) : (
+                  <div className="h-[160px] flex flex-col items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-[#0a0a0a] dark:border-[#fafafa] border-t-transparent rounded-full animate-spin mb-2"></div>
+                    <p className="text-xs text-[#737373] dark:text-[#737373]">Loading…</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-3">
+                <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
+                  Analysis
+                </div>
+                <h2 className="text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                  Capability distribution
+                </h2>
+              </div>
+              <CategoryDistribution data={categoryData || undefined} isLoading={!categoryData} />
+            </div>
+          </aside>
         </div>
       </div>
 

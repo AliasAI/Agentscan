@@ -53,6 +53,23 @@ export interface Agent {
   // ERC-8004 active field and metadata refresh
   is_active?: boolean | null;
   metadata_refreshed_at?: string | null;
+  ecosystems?: AgentEcosystemLink[];
+  capabilities?: AgentCapability[];
+}
+
+export interface AgentEcosystemLink {
+  name: string;
+  source_url?: string | null;
+  external_id?: string | null;
+  confidence_score?: number | null;
+  metadata?: Record<string, any> | null;
+}
+
+export interface AgentCapability {
+  name: string;
+  source?: string | null;
+  verified: boolean;
+  value?: Record<string, any> | null;
 }
 
 export interface Contracts {
@@ -129,6 +146,16 @@ export interface PaginatedResponse<T> {
   page: number;
   page_size: number;
   total_pages: number;
+}
+
+export interface EcosystemSummaryItem {
+  ecosystem: string;
+  agent_count: number;
+  capability_count: number;
+}
+
+export interface EcosystemSummaryResponse {
+  items: EcosystemSummaryItem[];
 }
 
 // Trending Agents Response (for homepage)

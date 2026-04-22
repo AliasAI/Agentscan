@@ -25,16 +25,12 @@ export default function InsightsPage() {
       setError(null)
 
       const networkParam = network !== 'all' ? network : undefined
-
-      // Fetch both APIs concurrently
       const [analytics, endpointStats] = await Promise.all([
         analyticsService.getOverview({ days, limit: 10, network: networkParam }),
         endpointHealthService.getQuickStats(networkParam).catch(() => null),
       ])
 
       setAnalyticsData(analytics)
-
-      // Extract quick stats from endpoint health quick-stats (pure SQL, fast)
       if (endpointStats?.summary) {
         setQuickStats(endpointStats.summary)
       }
@@ -52,7 +48,6 @@ export default function InsightsPage() {
     return () => clearInterval(interval)
   }, [fetchData])
 
-  // Build stat cards from combined data
   const statCards = analyticsData ? [
     {
       label: 'Active Agents',
@@ -77,7 +72,6 @@ export default function InsightsPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
-      {/* Header */}
       <div className="border-b border-[#e5e5e5] dark:border-[#262626]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <nav className="flex items-center gap-2 text-xs text-[#737373] mb-4">
@@ -101,9 +95,7 @@ export default function InsightsPage() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Network filter */}
         <div className="mb-6">
           <NetworkSelector selectedNetwork={network} onNetworkChange={setNetwork} />
         </div>

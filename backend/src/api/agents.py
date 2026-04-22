@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session, joinedload, defer
+from sqlalchemy.orm import Session, joinedload, defer, selectinload
 from sqlalchemy import func
 
 from src.db.database import get_db
@@ -48,6 +48,8 @@ async def get_agents(
     page_size: int = Query(20, ge=1, le=100),
     search: str | None = None,
     network: str | None = Query(None, description="Filter by network ID or 'all'"),
+    ecosystem: str | None = Query(None, description="Filter by ecosystem name"),
+    capability: str | None = Query(None, description="Filter by capability name"),
     reputation_min: float | None = Query(None, ge=0),
     reputation_max: float | None = Query(None, ge=0),
     has_reputation: bool | None = Query(None, description="Filter agents with reputation activity"),
@@ -61,6 +63,8 @@ async def get_agents(
     # Defer heavy JSON columns not needed in list view
     query = db.query(Agent).options(
         joinedload(Agent.network),
+        selectinload(Agent.ecosystem_links),
+        selectinload(Agent.capabilities),
         defer(Agent.on_chain_data),
         defer(Agent.endpoint_status),
     )
@@ -71,6 +75,12 @@ async def get_agents(
     # Network filtering
     if network and network != "all":
         query = query.filter(Agent.network_id == network)
+
+    if ecosystem:
+        query = query.filter(Agent.ecosystem_links.any(ecosystem_name=ecosystem))
+
+    if capability:
+        query = query.filter(Agent.capabilities.any(capability_name=capability))
 
     # Case-insensitive search
     if search:
@@ -130,6 +140,8 @@ async def get_trending_agents(
         return apply_quality_filter(
             db.query(Agent).options(
                 joinedload(Agent.network),
+                selectinload(Agent.ecosystem_links),
+                selectinload(Agent.capabilities),
                 defer(Agent.on_chain_data),
                 defer(Agent.endpoint_status),
             ),
@@ -177,6 +189,8 @@ async def get_featured_agents(db: Session = Depends(get_db)):
         db.query(Agent)
         .options(
             joinedload(Agent.network),
+            selectinload(Agent.ecosystem_links),
+            selectinload(Agent.capabilities),
             defer(Agent.on_chain_data),
             defer(Agent.endpoint_status),
         )
@@ -193,7 +207,11 @@ async def get_agent(agent_id: str, db: Session = Depends(get_db)):
 
     agent = (
         db.query(Agent)
-        .options(joinedload(Agent.network))
+        .options(
+            joinedload(Agent.network),
+            selectinload(Agent.ecosystem_links),
+            selectinload(Agent.capabilities),
+        )
         .filter(Agent.id == agent_id)
         .first()
     )

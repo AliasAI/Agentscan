@@ -76,3 +76,6 @@ class Agent(Base):
     # Relationships
     network = relationship("Network", back_populates="agents")
     activities = relationship("Activity", back_populates="agent")
+    ecosystem_links = relationship("AgentEcosystemLink", back_populates="agent")
+    capabilities = relationship("AgentCapability", back_populates="agent")
+    activity_snapshots = relationship("AgentActivitySnapshot", back_populates="agent")
