@@ -14,6 +14,9 @@ if [ ! -d "node_modules" ]; then
   npm install
 fi
 
+# 确保日志目录存在
+mkdir -p ../logs
+
 # 启动开发服务器
-echo "启动 Next.js 开发服务器..."
-npm run dev
+echo "启动 Next.js 开发服务器... 日志将输出到 logs/frontend.log"
+npm run dev 2>&1 | tee ../logs/frontend.log

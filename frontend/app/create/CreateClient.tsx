@@ -12,6 +12,7 @@
  */
 
 import { useAccount } from 'wagmi'
+import Link from 'next/link'
 import { AgentForm } from '@/components/create/AgentForm'
 import { WalletButton } from '@/components/web3/WalletButton'
 import { NetworkSwitcher } from '@/components/web3/NetworkSwitcher'
@@ -21,16 +22,30 @@ export default function CreateAgentPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Page header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#0a0a0a] dark:text-[#fafafa] mb-2">
-            Create Agent
-          </h1>
-          <p className="text-sm text-[#525252] dark:text-[#a3a3a3]">
-            Register a new AI agent on the ERC-8004 protocol
-          </p>
+      <div className="border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
+          <nav className="mb-4 flex items-center gap-2 text-xs text-[#737373]">
+            <Link href="/" className="transition-colors hover:text-[#0a0a0a] dark:hover:text-[#fafafa]">
+              Home
+            </Link>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-[#d4d4d4] dark:text-[#404040]">
+              <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="font-medium text-[#0a0a0a] dark:text-[#fafafa]">Create</span>
+          </nav>
+
+          <div className="max-w-3xl">
+            <h1 className="mb-2 text-2xl font-bold text-[#0a0a0a] dark:text-[#fafafa] lg:text-3xl">
+              Create Agent
+            </h1>
+            <p className="text-sm text-[#525252] dark:text-[#a3a3a3]">
+              Register a new AI agent on the ERC-8004 protocol.
+            </p>
+          </div>
         </div>
+      </div>
+
+      <div className="container mx-auto max-w-5xl px-4 py-8">
 
         {/* Connection prompt (shown when wallet not connected) */}
         {!isConnected ? (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { leaderboardService } from '@/lib/api/services'
 import type { LeaderboardItem } from '@/types'
 import { NetworkSelector } from '@/components/common/NetworkSelector'
@@ -63,58 +64,72 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
+      <div className="border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
+          <nav className="mb-4 flex items-center gap-2 text-xs text-[#737373]">
+            <Link href="/" className="transition-colors hover:text-[#0a0a0a] dark:hover:text-[#fafafa]">Home</Link>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-[#d4d4d4] dark:text-[#404040]">
+              <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="font-medium text-[#0a0a0a] dark:text-[#fafafa]">Leaderboard</span>
+          </nav>
+
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-[#0a0a0a] dark:text-[#fafafa] lg:text-3xl">
+                Leaderboard
+              </h1>
+              <p className="mt-1 text-sm text-[#525252] dark:text-[#a3a3a3]">
+                {loading ? (
+                  <span className="inline-block h-4 w-32 animate-pulse rounded bg-[#e5e5e5] dark:bg-[#262626]" />
+                ) : (
+                  `${total.toLocaleString()} agents ranked by composite score`
+                )}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <NetworkSelector
+                selectedNetwork={network}
+                onNetworkChange={handleNetworkChange}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-[#0a0a0a] dark:text-[#fafafa]">
-              Leaderboard
-            </h1>
-            <p className="text-sm text-[#737373] mt-1">
-              {loading ? (
-                <span className="inline-block w-32 h-4 bg-[#e5e5e5] dark:bg-[#262626] rounded animate-pulse" />
-              ) : (
-                `${total.toLocaleString()} agents ranked by composite score`
-              )}
-            </p>
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <div className="flex items-center bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg overflow-hidden">
+            {['7d', '30d', 'All'].map((period) => (
+              <button
+                key={period}
+                disabled={period !== 'All'}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  period === 'All'
+                    ? 'bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a]'
+                    : 'text-[#d4d4d4] dark:text-[#404040] cursor-not-allowed'
+                }`}
+              >
+                {period}
+              </button>
+            ))}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg overflow-hidden">
-              {['7d', '30d', 'All'].map((period) => (
-                <button
-                  key={period}
-                  disabled={period !== 'All'}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                    period === 'All'
-                      ? 'bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a]'
-                      : 'text-[#d4d4d4] dark:text-[#404040] cursor-not-allowed'
-                  }`}
-                >
-                  {period}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg overflow-hidden">
-              {SORT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => handleSortChange(opt.value)}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                    sortBy === opt.value
-                      ? 'bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a]'
-                      : 'text-[#737373] hover:text-[#0a0a0a] dark:hover:text-[#fafafa]'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-
-            <NetworkSelector
-              selectedNetwork={network}
-              onNetworkChange={handleNetworkChange}
-            />
+          <div className="flex items-center bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#262626] rounded-lg overflow-hidden">
+            {SORT_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleSortChange(opt.value)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  sortBy === opt.value
+                    ? 'bg-[#0a0a0a] dark:bg-[#fafafa] text-white dark:text-[#0a0a0a]'
+                    : 'text-[#737373] hover:text-[#0a0a0a] dark:hover:text-[#fafafa]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 

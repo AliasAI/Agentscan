@@ -26,6 +26,9 @@ fi
 # 顺序：create_all() → migrate_*() → init_networks()
 # 无需在此手动运行迁移脚本
 
+# 确保日志目录存在
+mkdir -p ../logs
+
 # 启动开发服务器
-echo "启动 FastAPI 服务器..."
-uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+echo "启动 FastAPI 服务器... 日志将输出到 logs/backend.log"
+uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000 2>&1 | tee ../logs/backend.log

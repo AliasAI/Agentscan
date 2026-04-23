@@ -73,7 +73,7 @@ export default function InsightsPage() {
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
       <div className="border-b border-[#e5e5e5] dark:border-[#262626]">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
           <nav className="flex items-center gap-2 text-xs text-[#737373] mb-4">
             <Link href="/" className="hover:text-[#0a0a0a] dark:hover:text-[#fafafa] transition-colors">Home</Link>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-[#d4d4d4] dark:text-[#404040]">
@@ -85,17 +85,17 @@ export default function InsightsPage() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] tracking-tight">
-                Network Insights
+                Agentic Economy Stack
               </h1>
               <p className="text-sm text-[#525252] dark:text-[#a3a3a3] mt-1">
-                Key metrics, trends, and recent activity across the ecosystem
+                Key metrics, trend lines, and recent activity across the network layer
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-6">
           <NetworkSelector selectedNetwork={network} onNetworkChange={setNetwork} />
         </div>

@@ -47,7 +47,7 @@ function TrendingColumn({
   const styles = accentStyles[accentColor]
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] p-3.5 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_12px_30px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:border-[#2b2b2b] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.26),0_16px_32px_rgba(0,0,0,0.22)]">
+    <div className="relative overflow-hidden rounded-2xl border border-[#ebebeb] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] p-3.5 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_12px_30px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:border-[#2b2b2b] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.26),0_16px_32px_rgba(0,0,0,0.22)]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
       <div className="flex items-center gap-2 mb-2.5">
         <div className={`p-1.5 rounded-md ${styles.bg}`}>
@@ -109,13 +109,13 @@ export function TrendingSection({ data, isLoading }: TrendingSectionProps) {
   }
 
   return (
-    <div className="relative mb-8 rounded-[28px] border border-[#e2e2e2] bg-[linear-gradient(180deg,rgba(255,255,255,0.7)_0%,rgba(255,255,255,0.3)_100%)] px-3 py-4 dark:border-[#252525] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.02)_100%)]">
+    <div className="relative mb-8">
       <div className="pointer-events-none absolute left-0 top-8 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.45),transparent_70%)] opacity-70 blur-3xl animate-[pulse_12s_ease-in-out_infinite] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.05),transparent_70%)]" />
       <div className="mb-4 border-b border-[#e5e5e5]/80 pb-3 dark:border-[#262626]/90">
         <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
           Snapshot
         </div>
-        <h2 className="text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+        <h2 className="text-xl font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
           Top ranked, reviewed, and recent
         </h2>
       </div>

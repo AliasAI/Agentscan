@@ -119,7 +119,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <section className="group relative mt-4 overflow-hidden rounded-2xl border border-[#e4e4e4] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(19,19,19,0.94)_100%)] p-4 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_12px_36px_rgba(10,10,10,0.04)] backdrop-blur-lg transition-[box-shadow,border-color] duration-300 dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_16px_40px_rgba(0,0,0,0.28)] hover:shadow-[0_1px_2px_rgba(10,10,10,0.04),0_18px_44px_rgba(10,10,10,0.06)] dark:hover:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_20px_48px_rgba(0,0,0,0.32)]">
+              <section className="group relative mt-4 overflow-hidden rounded-2xl border border-[#efefef] dark:border-[#222222] bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(250,250,250,0.97)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(19,19,19,0.94)_100%)] p-4 shadow-[0_2px_8px_rgba(10,10,10,0.03),0_12px_36px_rgba(10,10,10,0.03)] backdrop-blur-lg transition-[box-shadow,border-color] duration-300 dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_16px_40px_rgba(0,0,0,0.28)] hover:shadow-[0_2px_8px_rgba(10,10,10,0.04),0_18px_44px_rgba(10,10,10,0.05)] dark:hover:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_20px_48px_rgba(0,0,0,0.32)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-[linear-gradient(180deg,rgba(255,255,255,0.5),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent)]" />
                 <div className="pointer-events-none absolute -right-16 top-0 h-28 w-40 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.55),transparent_68%)] opacity-70 blur-2xl transition-opacity duration-300 group-hover:opacity-90 animate-[pulse_12s_ease-in-out_infinite] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.08),transparent_68%)]" />
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -140,13 +140,13 @@ export default function HomePage() {
                     </Link>
                     <Link
                       href="/ecosystems"
-                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 rounded-lg border border-[#dddddd] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.88)_0%,rgba(18,18,18,0.94)_100%)] backdrop-blur-lg text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium transition-[transform,border-color,background-color] duration-200 hover:-translate-y-[1px] hover:border-[#cfcfcf] dark:hover:border-[#383838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
+                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 rounded-lg border border-[#e8e8e8] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.88)_0%,rgba(18,18,18,0.94)_100%)] backdrop-blur-lg text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium transition-[transform,border-color,background-color] duration-200 hover:-translate-y-[1px] hover:border-[#d8d8d8] dark:hover:border-[#383838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
                     >
                       <span>Open Ecosystems</span>
                     </Link>
                     <button
                       onClick={() => setMcpModalOpen(true)}
-                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 rounded-lg border border-[#dddddd] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.88)_0%,rgba(18,18,18,0.94)_100%)] backdrop-blur-lg text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium transition-[transform,border-color,background-color] duration-200 hover:-translate-y-[1px] hover:border-[#cfcfcf] dark:hover:border-[#383838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] sm:col-span-2 lg:col-span-1"
+                      className="inline-flex w-full items-center justify-center gap-1.5 h-10 px-4 rounded-lg border border-[#e8e8e8] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.88)_0%,rgba(18,18,18,0.94)_100%)] backdrop-blur-lg text-[#0a0a0a] dark:text-[#fafafa] text-sm font-medium transition-[transform,border-color,background-color] duration-200 hover:-translate-y-[1px] hover:border-[#d8d8d8] dark:hover:border-[#383838] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] sm:col-span-2 lg:col-span-1"
                     >
                       <span>Install MCP</span>
                     </button>
@@ -173,7 +173,7 @@ export default function HomePage() {
                   </>
                 ) : (
                   <>
-                    <Link href="/agents" className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(251,251,251,0.95)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left backdrop-blur-lg transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:border-[#d0d0d0] dark:hover:border-[#383838] hover:shadow-[0_10px_24px_rgba(10,10,10,0.05)] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
+                    <Link href="/agents" className="relative overflow-hidden rounded-2xl border border-[#ebebeb] dark:border-[#232323] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left backdrop-blur-lg transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:border-[#ddd] dark:hover:border-[#383838] hover:shadow-[0_8px_20px_rgba(10,10,10,0.04)] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.38),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
                       <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                         Indexed Agents
@@ -182,7 +182,7 @@ export default function HomePage() {
                         {formatNumber(stats.total_agents)}
                       </div>
                     </Link>
-                    <Link href="/agents" className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(251,251,251,0.95)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left backdrop-blur-lg transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:border-[#d0d0d0] dark:hover:border-[#383838] hover:shadow-[0_10px_24px_rgba(10,10,10,0.05)] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
+                    <Link href="/agents" className="relative overflow-hidden rounded-2xl border border-[#ebebeb] dark:border-[#232323] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left backdrop-blur-lg transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:border-[#ddd] dark:hover:border-[#383838] hover:shadow-[0_8px_20px_rgba(10,10,10,0.04)] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.38),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
                       <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                         Active Agents
@@ -191,7 +191,7 @@ export default function HomePage() {
                         {formatNumber(stats.active_agents)}
                       </div>
                     </Link>
-                    <Link href="/networks" className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(251,251,251,0.95)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left backdrop-blur-lg transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:border-[#d0d0d0] dark:hover:border-[#383838] hover:shadow-[0_10px_24px_rgba(10,10,10,0.05)] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
+                    <Link href="/networks" className="relative overflow-hidden rounded-2xl border border-[#ebebeb] dark:border-[#232323] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left backdrop-blur-lg transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-[1px] hover:border-[#ddd] dark:hover:border-[#383838] hover:shadow-[0_8px_20px_rgba(10,10,10,0.04)] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.38),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
                       <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                         Networks
@@ -200,7 +200,7 @@ export default function HomePage() {
                         {formatNumber(stats.total_networks)}
                       </div>
                     </Link>
-                    <div className="relative overflow-hidden rounded-2xl border border-[#e0e0e0] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(251,251,251,0.95)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left shadow-[0_1px_2px_rgba(10,10,10,0.03)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
+                    <div className="relative overflow-hidden rounded-2xl border border-[#ebebeb] dark:border-[#232323] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.84)_0%,rgba(20,20,20,0.92)_100%)] px-4 py-4 text-left shadow-[0_1px_2px_rgba(10,10,10,0.02)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.38),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
                       <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                         Activities
@@ -225,7 +225,7 @@ export default function HomePage() {
 
         <div className="mt-1 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <section className="lg:col-span-2">
-            <div className="flex items-end justify-between gap-4 mb-5 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
+            <div className="flex items-end justify-between gap-4 mb-4 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
               <div>
                 <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
                   Index
@@ -263,7 +263,7 @@ export default function HomePage() {
                   <p className="text-xs text-[#737373] dark:text-[#737373]">Try adjusting your search or filters</p>
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-2xl border border-[#dfdfdf] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] shadow-[0_1px_2px_rgba(10,10,10,0.04),0_18px_40px_rgba(10,10,10,0.05)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_20px_44px_rgba(0,0,0,0.24)]">
+                <div className="overflow-hidden rounded-2xl border border-[#ebebeb] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] shadow-[0_1px_2px_rgba(10,10,10,0.04),0_18px_40px_rgba(10,10,10,0.05)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_20px_44px_rgba(0,0,0,0.24)]">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-[linear-gradient(180deg,rgba(255,255,255,0.3),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
                   <div className="hidden md:grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_96px_88px] gap-4 px-4 py-2.5 border-b border-[#e5e5e5] dark:border-[#2a2a2a] bg-[linear-gradient(180deg,rgba(255,255,255,0.76)_0%,rgba(247,247,247,0.86)_100%)] dark:bg-[linear-gradient(180deg,rgba(21,21,21,0.84)_0%,rgba(18,18,18,0.9)_100%)] text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373]">
                     <div>Agent</div>
@@ -351,12 +351,12 @@ export default function HomePage() {
 
           <aside className="space-y-6 lg:pl-1">
             <div>
-              <div className="flex items-center justify-between mb-3 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
+              <div className="flex items-end justify-between mb-4 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
                 <div>
                   <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
                     Live Feed
                   </div>
-                  <h2 className="text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                  <h2 className="text-xl font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
                     Recent activity
                   </h2>
                 </div>
@@ -365,7 +365,7 @@ export default function HomePage() {
                   <span className="text-[10px] text-[#a3a3a3] dark:text-[#525252] uppercase tracking-wide">Live</span>
                 </div>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-[#dfdfdf] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] shadow-[0_1px_2px_rgba(10,10,10,0.04),0_14px_32px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.28),0_18px_36px_rgba(0,0,0,0.22)]">
+              <div className="overflow-hidden rounded-2xl border border-[#ebebeb] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(251,251,251,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] shadow-[0_1px_2px_rgba(10,10,10,0.04),0_14px_32px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.28),0_18px_36px_rgba(0,0,0,0.22)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
                 {activities.length === 0 ? (
                   loading ? (
@@ -394,15 +394,15 @@ export default function HomePage() {
             </div>
 
             <div>
-              <div className="mb-3 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
+              <div className="mb-4 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
                 <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
                   Analysis
                 </div>
-                <h2 className="text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                <h2 className="text-xl font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
                   Registration trend
                 </h2>
               </div>
-              <div className="relative rounded-2xl border border-[#dfdfdf] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] p-4 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_14px_32px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.28),0_18px_36px_rgba(0,0,0,0.22)]">
+              <div className="relative rounded-2xl border border-[#ebebeb] dark:border-[#2b2b2b] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(250,250,250,0.96)_100%)] dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.86)_0%,rgba(18,18,18,0.94)_100%)] p-4 shadow-[0_1px_2px_rgba(10,10,10,0.04),0_14px_32px_rgba(10,10,10,0.04)] backdrop-blur-lg dark:shadow-[0_1px_2px_rgba(0,0,0,0.28),0_18px_36px_rgba(0,0,0,0.22)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
                 {trendData.length > 0 ? (
                   <RegistrationTrendChart data={trendData} />
@@ -416,11 +416,11 @@ export default function HomePage() {
             </div>
 
             <div>
-              <div className="mb-3 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
+              <div className="mb-4 border-b border-[#e5e5e5]/80 dark:border-[#262626]/90 pb-3">
                 <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#737373] dark:text-[#737373] mb-1">
                   Analysis
                 </div>
-                <h2 className="text-base font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
+                <h2 className="text-xl font-semibold text-[#0a0a0a] dark:text-[#fafafa]">
                   Capability distribution
                 </h2>
               </div>

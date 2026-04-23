@@ -3,11 +3,10 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { AgentCard } from '@/components/agent/AgentCard'
 import { SearchBar } from '@/components/common/SearchBar'
-import { AgentCardSkeleton } from '@/components/common/Skeleton'
 import { FilterSort, type FilterOptions, type SortOption } from '@/components/common/FilterSort'
 import { NetworkSelector } from '@/components/common/NetworkSelector'
+import { AgentListRow, AgentListHeader, AgentListRowSkeleton, AGENT_LIST_CONTAINER_CLASS } from '@/components/agent/AgentListRow'
 import { agentService } from '@/lib/api/services'
 import type { Agent } from '@/types'
 
@@ -153,19 +152,8 @@ function AgentsPageContent() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
-      <div className="relative border-b border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div
-            className="absolute -top-24 -right-24 w-96 h-96 rounded-full opacity-[0.03] dark:opacity-[0.02]"
-            style={{ background: 'radial-gradient(circle, #0a0a0a 0%, transparent 70%)' }}
-          />
-          <div
-            className="absolute -bottom-32 -left-32 w-64 h-64 rounded-full opacity-[0.02] dark:opacity-[0.015]"
-            style={{ background: 'radial-gradient(circle, #0a0a0a 0%, transparent 70%)' }}
-          />
-        </div>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 relative">
+      <div className="border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
           <nav className="flex items-center gap-2 text-xs text-[#737373] mb-4">
             <Link href="/" className="hover:text-[#0a0a0a] dark:hover:text-[#fafafa] transition-colors">
               Home
@@ -179,7 +167,7 @@ function AgentsPageContent() {
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-[#0a0a0a] dark:text-[#fafafa] mb-2 tracking-tight">
-                AI Agents
+                Agent Index
               </h1>
               <p className="text-sm text-[#525252] dark:text-[#a3a3a3] max-w-xl">
                 {headingDescription}
@@ -202,8 +190,8 @@ function AgentsPageContent() {
         </div>
       </div>
 
-      <div className="sticky top-14 lg:top-16 z-40 bg-[#fafafa]/95 dark:bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-[#e5e5e5] dark:border-[#262626]">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div className="sticky top-14 lg:top-16 z-40 border-b border-[#e5e5e5] bg-[#fafafa]/95 backdrop-blur-sm dark:border-[#262626] dark:bg-[#0a0a0a]/95">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
               <NetworkSelector
@@ -278,7 +266,7 @@ function AgentsPageContent() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px] text-[#737373] dark:text-[#737373]">
           <span className="font-medium uppercase tracking-wide text-[#525252] dark:text-[#a3a3a3]">Filters</span>
           <span>Network: {selectedNetwork === 'all' ? 'All' : selectedNetwork}</span>
@@ -307,12 +295,13 @@ function AgentsPageContent() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {Array.from({ length: pageSize }).map((_, i) => (
-              <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 30}ms` }}>
-                <AgentCardSkeleton />
-              </div>
-            ))}
+          <div className={AGENT_LIST_CONTAINER_CLASS}>
+            <AgentListHeader />
+            <div className="divide-y divide-[#ebebeb] dark:divide-[#2a2a2a]">
+              {Array.from({ length: pageSize }).map((_, i) => (
+                <AgentListRowSkeleton key={i} />
+              ))}
+            </div>
           </div>
         ) : agents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -355,11 +344,14 @@ function AgentsPageContent() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {agents.map((agent) => (
-                <div key={agent.id} className="animate-fade-in">
-                  <AgentCard agent={agent} />
-                </div>
+            <div className={AGENT_LIST_CONTAINER_CLASS}>
+              <AgentListHeader />
+              {agents.map((agent, index) => (
+                <AgentListRow
+                  key={agent.id}
+                  agent={agent}
+                  isLast={index === agents.length - 1}
+                />
               ))}
             </div>
 
