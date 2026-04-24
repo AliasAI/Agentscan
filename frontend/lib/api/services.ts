@@ -20,6 +20,8 @@ import type {
   TrendingAgentsResponse,
   LeaderboardResponse,
   EcosystemSummaryResponse,
+  VirtualsAcpIngestionStatus,
+  VirtualsAcpScanResponse,
 } from '@/types';
 
 // 统计数据服务
@@ -75,6 +77,12 @@ export const agentService = {
 
 export const ecosystemService = {
   getSummary: () => apiGet<EcosystemSummaryResponse>('/ecosystems/summary'),
+  getVirtualsAcpIngestStatus: () =>
+    apiGet<VirtualsAcpIngestionStatus>('/ecosystems/virtuals-acp/ingest/status'),
+  getVirtualsAcpScan: (topAgentsLimit = 10, txLimit = 10) =>
+    apiGet<VirtualsAcpScanResponse>(
+      `/ecosystems/virtuals-acp/scan?top_agents_limit=${topAgentsLimit}&tx_limit=${txLimit}`,
+    ),
 };
 
 // 网络服务

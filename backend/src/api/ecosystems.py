@@ -11,8 +11,29 @@ from src.services.virtuals_acp_ingestion import (
     DEFAULT_QUERY_SEEDS,
     virtuals_acp_ingestion_service,
 )
+from src.services.virtuals_acp_overview import fetch_scan_overview
 
 router = APIRouter()
+
+
+@router.get("/ecosystems/virtuals-acp/scan")
+async def get_virtuals_acp_scan(
+    top_agents_limit: int = 10,
+    tx_limit: int = 10,
+):
+    """Live overview of the Virtuals ACP ecosystem (proxied from acpx.virtuals.io).
+
+    Returns aggregated metrics, top agents, and recent agent-to-agent transactions.
+    Cached for 4 hours to avoid hammering the upstream public API.
+    """
+    if not 1 <= top_agents_limit <= 50:
+        raise HTTPException(status_code=400, detail="top_agents_limit must be 1..50")
+    if not 1 <= tx_limit <= 50:
+        raise HTTPException(status_code=400, detail="tx_limit must be 1..50")
+    try:
+        return await fetch_scan_overview(top_agents_limit, tx_limit)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"upstream_error: {exc}") from exc
 
 
 @router.get("/ecosystems/summary", response_model=EcosystemSummaryResponse)
@@ -77,8 +98,8 @@ async def ingest_virtuals_acp(
     top_k: int = 100,
 ):
     """Start a background Virtuals ACP discovery ingestion run."""
-    if top_k < 1 or top_k > 500:
-        raise HTTPException(status_code=400, detail="top_k must be between 1 and 500")
+    if top_k < 1 or top_k > 2000:
+        raise HTTPException(status_code=400, detail="top_k must be between 1 and 2000")
     if virtuals_acp_ingestion_service.is_running:
         return {
             "status": "already_running",

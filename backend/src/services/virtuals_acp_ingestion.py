@@ -28,18 +28,11 @@ ACP_API_BASE_URL = "https://api.acp.virtuals.io"
 ACP_DISCOVERY_ENDPOINT = "/agents/search"
 VIRTUALS_ACP_NETWORK_ID = "virtuals-acp"
 VIRTUALS_ACP_ECOSYSTEM = "virtuals_acp"
-DEFAULT_QUERY_SEEDS = [
-    "agent",
-    "ai",
-    "assistant",
-    "data",
-    "research",
-    "trading",
-    "market",
-    "crypto",
-    "image",
-    "analysis",
-]
+# `query=*` is a match-all wildcard supported by the ACP search API and returns
+# the full agent roster in one call (capped server-side ~261 at time of writing).
+# Using this by default gives accurate overview counts; seed-keyword queries
+# previously only returned the union of matches and systematically under-counted.
+DEFAULT_QUERY_SEEDS = ["*"]
 
 
 class VirtualsAcpIngestionService:

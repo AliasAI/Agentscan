@@ -1,5 +1,6 @@
 """FastAPI application entry point"""
 
+import os
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -100,7 +101,9 @@ app.include_router(leaderboard_router, prefix="/api", tags=["leaderboard"])
 @app.on_event("startup")
 async def startup_event():
     """Application startup event"""
-    # Start blockchain sync scheduler
+    if os.getenv("DISABLE_SYNC", "").lower() in ("1", "true", "yes"):
+        print("DISABLE_SYNC is set — skipping scheduler start")
+        return
     start_scheduler()
 
 

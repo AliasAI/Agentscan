@@ -158,6 +158,76 @@ export interface EcosystemSummaryResponse {
   items: EcosystemSummaryItem[];
 }
 
+export interface IngestionRunInfo {
+  id: string;
+  status: string;
+  started_at: string | null;
+  ended_at: string | null;
+  stats: Record<string, any> | null;
+  error_log: string | null;
+}
+
+export interface VirtualsAcpIngestionStatus {
+  is_running: boolean;
+  last_error: string | null;
+  last_run_id: string | null;
+  latest_run: IngestionRunInfo | null;
+  recent_runs: IngestionRunInfo[];
+  progress?: Record<string, any> | null;
+}
+
+export interface VirtualsAcpMetric {
+  value: number | null;
+  delta_pct_30d: number | null;
+  points: number;
+}
+
+export interface VirtualsAcpTopAgent {
+  id: number | null;
+  name: string | null;
+  profile_pic: string | null;
+  is_virtual_agent: boolean | null;
+  virtual_agent_id: string | null;
+  agdp: number | null;
+  volume: number | null;
+  revenue: number | null;
+  memo_count: number | null;
+  successful_jobs: number | null;
+  unique_buyers: number | null;
+  success_rate: number | null;
+  last_active_at: string | null;
+  tag: string | null;
+}
+
+export interface VirtualsAcpTxParticipant {
+  id: number | null;
+  name: string | null;
+  profile_pic: string | null;
+}
+
+export interface VirtualsAcpRecentTransaction {
+  id: number | string | null;
+  created_at: string | null;
+  tx_hash: string | null;
+  type: string | null;
+  content: string | null;
+  from_agent: VirtualsAcpTxParticipant | null;
+  to_agent: VirtualsAcpTxParticipant | null;
+}
+
+export interface VirtualsAcpScanResponse {
+  source: string;
+  fetched_at: number;
+  metrics: {
+    total_agdp: VirtualsAcpMetric;
+    total_revenue: VirtualsAcpMetric;
+    total_jobs: VirtualsAcpMetric;
+    total_active_wallets: VirtualsAcpMetric;
+  };
+  top_agents: VirtualsAcpTopAgent[];
+  recent_transactions: VirtualsAcpRecentTransaction[];
+}
+
 // Trending Agents Response (for homepage)
 export interface TrendingAgentsResponse {
   top_ranked: Agent[];
