@@ -33,10 +33,10 @@ export default function McpOverviewPage() {
         <p className="text-sm text-[#525252] dark:text-[#a1a1a6] mb-3">
           No installation needed. Configure your MCP client to run:
         </p>
-        <CodeBlock code="npx -y @anthropic/agentscan-mcp-server" language="bash" />
+        <CodeBlock code="npx -y @aliasai2026/agentscan-mcp-server" language="bash" />
 
         <h3 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-2 mt-6">Option 2: Global install</h3>
-        <CodeBlock code="npm install -g @anthropic/agentscan-mcp-server" language="bash" />
+        <CodeBlock code="npm install -g @aliasai2026/agentscan-mcp-server" language="bash" />
       </Section>
 
       <Section title="Claude Desktop Configuration">
@@ -50,7 +50,7 @@ export default function McpOverviewPage() {
   "mcpServers": {
     "agentscan": {
       "command": "npx",
-      "args": ["-y", "@anthropic/agentscan-mcp-server"]
+      "args": ["-y", "@aliasai2026/agentscan-mcp-server"]
     }
   }
 }`}
