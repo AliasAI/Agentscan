@@ -13,7 +13,7 @@ export default function McpOverviewPage() {
         MCP Server
       </h1>
       <p className="text-[#525252] dark:text-[#a1a1a6] mb-8 leading-relaxed">
-        The Agentscan MCP (Model Context Protocol) server lets AI assistants like Claude, Cursor, and Windsurf
+        The Agentscan MCP (Model Context Protocol) server lets AI assistants like Codex, Claude Code, Cursor, and Windsurf
         query the ERC-8004 agent ecosystem directly.
       </p>
 
@@ -39,12 +39,25 @@ export default function McpOverviewPage() {
         <CodeBlock code="npm install -g @aliasai2026/agentscan-mcp-server" language="bash" />
       </Section>
 
-      <Section title="Claude Desktop Configuration">
+      <Section title="Client Configuration">
         <p className="text-sm text-[#525252] dark:text-[#a1a1a6] mb-3">
-          Add this to your Claude Desktop configuration file:
+          Use the configuration format for your AI assistant:
         </p>
+        <h3 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-2">Codex</h3>
         <CodeBlock
-          title="claude_desktop_config.json"
+          language="bash"
+          code="codex mcp add agentscan -- npx -y @aliasai2026/agentscan-mcp-server"
+        />
+
+        <h3 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-2 mt-6">Claude Code</h3>
+        <CodeBlock
+          language="bash"
+          code="claude mcp add agentscan -- npx -y @aliasai2026/agentscan-mcp-server"
+        />
+
+        <h3 className="text-sm font-semibold text-[#0a0a0a] dark:text-[#fafafa] mb-2 mt-6">Cursor / VS Code</h3>
+        <CodeBlock
+          title="mcp.json"
           language="json"
           code={`{
   "mcpServers": {
@@ -55,10 +68,6 @@ export default function McpOverviewPage() {
   }
 }`}
         />
-        <p className="text-sm text-[#6e6e73] dark:text-[#86868b] mt-3">
-          Config file location: <code className="px-1.5 py-0.5 rounded bg-[#f5f5f5] dark:bg-[#1a1a1a] text-xs font-mono">~/Library/Application Support/Claude/claude_desktop_config.json</code> (macOS)
-          or <code className="px-1.5 py-0.5 rounded bg-[#f5f5f5] dark:bg-[#1a1a1a] text-xs font-mono">%APPDATA%\Claude\claude_desktop_config.json</code> (Windows)
-        </p>
       </Section>
 
       <Section title="Environment Variables">

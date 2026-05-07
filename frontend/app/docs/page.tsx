@@ -28,7 +28,7 @@ export default function DocsIntroPage() {
         <QuickLink
           href="/docs/mcp"
           title="MCP Server"
-          description="Connect Agentscan to Claude, Cursor, or any MCP-compatible AI client."
+          description="Connect Agentscan to Codex, Claude Code, Cursor, or any MCP-compatible AI client."
         />
         <QuickLink
           href="/docs/api/agents"

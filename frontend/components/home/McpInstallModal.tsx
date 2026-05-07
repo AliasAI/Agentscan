@@ -4,19 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 
 const tabs = [
   {
-    label: 'Claude Code',
-    code: `claude mcp add agentscan -- npx -y @aliasai2026/agentscan-mcp-server`,
+    label: 'Codex',
+    code: `codex mcp add agentscan -- npx -y @aliasai2026/agentscan-mcp-server`,
   },
   {
-    label: 'Claude Desktop',
-    code: `{
-  "mcpServers": {
-    "agentscan": {
-      "command": "npx",
-      "args": ["-y", "@aliasai2026/agentscan-mcp-server"]
-    }
-  }
-}`,
+    label: 'Claude Code',
+    code: `claude mcp add agentscan -- npx -y @aliasai2026/agentscan-mcp-server`,
   },
   {
     label: 'Cursor / VS Code',
