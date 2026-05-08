@@ -22,6 +22,7 @@ import type {
   EcosystemSummaryResponse,
   VirtualsAcpIngestionStatus,
   VirtualsAcpScanResponse,
+  BnbAgentScanResponse,
 } from '@/types';
 
 // 统计数据服务
@@ -82,6 +83,10 @@ export const ecosystemService = {
   getVirtualsAcpScan: (topAgentsLimit = 10, txLimit = 10) =>
     apiGet<VirtualsAcpScanResponse>(
       `/ecosystems/virtuals-acp/scan?top_agents_limit=${topAgentsLimit}&tx_limit=${txLimit}`,
+    ),
+  getBnbAgentScan: (eventsLimit = 6, blocksLimit = 4, commitsLimit = 5) =>
+    apiGet<BnbAgentScanResponse>(
+      `/ecosystems/bnb-agent/scan?events_limit=${eventsLimit}&blocks_limit=${blocksLimit}&commits_limit=${commitsLimit}`,
     ),
 };
 

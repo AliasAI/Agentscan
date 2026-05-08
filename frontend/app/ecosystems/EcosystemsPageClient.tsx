@@ -5,7 +5,8 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 import { ecosystemService } from '@/lib/api/services'
-import type { VirtualsAcpScanResponse } from '@/types'
+import type { BnbAgentScanResponse, VirtualsAcpScanResponse } from '@/types'
+import BnbAgentSection from './components/BnbAgentSection'
 
 const REFRESH_MS = 4 * 60 * 60 * 1000
 
@@ -58,23 +59,34 @@ function parseJobContent(content: string | null): string {
 
 export default function EcosystemsPageClient() {
   const [scan, setScan] = useState<VirtualsAcpScanResponse | null>(null)
+  const [bnbScan, setBnbScan] = useState<BnbAgentScanResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const load = async () => {
-      try {
-        const data = await ecosystemService.getVirtualsAcpScan(10, 10)
-        if (cancelled) return
-        setScan(data)
-        setError(null)
-      } catch (err) {
-        console.error('Failed to load Virtuals ACP scan:', err)
-        if (!cancelled) setError('Failed to fetch live ACP scan data.')
-      } finally {
-        if (!cancelled) setLoading(false)
+      const [acpResult, bnbResult] = await Promise.allSettled([
+        ecosystemService.getVirtualsAcpScan(10, 10),
+        ecosystemService.getBnbAgentScan(6, 4, 5),
+      ])
+      if (cancelled) return
+
+      if (acpResult.status === 'fulfilled') {
+        setScan(acpResult.value)
+      } else {
+        console.error('Failed to load Virtuals ACP data:', acpResult.reason)
       }
+
+      if (bnbResult.status === 'fulfilled') {
+        setBnbScan(bnbResult.value)
+      } else {
+        console.error('Failed to load BNB Agent data:', bnbResult.reason)
+      }
+
+      const failed = acpResult.status === 'rejected' || bnbResult.status === 'rejected'
+      setError(failed ? 'Some live ecosystem data failed to refresh.' : null)
+      setLoading(false)
     }
     load()
     const id = setInterval(load, REFRESH_MS)
@@ -97,6 +109,8 @@ export default function EcosystemsPageClient() {
 
         <VirtualsAcpSection scan={scan} loading={loading} />
 
+        <BnbAgentSection scan={bnbScan} loading={loading} />
+
         <div className="mt-12 mb-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-[#e5e5e5] dark:bg-[#262626]" />
           <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#737373]">
@@ -105,21 +119,7 @@ export default function EcosystemsPageClient() {
           <div className="h-px flex-1 bg-[#e5e5e5] dark:bg-[#262626]" />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <UpcomingTile
-            title="BNB ERC-8183 — On-chain Execution"
-            logoSrc="/brand-assets/bnb-mark.svg"
-            logoAlt="BNB Chain"
-            logoWidth={24}
-            logoHeight={24}
-            badgeClass="bg-[#fef3c7] text-[#92400e] dark:bg-[#3b3015] dark:text-[#fcd34d]"
-            summary="ERC-8183 is BNB's proposed standard for agents that live inside the EVM: each agent is a smart contract with a verifiable identity and a permissioned queue of jobs it can execute — trades, rebalances, liquidations, MEV, on-chain tool calls. The value proposition is auditability: every action an agent takes is a transaction anyone can replay."
-            bullets={[
-              'Who it serves — trading and DeFi agents that need their reasoning to be provable, not just their outputs.',
-              'What we want to measure — share of BNB agents claiming 8183 conformance, their job throughput, and gas footprint.',
-              'Why not yet — the spec is still draft and there\'s no central registry; enumeration requires scanning BNB Chain for contracts implementing the 8183 interface.',
-            ]}
-          />
+        <div className="grid gap-6 md:grid-cols-1">
           <UpcomingTile
             title="x402 + Coinbase CDP — Machine Payments"
             logoSrc="/brand-assets/coinbase-wordmark.svg"
@@ -127,11 +127,11 @@ export default function EcosystemsPageClient() {
             logoWidth={96}
             logoHeight={18}
             badgeClass="bg-[#d1fae5] text-[#065f46] dark:bg-[#15352a] dark:text-[#6ee7b7]"
-            summary="x402 revives HTTP's dormant 'Payment Required' status as the handshake for agent-to-agent commerce: any endpoint can return a signed price quote, the caller pays stablecoin on Base, and the same request replays with proof-of-payment. Paired with Coinbase's CDP AgentKit — programmable custodial wallets for agents — it removes the last human from the loop."
+            summary="x402 revives HTTP's dormant Payment Required status as the handshake for agent-to-agent commerce: any endpoint can return a signed price quote, the caller pays stablecoin on Base, and the same request replays with proof-of-payment. Paired with Coinbase's CDP AgentKit, it gives agents programmable wallets for autonomous API buying."
             bullets={[
-              'Who it serves — API providers and autonomous buyers that need micropayments without accounts, subscriptions, or OAuth.',
-              'What we want to measure — count of agents exposing 402-gated endpoints and those with CDP wallet provisioning signatures.',
-              'Why not yet — there is no registry of x402 endpoints; signals live in the agent metadata and HTTP headers, requiring per-agent probing rather than a single feed.',
+              'Who it serves - API providers and autonomous buyers that need micropayments without accounts, subscriptions, or OAuth.',
+              'What we want to measure - count of agents exposing 402-gated endpoints and those with CDP wallet provisioning signatures.',
+              'Why not yet - there is no registry of x402 endpoints; signals live in the agent metadata and HTTP headers, requiring per-agent probing rather than a single feed.',
             ]}
           />
         </div>
@@ -490,7 +490,7 @@ function Header() {
               Autonomous agents need three things to transact: a way to advertise services,
               a way to execute them on-chain, and a way to settle payment without a human.
               We track the most credible protocol for each — Virtuals ACP for commerce,
-              BNB's ERC-8183 for execution, and x402 + Coinbase CDP for payments.
+              BNB ERC-8183 for execution, and x402 + Coinbase CDP for payments.
             </p>
           </div>
         </div>

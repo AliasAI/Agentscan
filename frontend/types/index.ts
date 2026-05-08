@@ -228,6 +228,148 @@ export interface VirtualsAcpScanResponse {
   recent_transactions: VirtualsAcpRecentTransaction[];
 }
 
+export interface BnbAgentScanResponse {
+  source: Record<string, string>;
+  fetched_at: number;
+  cache_ttl_seconds: number;
+  agentscan: {
+    network_id: string;
+    network_name: string;
+    agent_count: number;
+    total_agents: number;
+    share_pct: number | null;
+    quality_agents: number;
+    quality_pct: number | null;
+    reputation_agents: number;
+    reputation_pct: number | null;
+    unique_owners: number;
+    unique_agent_addresses: number;
+    first_seen_at: string | null;
+    last_seen_at: string | null;
+    sync: {
+      last_block: number | null;
+      current_block: number | null;
+      status: string | null;
+      last_synced_at: string | null;
+      updated_at: string | null;
+    };
+  };
+  nfascan: {
+    stats: {
+      totalAgents: number;
+      totalEvents: number;
+      totalReceipts: number;
+      totalBlocks: number;
+      latestBlock: number;
+    };
+    bap578: {
+      bap578Agents: number;
+      merkleLearningAgents: number;
+      jsonLightAgents: number;
+      erc8004Registered: number;
+      indexedContracts: number;
+      learningModelBreakdown: Record<string, number>;
+      chainCoverage: Record<string, number>;
+    };
+    health: {
+      status: string;
+      lastSyncedBlock: number;
+      lastSyncTime: string;
+      syncAgeSec: number;
+      isLive: boolean;
+      syncMode: string;
+    };
+    contract: {
+      mintFeeBNB: string;
+      paused: boolean;
+      treasury: string;
+      proxy: string;
+      implementation: string;
+      compiler: string;
+      verified: boolean;
+      sourcify: string;
+      honeycomb?: Record<string, string>;
+    };
+    recent_events: BnbAgentEvent[];
+    recent_blocks: BnbAgentBlock[];
+  };
+  sdk: {
+    repo: {
+      full_name: string;
+      html_url: string;
+      description: string;
+      stars: number;
+      forks: number;
+      open_issues: number;
+      pushed_at: string;
+      updated_at: string;
+    };
+    latest_release: {
+      tag_name: string;
+      name: string;
+      published_at: string;
+      url: string;
+    } | null;
+    recent_commits: BnbAgentCommit[];
+    open_pull_requests: BnbAgentPullRequest[];
+  };
+  execution: {
+    network: string;
+    chain_id: number;
+    latest_block: number | null;
+    erc8183_contract: string;
+    apex_evaluator: string;
+    payment_token_default: string;
+    code_bytes: number;
+    job_counter: number | null;
+    paused: boolean | null;
+    payment_token: string | null;
+    platform_fee_bp: number | null;
+    evaluator_fee_bp: number | null;
+    mainnet_status: string;
+  };
+  maturity: Record<string, { status: string; evidence: string }>;
+}
+
+export interface BnbAgentEvent {
+  id: string;
+  txHash: string;
+  blockNumber: number;
+  fromAddress: string;
+  toAddress: string;
+  value: string;
+  gasUsed: string;
+  gasPrice: string;
+  status: string;
+  method: string;
+  timestamp: string;
+}
+
+export interface BnbAgentBlock {
+  id: string;
+  blockNumber: number;
+  hash: string;
+  agentCount: number;
+  eventCount: number;
+  gasUsed: string;
+  validator: string;
+  timestamp: string;
+}
+
+export interface BnbAgentCommit {
+  sha: string;
+  message: string;
+  date: string;
+  url: string;
+}
+
+export interface BnbAgentPullRequest {
+  number: number;
+  title: string;
+  updated_at: string;
+  url: string;
+}
+
 // Trending Agents Response (for homepage)
 export interface TrendingAgentsResponse {
   top_ranked: Agent[];

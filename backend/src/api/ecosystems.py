@@ -11,6 +11,7 @@ from src.services.virtuals_acp_ingestion import (
     DEFAULT_QUERY_SEEDS,
     virtuals_acp_ingestion_service,
 )
+from src.services.bnb_agent_overview import fetch_bnb_agent_overview
 from src.services.virtuals_acp_overview import fetch_scan_overview
 
 router = APIRouter()
@@ -32,6 +33,36 @@ async def get_virtuals_acp_scan(
         raise HTTPException(status_code=400, detail="tx_limit must be 1..50")
     try:
         return await fetch_scan_overview(top_agents_limit, tx_limit)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"upstream_error: {exc}") from exc
+
+
+@router.get("/ecosystems/bnb-agent/scan")
+async def get_bnb_agent_scan(
+    events_limit: int = 6,
+    blocks_limit: int = 4,
+    commits_limit: int = 5,
+    db: Session = Depends(get_db),
+):
+    """Live overview of the BNB Agent stack.
+
+    Combines local Agentscan ERC-8004 counts, NfaSCAN BAP-578 telemetry,
+    BNBAgent SDK repository activity, and BSC testnet APEX/8183 contract state.
+    Cached for 10 minutes by the service layer.
+    """
+    if not 1 <= events_limit <= 20:
+        raise HTTPException(status_code=400, detail="events_limit must be 1..20")
+    if not 1 <= blocks_limit <= 20:
+        raise HTTPException(status_code=400, detail="blocks_limit must be 1..20")
+    if not 1 <= commits_limit <= 10:
+        raise HTTPException(status_code=400, detail="commits_limit must be 1..10")
+    try:
+        return await fetch_bnb_agent_overview(
+            db,
+            events_limit=events_limit,
+            blocks_limit=blocks_limit,
+            commits_limit=commits_limit,
+        )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"upstream_error: {exc}") from exc
 
