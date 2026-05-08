@@ -47,6 +47,7 @@ export default function BnbAgentSection({
   const nfascan = scan?.nfascan
   const execution = scan?.execution
   const sdk = scan?.sdk
+  const latestNfaBlockTime = nfascan?.recent_blocks[0]?.timestamp ?? nfascan?.health.lastSyncTime
 
   return (
     <section className="mt-8 rounded-[32px] border border-[#f0d675] bg-[#fffdf5] p-6 shadow-sm dark:border-[#4a3b12] dark:bg-[#15130b] sm:p-8">
@@ -135,7 +136,7 @@ export default function BnbAgentSection({
               <InfoRow label="Unique owners" value={formatInt(agentscan?.unique_owners)} />
               <InfoRow label="Agentscan sync" value={`${agentscan?.sync.status ?? '--'} at block ${formatInt(agentscan?.sync.current_block)}`} />
               <InfoRow label="NfaSCAN health" value={`${nfascan?.health.status ?? '--'} / ${nfascan?.health.syncMode ?? '--'}`} />
-              <InfoRow label="NfaSCAN latest block" value={`${formatInt(nfascan?.stats.latestBlock)} (${formatRelative(nfascan?.health.lastSyncTime)})`} />
+              <InfoRow label="NfaSCAN latest block" value={`${formatInt(nfascan?.stats.latestBlock)} (${formatRelative(latestNfaBlockTime)})`} />
             </tbody>
           </table>
         </div>
