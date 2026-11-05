@@ -1,11 +1,11 @@
 """统计数据 API"""
 
 from datetime import datetime, timedelta
-from threading import Lock
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from typing import List, Dict, Any
+from starlette.concurrency import run_in_threadpool
+from typing import List
 from pydantic import BaseModel
 
 from src.db.database import get_db
@@ -15,6 +15,7 @@ from src.schemas.common import (
     NetworkSyncStatus, MultiNetworkSyncStatus
 )
 from src.core.networks_config import get_enabled_networks
+from src.services.public_snapshot import PublicSnapshot
 
 
 class RegistrationTrendData(BaseModel):
@@ -28,44 +29,13 @@ class RegistrationTrendResponse(BaseModel):
     data: List[RegistrationTrendData]
 
 
-STATS_CACHE_TTL_SECONDS = 30
-_stats_cache: Dict[str, Any] = {}
-_stats_cache_lock = Lock()
-
 router = APIRouter()
 
 
 @router.get("/stats", response_model=StatsResponse)
-def get_stats(db: Session = Depends(get_db)):
+async def get_stats(db: Session = Depends(get_db)):
     """获取整体统计数据"""
-    now = datetime.utcnow()
-    cached_value = _get_cached_stats(now)
-    if cached_value is not None:
-        return cached_value
-
-    with _stats_cache_lock:
-        now = datetime.utcnow()
-        cached_value = _get_cached_stats(now)
-        if cached_value is not None:
-            return cached_value
-
-        response = _build_stats_response(db, now)
-        _stats_cache["cached_at"] = now
-        _stats_cache["value"] = response
-        return response
-
-
-def _get_cached_stats(now: datetime) -> StatsResponse | None:
-    """Return cached stats when fresh enough."""
-    cached_at = _stats_cache.get("cached_at")
-    cached_value = _stats_cache.get("value")
-    if (
-        cached_at
-        and cached_value is not None
-        and (now - cached_at).total_seconds() < STATS_CACHE_TTL_SECONDS
-    ):
-        return cached_value
-    return None
+    return await stats_snapshot.get(db)
 
 
 def _build_stats_response(db: Session, now: datetime) -> StatsResponse:
@@ -184,11 +154,7 @@ def _build_sync_status(
     )
 
 
-@router.get("/stats/registration-trend", response_model=RegistrationTrendResponse)
-def get_registration_trend(
-    days: int = Query(default=30, ge=1, le=365, description="Number of days to query"),
-    db: Session = Depends(get_db)
-):
+def _build_registration_trend(db: Session, days: int) -> RegistrationTrendResponse:
     """Get agent registration trend data (grouped by day)"""
 
     # Calculate date range
@@ -225,3 +191,19 @@ def get_registration_trend(
         current_date += timedelta(days=1)
 
     return RegistrationTrendResponse(data=trend_data)
+
+
+stats_snapshot = PublicSnapshot("stats", 120, lambda db: _build_stats_response(db, datetime.utcnow()))
+registration_trend_snapshot = PublicSnapshot(
+    "registration_trend", 900, lambda db: _build_registration_trend(db, 30)
+)
+
+
+@router.get("/stats/registration-trend", response_model=RegistrationTrendResponse)
+async def get_registration_trend(
+    days: int = Query(default=30, ge=1, le=365, description="Number of days to query"),
+    db: Session = Depends(get_db),
+):
+    if days == 30:
+        return await registration_trend_snapshot.get(db)
+    return await run_in_threadpool(_build_registration_trend, db, days)

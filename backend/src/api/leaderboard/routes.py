@@ -1,11 +1,12 @@
 """Leaderboard API routes
 
 Provides ranked agent listings with composite scoring.
-Streams source rows and caches compact scores for five minutes.
+Streams source rows and keeps the global scores warm.
 """
 
 import time
 from collections import OrderedDict
+from heapq import nlargest
 from operator import attrgetter
 from anyio import CapacityLimiter, to_thread
 from fastapi import APIRouter, Depends, Query
@@ -16,12 +17,13 @@ from pydantic import BaseModel
 
 from src.db.database import get_db
 from src.models import Agent
+from src.services.public_snapshot import PublicSnapshot
 from src.services.scoring import calc_agent_score
 
 router = APIRouter()
 
 CACHE_TTL = 300  # 5 minutes
-MAX_CACHED_SCOPES = 4
+MAX_CACHED_SCOPES = 3
 SCORE_BATCH_SIZE = 1000
 
 
@@ -42,6 +44,7 @@ class ScoredAgent(NamedTuple):
 
 _score_cache: OrderedDict[str | None, tuple[float, list[ScoredAgent]]] = OrderedDict()
 _leaderboard_limiter = CapacityLimiter(1)
+_ranking_limiter = CapacityLimiter(2)
 
 
 class LeaderboardItem(BaseModel):
@@ -137,9 +140,13 @@ def _build_scored_list(db: Session, network: Optional[str]) -> list[ScoredAgent]
     return scored
 
 
-def _get_scored_list(db: Session, network: Optional[str]) -> list[ScoredAgent]:
+leaderboard_snapshot = PublicSnapshot(
+    "leaderboard", 900, lambda db: _build_scored_list(db, None), _leaderboard_limiter
+)
+
+
+def _get_scored_list(db: Session, network: str) -> list[ScoredAgent]:
     """Reuse scores while fresh and evict old scopes."""
-    network = network or None
     now = time.monotonic()
     for key, (expires, _) in list(_score_cache.items()):
         if expires <= now:
@@ -164,29 +171,34 @@ async def get_leaderboard(
     db: Session = Depends(get_db),
 ):
     """Get ranked agent leaderboard with composite scores."""
+    if network:
+        scored = await to_thread.run_sync(
+            _get_scored_list, db, network, limiter=_leaderboard_limiter
+        )
+    else:
+        scored = await leaderboard_snapshot.get(db)
     return await to_thread.run_sync(
-        _get_leaderboard, db, network, sort_by, page, page_size,
-        limiter=_leaderboard_limiter,
+        _rank_page, scored, sort_by, page, page_size, limiter=_ranking_limiter
     )
 
 
-def _get_leaderboard(
-    db: Session, network: Optional[str], sort_by: str, page: int, page_size: int
+def _rank_page(
+    scored: list[ScoredAgent], sort_by: str, page: int, page_size: int
 ) -> LeaderboardResponse:
     if sort_by not in SORT_FIELDS:
         sort_by = "score"
 
-    scored = _get_scored_list(db, network)
-
-    # Sort by requested field
-    sort_key = f"{sort_by}_score" if sort_by != "score" else "score"
-    scored_sorted = sorted(scored, key=attrgetter(sort_key), reverse=True)
-
-    # Paginate
-    total = len(scored_sorted)
+    sort_key = attrgetter(f"{sort_by}_score" if sort_by != "score" else "score")
+    total = len(scored)
     total_pages = max(1, (total + page_size - 1) // page_size)
     start = (page - 1) * page_size
-    page_items = scored_sorted[start:start + page_size]
+    end = start + page_size
+    if start >= total:
+        page_items = []
+    elif end <= 1000:
+        page_items = nlargest(end, scored, key=sort_key)[start:]
+    else:
+        page_items = sorted(scored, key=sort_key, reverse=True)[start:end]
 
     items = [
         LeaderboardItem(

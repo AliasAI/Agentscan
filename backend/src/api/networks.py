@@ -9,6 +9,7 @@ from datetime import datetime
 
 from src.db.database import get_db
 from src.models import Network, Agent
+from src.services.public_snapshot import PublicSnapshot
 
 
 class ContractsInfo(BaseModel):
@@ -55,17 +56,25 @@ async def get_networks(db: Session = Depends(get_db)):
 @router.get("/networks/stats", response_model=List[NetworkWithStatsResponse])
 async def get_networks_with_stats(db: Session = Depends(get_db)):
     """Get all networks with agent count statistics"""
-    # Query networks with agent count
+    return await network_stats_snapshot.get(db)
+
+
+def _build_network_stats(db: Session) -> list[NetworkWithStatsResponse]:
+    counts = (
+        db.query(Agent.network_id, func.count().label("agent_count"))
+        .group_by(Agent.network_id)
+        .subquery()
+    )
     results = (
         db.query(
             Network.id,
             Network.name,
             Network.chain_id,
             Network.explorer_url,
-            func.count(Agent.id).label('agent_count')
+            func.coalesce(counts.c.agent_count, 0).label("agent_count"),
         )
-        .outerjoin(Agent, Network.id == Agent.network_id)
-        .group_by(Network.id)
+        .outerjoin(counts, Network.id == counts.c.network_id)
+        .order_by(Network.id)
         .all()
     )
 
@@ -79,3 +88,6 @@ async def get_networks_with_stats(db: Session = Depends(get_db)):
         )
         for r in results
     ]
+
+
+network_stats_snapshot = PublicSnapshot("network_stats", 300, _build_network_stats)

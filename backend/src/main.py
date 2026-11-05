@@ -24,8 +24,9 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 from src.api import stats, agents, sync, networks, activities, classification, feedback, endpoint_health, metadata, analytics, ecosystems
-from src.api.leaderboard import router as leaderboard_router
-from src.services.scheduler import start_scheduler, shutdown_scheduler
+from src.api.leaderboard.routes import leaderboard_snapshot, router as leaderboard_router
+from src.api.taxonomy.routes import distribution_snapshot
+from src.services.scheduler import scheduler, start_scheduler, shutdown_scheduler
 from src.db.migrate_add_contracts import migrate as migrate_contracts
 from src.db.migrate_add_oasf_fields import migrate as migrate_oasf
 from src.db.migrate_add_classification_source import migrate as migrate_classification_source
@@ -108,6 +109,17 @@ async def startup_event():
     if os.getenv("DISABLE_SYNC", "").lower() in ("1", "true", "yes"):
         print("DISABLE_SYNC is set — skipping scheduler start")
         return
+    snapshots = (
+        stats.stats_snapshot,
+        agents.recent_agents_snapshot,
+        agents.trending_snapshot,
+        networks.network_stats_snapshot,
+        stats.registration_trend_snapshot,
+        distribution_snapshot,
+        leaderboard_snapshot,
+    )
+    for index, snapshot in enumerate(snapshots):
+        snapshot.schedule(scheduler, delay=5 + index * 10)
     start_scheduler()
 
 

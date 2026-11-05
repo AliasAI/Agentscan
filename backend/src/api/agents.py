@@ -1,18 +1,23 @@
 """Agent API"""
 
 from datetime import datetime
+from functools import partial
 
+from anyio import CapacityLimiter, to_thread
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload, defer, selectinload
 from sqlalchemy import func
+from starlette.concurrency import run_in_threadpool
 
 from src.db.database import get_db
 from src.models import Agent
 from src.schemas.agent import AgentResponse, AgentListItem
 from src.schemas.common import PaginatedResponse
 from src.services.metadata_processor import refresh_agent_metadata
+from src.services.public_snapshot import PublicSnapshot
 
 router = APIRouter()
+_agent_list_limiter = CapacityLimiter(4)
 
 
 def apply_quality_filter(query, quality: str):
@@ -59,9 +64,41 @@ async def get_agents(
     db: Session = Depends(get_db),
 ):
     """Get agent list with sorting, filtering, pagination and search"""
+    if (
+        page == 1 and page_size == 8 and quality == "basic"
+        and sort_field == "created_at" and sort_order == "desc"
+        and network in (None, "", "all")
+        and not (search or ecosystem or capability or has_reputation)
+        and reputation_min is None and reputation_max is None
+    ):
+        return await recent_agents_snapshot.get(db)
+    load = partial(
+        _list_agents, db, page, page_size, search=search, network=network,
+        ecosystem=ecosystem, capability=capability, reputation_min=reputation_min,
+        reputation_max=reputation_max, has_reputation=has_reputation, quality=quality,
+        sort_field=sort_field, sort_order=sort_order,
+    )
+    return await to_thread.run_sync(load, limiter=_agent_list_limiter)
 
+
+def _list_agents(
+    db: Session,
+    page: int,
+    page_size: int,
+    *,
+    search: str | None = None,
+    network: str | None = None,
+    ecosystem: str | None = None,
+    capability: str | None = None,
+    reputation_min: float | None = None,
+    reputation_max: float | None = None,
+    has_reputation: bool | None = None,
+    quality: str = "all",
+    sort_field: str = "created_at",
+    sort_order: str = "desc",
+) -> PaginatedResponse[AgentListItem]:
     # Defer heavy JSON columns not needed in list view
-    query = db.query(Agent).options(
+    query = db.query(Agent).select_from(Agent).options(
         joinedload(Agent.network),
         selectinload(Agent.ecosystem_links),
         selectinload(Agent.capabilities),
@@ -109,7 +146,7 @@ async def get_agents(
     query = query.order_by(column.asc() if sort_order == "asc" else column.desc())
 
     # Optimized COUNT: strip ORDER BY and skip ORM hydration
-    total = query.with_entities(func.count(Agent.id)).order_by(None).scalar()
+    total = query.with_entities(func.count()).order_by(None).scalar()
     total_pages = (total + page_size - 1) // page_size
 
     # Apply pagination
@@ -131,6 +168,12 @@ async def get_trending_agents(
     limit: int = Query(5, ge=1, le=20),
     db: Session = Depends(get_db),
 ):
+    if limit == 5:
+        return await trending_snapshot.get(db)
+    return await run_in_threadpool(_build_trending_agents, db, limit)
+
+
+def _build_trending_agents(db: Session, limit: int):
     """Get trending agents for homepage: top_ranked, featured, trending.
 
     All lists are filtered to show only quality agents (with name + description).
@@ -179,6 +222,12 @@ async def get_trending_agents(
         "featured": [AgentListItem.from_orm_with_network(a) for a in featured],
         "trending": [AgentListItem.from_orm_with_network(a) for a in trending],
     }
+
+
+trending_snapshot = PublicSnapshot("trending_agents", 300, lambda db: _build_trending_agents(db, 5))
+recent_agents_snapshot = PublicSnapshot(
+    "recent_agents", 300, lambda db: _list_agents(db, 1, 8, quality="basic")
+)
 
 
 @router.get("/agents/featured", response_model=list[AgentListItem])

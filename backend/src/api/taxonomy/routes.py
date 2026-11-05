@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from src.db.database import get_db
 from src.models.agent import Agent
+from src.services.public_snapshot import PublicSnapshot
 from src.taxonomies.oasf_taxonomy import (
     get_all_skills,
     get_all_domains,
@@ -18,7 +19,11 @@ router = APIRouter()
 
 
 @router.get("/taxonomy/distribution")
-def get_taxonomy_distribution(db: Session = Depends(get_db)):
+async def get_taxonomy_distribution(db: Session = Depends(get_db)):
+    return await distribution_snapshot.get(db)
+
+
+def _build_taxonomy_distribution(db: Session):
     """获取分类分布统计，用于首页展示热门分类
 
     返回 Skills 和 Domains 的分布情况，聚合到一级分类
@@ -162,6 +167,9 @@ def _get_domain_category(domain_slug: str) -> str:
     # 默认返回首字母大写
     parts = domain_slug.split("/")
     return parts[0].replace("_", " ").title()
+
+
+distribution_snapshot = PublicSnapshot("taxonomy_distribution", 1800, _build_taxonomy_distribution)
 
 
 @router.get("/taxonomy/skills")
