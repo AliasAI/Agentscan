@@ -17,6 +17,9 @@ services:
     env_file:
       - ./backend/.env
     restart: unless-stopped
+    # Keep backend memory pressure from exhausting swap on the shared host.
+    mem_limit: 4g
+    memswap_limit: 4g
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 5s

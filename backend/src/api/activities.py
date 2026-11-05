@@ -1,6 +1,7 @@
 """Activity API"""
 
 from fastapi import APIRouter, Depends, Query, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from src.db.database import get_db
@@ -13,7 +14,7 @@ router = APIRouter()
 
 
 @router.get("/activities", response_model=PaginatedResponse[ActivityResponse])
-async def get_activities(
+def get_activities(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -21,7 +22,7 @@ async def get_activities(
     """Get activity list with pagination"""
 
     # Get total count
-    total = db.query(Activity).count()
+    total = db.query(func.count()).select_from(Activity).scalar()
 
     # Get paginated activities with agent info
     activities = (

@@ -185,7 +185,7 @@ def _build_sync_status(
 
 
 @router.get("/stats/registration-trend", response_model=RegistrationTrendResponse)
-async def get_registration_trend(
+def get_registration_trend(
     days: int = Query(default=30, ge=1, le=365, description="Number of days to query"),
     db: Session = Depends(get_db)
 ):
@@ -201,7 +201,7 @@ async def get_registration_trend(
 
     results = db.query(
         func.date(Activity.created_at).label('date'),
-        func.count(Activity.id).label('count')
+        func.count().label('count')
     ).filter(
         Activity.activity_type == ActivityType.REGISTERED,
         Activity.created_at >= start_date
