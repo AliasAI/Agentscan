@@ -9,6 +9,7 @@ from collections import OrderedDict
 from operator import attrgetter
 from anyio import CapacityLimiter, to_thread
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import NamedTuple, Optional
 from pydantic import BaseModel
@@ -72,21 +73,21 @@ class LeaderboardResponse(BaseModel):
 SORT_FIELDS = {"score", "service", "usage", "freshness", "profile"}
 
 
-MIN_SCORE_THRESHOLD = 10  # Hide empty-shell agents (name-only, score ~5)
+MIN_SCORE_THRESHOLD = 10  # Profile alone reaches this only with all four fields.
 
 
 def _build_scored_list(db: Session, network: Optional[str]) -> list[ScoredAgent]:
-    """Compute scores for all agents, filtering out empties. Cached at route level.
-
-    Uses selective column loading to avoid fetching heavy JSON blobs
-    (on_chain_data, etc.) — only the 11 columns needed for scoring.
-    """
+    """Score candidates in batches using only the fields needed for ranking."""
+    total_endpoints = Agent.endpoint_status["total_endpoints"].as_integer()
+    healthy_endpoints = Agent.endpoint_status["healthy_endpoints"].as_integer()
     query = db.query(
         Agent.id,
         Agent.name,
         Agent.token_id,
         Agent.network_id,
-        Agent.endpoint_status,
+        total_endpoints.label("total_endpoints"),
+        healthy_endpoints.label("healthy_endpoints"),
+        Agent.endpoint_status["has_working_endpoints"].as_boolean().label("has_working"),
         Agent.reputation_count,
         Agent.reputation_score,
         Agent.reputation_last_updated,
@@ -94,17 +95,25 @@ def _build_scored_list(db: Session, network: Optional[str]) -> list[ScoredAgent]
         Agent.skills,
         Agent.domains,
     )
+    # Without service, usage, or freshness, all four profile fields are
+    # needed to meet the score threshold. Leave exact scoring to Python.
+    query = query.filter(or_(
+        healthy_endpoints != 0,
+        Agent.reputation_count > 0,
+        Agent.reputation_score > 0,
+        Agent.reputation_last_updated.is_not(None),
+        (Agent.skills != "[]") & (Agent.domains != "[]"),
+    ))
     if network:
         query = query.filter(Agent.network_id == network)
 
     scored = []
     for row in query.yield_per(SCORE_BATCH_SIZE):
-        has_working = bool(
-            row.endpoint_status
-            and row.endpoint_status.get("has_working_endpoints")
-        )
         scores = calc_agent_score(
-            endpoint_status=row.endpoint_status,
+            endpoint_status={
+                "total_endpoints": row.total_endpoints or 0,
+                "healthy_endpoints": row.healthy_endpoints or 0,
+            },
             feedback_count=row.reputation_count or 0,
             reputation_score=row.reputation_score or 0.0,
             reputation_last_updated=row.reputation_last_updated,
@@ -121,7 +130,7 @@ def _build_scored_list(db: Session, network: Optional[str]) -> list[ScoredAgent]
                 network_id=row.network_id,
                 reputation_score=row.reputation_score or 0.0,
                 reputation_count=row.reputation_count or 0,
-                has_working=has_working,
+                has_working=bool(row.has_working),
                 **scores,
             ))
 
