@@ -13,6 +13,7 @@ from typing import Any
 import httpx
 import structlog
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from src.db.database import SessionLocal
 from src.services.bnb_agent_sources import (
@@ -49,7 +50,7 @@ async def fetch_bnb_agent_overview(
     cache_key = f"bnb:{events_limit}:{blocks_limit}:{commits_limit}"
 
     async def _load(load_db: Session) -> dict[str, Any]:
-        agentscan = local_agentscan_snapshot(load_db)
+        agentscan = await run_in_threadpool(local_agentscan_snapshot, load_db)
 
         async with httpx.AsyncClient(
             timeout=6.0,

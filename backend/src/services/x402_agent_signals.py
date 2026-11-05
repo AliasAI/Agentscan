@@ -11,52 +11,53 @@ from sqlalchemy import distinct, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from src.models import Agent, AgentCapability, AgentEcosystemLink
+from src.models import Agent, AgentCapability, AgentEcosystemLink, X402EcosystemSnapshot
+
+
+def read_local_x402_snapshot(db: Session) -> dict[str, Any]:
+    """Serve the last published metadata counts without scanning the registry."""
+    latest = db.query(X402EcosystemSnapshot).order_by(
+        X402EcosystemSnapshot.snapshot_time.desc()
+    ).first()
+    counts = {"coinbase_linked_agents": _distinct_link_count(db, "coinbase")}
+    for signal in ("x402", "agentkit", "payable"):
+        key = f"{signal}_capability_agents"
+        cached_count = getattr(latest, key, None)
+        counts[key] = cached_count if cached_count is not None else len(_capability_agent_ids(db, signal))
+    return counts
 
 
 def local_x402_snapshot(db: Session) -> dict[str, Any]:
     """Return local x402 adoption counts from capabilities and agent metadata."""
     linked_agents = _distinct_link_count(db, "coinbase")
-    x402_agents = _x402_metadata_agent_ids(db) | _capability_agent_ids(db, "x402")
-    agentkit_agents = _metadata_agent_ids(db, "agentkit") | _capability_agent_ids(db, "agentkit")
-    payable_agents = _payable_metadata_agent_ids(db) | _capability_agent_ids(db, "payable")
+    x402_agents = _capability_agent_ids(db, "x402")
+    agentkit_agents = _capability_agent_ids(db, "agentkit")
+    payable_agents = _capability_agent_ids(db, "payable")
+
+    extra_x402 = extra_agentkit = extra_payable = 0
+    try:
+        for agent_id, payload, text in _metadata_payloads(db):
+            supports_x402 = _has_x402_signal(payload)
+            if agent_id not in x402_agents and (supports_x402 or "x402" in text):
+                extra_x402 += 1
+            if agent_id not in agentkit_agents and "agentkit" in text:
+                extra_agentkit += 1
+            if agent_id not in payable_agents and (supports_x402 or "payment" in text):
+                extra_payable += 1
+    except SQLAlchemyError:
+        db.rollback()
+        extra_x402 = extra_agentkit = extra_payable = 0
+
     return {
         "coinbase_linked_agents": linked_agents,
-        "x402_capability_agents": len(x402_agents),
-        "agentkit_capability_agents": len(agentkit_agents),
-        "payable_capability_agents": len(payable_agents),
+        "x402_capability_agents": len(x402_agents) + extra_x402,
+        "agentkit_capability_agents": len(agentkit_agents) + extra_agentkit,
+        "payable_capability_agents": len(payable_agents) + extra_payable,
     }
 
 
-def _x402_metadata_agent_ids(db: Session) -> set[str]:
-    return _metadata_agent_ids(db, "x402")
-
-
-def _payable_metadata_agent_ids(db: Session) -> set[str]:
-    ids = set()
-    for agent_id, payload, text in _metadata_payloads(db):
-        if _has_x402_signal(payload) or "payment" in text or "micropayment" in text:
-            ids.add(agent_id)
-    return ids
-
-
-def _metadata_agent_ids(db: Session, signal: str) -> set[str]:
-    ids = set()
-    for agent_id, payload, text in _metadata_payloads(db):
-        if signal == "x402" and _has_x402_signal(payload):
-            ids.add(agent_id)
-        elif signal in text:
-            ids.add(agent_id)
-    return ids
-
-
 def _metadata_payloads(db: Session):
-    try:
-        rows = db.query(Agent.id, Agent.metadata_uri, Agent.on_chain_data, Agent.description).all()
-    except SQLAlchemyError:
-        db.rollback()
-        return
-
+    rows = db.query(Agent.id, Agent.metadata_uri, Agent.on_chain_data, Agent.description).yield_per(1000)
     for agent_id, metadata_uri, on_chain_data, description in rows:
         uri = metadata_uri or _agent_uri(on_chain_data)
         payload = _parse_metadata_uri(uri)

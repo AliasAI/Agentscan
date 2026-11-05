@@ -12,10 +12,11 @@ from urllib.parse import urlparse
 import httpx
 import structlog
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from src.db.database import SessionLocal
 from src.services.stale_cache import StaleWhileRevalidateCache
-from src.services.x402_agent_signals import local_x402_snapshot
+from src.services.x402_agent_signals import read_local_x402_snapshot
 from src.services.x402_history import get_x402_history, record_x402_snapshot
 from src.services.x402_pricing import amount_usd, price_distribution
 
@@ -26,7 +27,6 @@ CDP_DISCOVERY_URL = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/res
 CACHE_TTL_SECONDS = 30 * 60
 DISCOVERY_PAGE_SIZE = 20
 DISCOVERY_SAMPLE_PAGES = 10
-
 
 _cache = StaleWhileRevalidateCache(
     CACHE_TTL_SECONDS,
@@ -40,7 +40,7 @@ async def fetch_x402_overview(db: Session, resources_limit: int = 8) -> dict[str
     cache_key = f"x402:{resources_limit}"
 
     async def _load(load_db: Session) -> dict[str, Any]:
-        local = local_x402_snapshot(load_db)
+        local = await run_in_threadpool(read_local_x402_snapshot, load_db)
         async with httpx.AsyncClient(
             timeout=6.0,
             headers={
@@ -74,8 +74,7 @@ async def fetch_x402_overview(db: Session, resources_limit: int = 8) -> dict[str
             "agentscan": local,
             "maturity": _maturity(local, discovery),
         }
-        record_x402_snapshot(load_db, overview)
-        overview["history"] = get_x402_history(load_db)
+        overview["history"] = await run_in_threadpool(_record_and_get_history, load_db, overview)
         return overview
 
     async def _refresh_load() -> dict[str, Any]:
@@ -90,6 +89,11 @@ async def fetch_x402_overview(db: Session, resources_limit: int = 8) -> dict[str
         lambda: _load(db),
         refresh_loader=_refresh_load,
     )
+
+
+def _record_and_get_history(db: Session, overview: dict[str, Any]) -> list[dict[str, Any]]:
+    record_x402_snapshot(db, overview)
+    return get_x402_history(db)
 
 
 async def _safe_text(client: httpx.AsyncClient, url: str, label: str) -> str:
