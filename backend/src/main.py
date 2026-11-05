@@ -26,6 +26,7 @@ structlog.configure(
 from src.api import stats, agents, sync, networks, activities, classification, feedback, endpoint_health, metadata, analytics, ecosystems
 from src.api.leaderboard.routes import leaderboard_snapshot, router as leaderboard_router
 from src.api.taxonomy.routes import distribution_snapshot
+from src.services.rollups.x402 import schedule_x402_rollup
 from src.services.scheduler import scheduler, start_scheduler, shutdown_scheduler
 from src.db.migrate_add_contracts import migrate as migrate_contracts
 from src.db.migrate_add_oasf_fields import migrate as migrate_oasf
@@ -120,6 +121,7 @@ async def startup_event():
     )
     for index, snapshot in enumerate(snapshots):
         snapshot.schedule(scheduler, delay=5 + index * 10)
+    schedule_x402_rollup(scheduler)
     start_scheduler()
 
 

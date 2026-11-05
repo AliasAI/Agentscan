@@ -84,11 +84,17 @@ async def fetch_x402_overview(db: Session, resources_limit: int = 8) -> dict[str
         finally:
             refresh_db.close()
 
-    return await _cache.get_or_set(
+    overview = await _cache.get_or_set(
         cache_key,
         lambda: _load(db),
         refresh_loader=_refresh_load,
     )
+    local = await run_in_threadpool(read_local_x402_snapshot, db)
+    return {
+        **overview,
+        "agentscan": local,
+        "maturity": _maturity(local, overview["discovery"]),
+    }
 
 
 def _record_and_get_history(db: Session, overview: dict[str, Any]) -> list[dict[str, Any]]:

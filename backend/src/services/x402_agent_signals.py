@@ -7,68 +7,57 @@ import json
 from typing import Any
 from urllib.parse import unquote
 
-from sqlalchemy import distinct, func
+from sqlalchemy import distinct, func, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from src.models import Agent, AgentCapability, AgentEcosystemLink, X402EcosystemSnapshot
+from src.models import AgentCapability, AgentEcosystemLink, X402EcosystemSnapshot
+
+SIGNALS = ("x402", "agentkit", "payable")
 
 
 def read_local_x402_snapshot(db: Session) -> dict[str, Any]:
     """Serve the last published metadata counts without scanning the registry."""
+    counts = {"coinbase_linked_agents": _distinct_link_count(db, "coinbase")}
+    try:
+        row = db.execute(text(
+            "SELECT x402, agentkit, payable FROM x402_rollup_state WHERE id = 1 AND ready = 1"
+        )).one_or_none()
+    except SQLAlchemyError:
+        db.rollback()
+        row = None
+    if row is not None:
+        counts.update({f"{signal}_capability_agents": value for signal, value in zip(SIGNALS, row)})
+        return counts
+
     latest = db.query(X402EcosystemSnapshot).order_by(
         X402EcosystemSnapshot.snapshot_time.desc()
     ).first()
-    counts = {"coinbase_linked_agents": _distinct_link_count(db, "coinbase")}
-    for signal in ("x402", "agentkit", "payable"):
+    for signal in SIGNALS:
         key = f"{signal}_capability_agents"
         cached_count = getattr(latest, key, None)
         counts[key] = cached_count if cached_count is not None else len(_capability_agent_ids(db, signal))
     return counts
 
 
-def local_x402_snapshot(db: Session) -> dict[str, Any]:
-    """Return local x402 adoption counts from capabilities and agent metadata."""
-    linked_agents = _distinct_link_count(db, "coinbase")
-    x402_agents = _capability_agent_ids(db, "x402")
-    agentkit_agents = _capability_agent_ids(db, "agentkit")
-    payable_agents = _capability_agent_ids(db, "payable")
+def x402_signal_mask(metadata_uri: str | None, on_chain_data: Any, description: str | None) -> int:
+    uri = metadata_uri or _agent_uri(on_chain_data)
+    payload = _parse_metadata_uri(uri)
+    parts = [description or "", uri or ""]
+    if isinstance(on_chain_data, dict):
+        parts.append(json.dumps(on_chain_data, ensure_ascii=False))
+    elif on_chain_data:
+        parts.append(str(on_chain_data))
+    if payload:
+        parts.append(json.dumps(payload, ensure_ascii=False))
 
-    extra_x402 = extra_agentkit = extra_payable = 0
-    try:
-        for agent_id, payload, text in _metadata_payloads(db):
-            supports_x402 = _has_x402_signal(payload)
-            if agent_id not in x402_agents and (supports_x402 or "x402" in text):
-                extra_x402 += 1
-            if agent_id not in agentkit_agents and "agentkit" in text:
-                extra_agentkit += 1
-            if agent_id not in payable_agents and (supports_x402 or "payment" in text):
-                extra_payable += 1
-    except SQLAlchemyError:
-        db.rollback()
-        extra_x402 = extra_agentkit = extra_payable = 0
-
-    return {
-        "coinbase_linked_agents": linked_agents,
-        "x402_capability_agents": len(x402_agents) + extra_x402,
-        "agentkit_capability_agents": len(agentkit_agents) + extra_agentkit,
-        "payable_capability_agents": len(payable_agents) + extra_payable,
-    }
-
-
-def _metadata_payloads(db: Session):
-    rows = db.query(Agent.id, Agent.metadata_uri, Agent.on_chain_data, Agent.description).yield_per(1000)
-    for agent_id, metadata_uri, on_chain_data, description in rows:
-        uri = metadata_uri or _agent_uri(on_chain_data)
-        payload = _parse_metadata_uri(uri)
-        text_parts = [description or "", uri or ""]
-        if isinstance(on_chain_data, dict):
-            text_parts.append(json.dumps(on_chain_data, ensure_ascii=False))
-        elif on_chain_data:
-            text_parts.append(str(on_chain_data))
-        if payload:
-            text_parts.append(json.dumps(payload, ensure_ascii=False))
-        yield str(agent_id), payload, " ".join(text_parts).lower()
+    searchable = " ".join(parts).lower()
+    supports_x402 = _has_x402_signal(payload)
+    return (
+        (1 if supports_x402 or "x402" in searchable else 0)
+        | (2 if "agentkit" in searchable else 0)
+        | (4 if supports_x402 or "payment" in searchable else 0)
+    )
 
 
 def _has_x402_signal(value: Any) -> bool:
